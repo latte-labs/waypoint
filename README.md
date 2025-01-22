@@ -11,7 +11,5 @@ The app includes features such as interactive maps, dynamic itineraries, and gam
 ---
 
 ## Team Members
-| **Name**          | **Student ID** | **Email**                                   |
-|--------------------|----------------|---------------------------------------------|
-| Russell Han Josef | 300369073      | [josefr@student.douglascollege.ca](mailto:josefr@student.douglascollege.ca) |
-| Simone Lue        | 300276605      | [lues@student.douglascollege.ca](mailto:lues@student.douglascollege.ca) |
+Russell Han Josef [https://www.linkedin.com/in/russellhanjosef/]
+Simone Liu [https://www.linkedin.com/in/simone-lue/]
