@@ -11,5 +11,5 @@ The app includes features such as interactive maps, dynamic itineraries, and gam
 ---
 
 ## Team Members
-Russell Han Josef [https://www.linkedin.com/in/russellhanjosef/]
-Simone Liu [https://www.linkedin.com/in/simone-lue/]
+- Russell Han Josef [https://www.linkedin.com/in/russellhanjosef/]
+- Simone Liu [https://www.linkedin.com/in/simone-lue/]
