@@ -4,32 +4,26 @@ This is a new [**React Native**](https://reactnative.dev) project, bootstrapped 
 
 > **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
 
-## Step 1: Start Metro
+## Step 1: Install dependencies 
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+First, you will need to install the dependencies for the building the app.
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+Run the following command from the frontend folder:
 
 ```sh
 # Using npm
-npm start
-
-# OR using Yarn
-yarn start
+cd Implementation/frontend
+npm install
 ```
 
-## Step 2: Build and run your app
+## Step 2: Run the app
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+While still inside the frontend folder run the following command to start the simulator:
 
 ### Android
 
 ```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
+npx react-native run-android
 ```
 
 ### iOS
@@ -51,11 +45,7 @@ bundle exec pod install
 For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
 
 ```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
+npx react-native run-ios
 ```
 
 If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
