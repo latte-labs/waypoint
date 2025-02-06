@@ -1,15 +1,26 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-from app.config.config import settings  # Ensure this is correct
+from dotenv import load_dotenv
 
-# Define Base for SQLAlchemy models
-Base = declarative_base()
+# Load environment variables from .env file (for local development)
+load_dotenv()
 
-# Database connection setup
-SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"sslmode": "require"})
+# Fix Heroku's incorrect `postgres://` format
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://")
+
+# Apply `sslmode="require"` **only for Heroku**, not local development
+if "heroku" in DATABASE_URL:
+    engine = create_engine(DATABASE_URL, connect_args={"sslmode": "require"})
+else:
+    engine = create_engine(DATABASE_URL)  # Local PostgreSQL doesn't require SSL
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+Base = declarative_base()
 
 # Dependency to get the database session
 def get_db():
