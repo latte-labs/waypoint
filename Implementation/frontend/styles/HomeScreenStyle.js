@@ -9,17 +9,19 @@ const HomeScreenStyles = StyleSheet.create({
         justifyContent: 'flex-start',
         alignContent: 'center',
         padding: 20,
+        backgroundColor: 'white',
     },
     scrollContainer: {
         flexGrow: 1,
         paddingBottom: 20,
+        backgroundColor: 'white'
     },
     searchbar: {
         width: '70%',
         height: 40,
         backgroundColor: '#f2f2f2',
         borderRadius: 20,
-        borderWidth: 0.5,
+        borderWidth: 0.25,
         paddingHorizontal: 20,
         marginStart: 15,
     },
@@ -30,11 +32,12 @@ const HomeScreenStyles = StyleSheet.create({
     },
     myTripsTitle: {
         fontSize: 22,   
+        marginTop: 10,
     },
     card: {
         backgroundColor: "#f2f2f2",
         borderRadius: 15,
-        borderWidth: 0,
+        borderWidth: 0.25,
         padding: 0,
         alignItems: 'center',
         justifyContent: 'center',

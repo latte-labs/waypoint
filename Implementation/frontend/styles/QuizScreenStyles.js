@@ -7,8 +7,9 @@ const QuizStyles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 20,
         paddingHorizontal: 10,
-        marginTop: 25,
+        marginTop: 0,
         height: '100%',
+        backgroundColor: 'white',
     },
     questionTitle: {
         fontSize: 26,

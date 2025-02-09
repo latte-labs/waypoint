@@ -1,25 +1,17 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-
-import {
-  SafeAreaView,
-} from 'react-native';
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-import QuizScreen from './QuizScreen';
-import HomeScreen from './HomeScreen';
+import { SafeAreaView } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';  
+import BottomNavigation from './BottomNavigation'; 
 
 function App() {
-
   return (
-    <SafeAreaView>
-      <HomeScreen />
-    </SafeAreaView>
+    <NavigationContainer>
+      <SafeAreaView style={{ flex: 1, backgroundColor:'#ffffff'}}> 
+        <BottomNavigation /> 
+      </SafeAreaView>
+    </NavigationContainer>
+      
+    
   );
 }
 

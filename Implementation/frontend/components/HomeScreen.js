@@ -41,14 +41,20 @@ function HomeScreen() {
                 />
                 <View style={styles.myTrips}>
                     <Text style={styles.myTripsTitle}>My Trips</Text>
-                    <FlatList
-                        data={trips}
-                        renderItem={renderItem}
-                        keyExtractor={item => item.id}
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{ paddingLeft: 0, paddingRight: 0 }}
-                    />
+                    {trips.length > 0 ? (
+                        <FlatList
+                            data={trips}
+                            renderItem={renderItem}
+                            keyExtractor={(item) => item.id}
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={{ paddingLeft: 0, paddingRight: 0 }}
+                        />
+                    ) : (
+                        <View style={[styles.card, { width: width * 0.8, marginHorizontal: 10 }]}>
+                            <Text style={styles.tripName}>No upcoming trips</Text>
+                        </View>
+                    )}
                 </View>
             </View>
         </ScrollView>
