@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native";
 
-const styles = StyleSheet.create({
+const QuizStyles = StyleSheet.create({
     container: {
         flexGrow: 1,
         justifyContent: 'flex-start',
@@ -104,4 +104,4 @@ const styles = StyleSheet.create({
     }
 })
 
-export default styles;
+export default QuizStyles;
