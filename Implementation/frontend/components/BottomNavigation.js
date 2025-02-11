@@ -5,8 +5,24 @@ import styles from '../styles/BottomNavigatorStyle';
 import HomeScreen from './HomeScreen';
 import QuizScreen from './QuizScreen';
 
+// Profile component placeholder
+// Delete this when Profile component is made and imported
+function Profile() {
+  return (
+    <Text>Placeholder Profile page</Text>
+  )
+}
+
+// Setting component placeholder
+// Delete this when Setting component is made and imported
+function Setting() {
+  return (
+    <Text>Placeholder Settings page</Text>
+  )
+}
+
 function BottomNavigation() {
-  const Tab = createBottomTabNavigator();
+  const Tab = createBottomTabNavigator()
 
   return (
    
@@ -30,7 +46,9 @@ function BottomNavigation() {
       >
         <Tab.Screen name="Home" component={HomeScreen} />
         <Tab.Screen name="Quiz" component={QuizScreen} />
-        
+        <Tab.Screen name="Profile" component={Profile} />
+        <Tab.Screen name="Setting" component={Setting} />
+
       </Tab.Navigator>
     
   );
