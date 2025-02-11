@@ -4,9 +4,9 @@ from app.db.db import get_db
 from app.models.quiz_model import QuizResult
 from app.schemas.quiz_schema import QuizResultCreate, QuizResultResponse
 
-quiz_router = APIRouter()
+router = APIRouter()  # ✅ Change to `router` for consistency with main.py
 
-@quiz_router.post("/quiz-results/", response_model=QuizResultResponse)
+@router.post("/quiz-results/", response_model=QuizResultResponse)
 def save_quiz_result(quiz_data: QuizResultCreate, db: Session = Depends(get_db)):
     new_result = QuizResult(**quiz_data.dict())
 

@@ -1,11 +1,10 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.db.db import get_db
-from app.models.user_model import User
+from app.db.db import get_db  # ✅ Import get_db here
 
-user_router = APIRouter()
+router = APIRouter()
 
-@user_router.get("/users/")
-def get_users(db: Session = Depends(get_db)):
-    users = db.query(User).all()
-    return users
+@router.get("/users/test-db")
+def test_db(db: Session = Depends(get_db)):
+    result = db.execute("SELECT current_database();")
+    return {"Connected to database": result.fetchone()[0]}
