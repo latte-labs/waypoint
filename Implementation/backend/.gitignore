@@ -1,4 +1,15 @@
-venv/
-__pycache__/
-*.pyc
+# Ignore environment files
 .env
+__pycache__/
+venv/
+.idea/
+.DS_Store
+
+# Ignore compiled Python files
+*.pyc
+*.pyo
+*.sqlite3
+
+# Ignore logs
+logs/
+*.log

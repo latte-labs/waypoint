@@ -1,5 +1,6 @@
-from .user_model import User
-from .travel_style_model import TravelStyle
+# Import tables in correct order to avoid Foreign Key issues
+from .travel_style_model import TravelStyle  # ✅ Must be first (users depend on it)
+from .user_model import User  # ✅ Users depend on TravelStyle
 from .place_model import Place
 from .user_favorite_model import UserFavorite
 from .itinerary_model import Itinerary
