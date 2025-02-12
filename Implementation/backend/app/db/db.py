@@ -3,6 +3,8 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 from dotenv import load_dotenv
 from pathlib import Path
 import os
+from sqlalchemy import MetaData
+
 
 # ✅ Load environment variables
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
