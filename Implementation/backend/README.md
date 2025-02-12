@@ -71,7 +71,7 @@ Replace username, password, and waypoint_db with your actual PostgreSQL credenti
 ### 6. Run the Application
 To run the FastAPI application locally, use the following command:
 ```bash
-uvicorn main:app --reload
+uvicorn app.main:app --reload
 ```
 You can now access the app at http://localhost:8000.
 ### 7. Testing API Endpoints
