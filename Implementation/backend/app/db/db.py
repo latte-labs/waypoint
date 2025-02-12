@@ -25,7 +25,7 @@ engine = create_engine(DATABASE_URL, echo=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # ✅ Define Base (before importing models)
-Base = declarative_base()
+Base = declarative_base(metadata=MetaData(schema="public"))  # ✅ Ensure tables go into 'public'
 
 # ✅ Import models AFTER defining Base
 from app.models import *  # Avoids circular import
