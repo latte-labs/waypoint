@@ -1,21 +1,28 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
-# from app.routes.user_routes import router as user_router  # ✅ Import correctly
-# from app.routes.quiz_routes import router as quiz_router  # ✅ Ensure correct import
 from app.config.config import settings
 from app.db.db import SessionLocal
 from sqlalchemy.sql import text  # ✅ Import `text`
 
-from app.routes import user_routes, itinerary_routes, place_routes, badge_routes, quiz_routes
+from app.routes import (
+    user_routes, 
+    itinerary_routes, 
+    place_routes, 
+    badge_routes, 
+    quiz_routes, 
+    user_favorite_routes,  # ✅ Added User Favorites
+    shared_itinerary_routes  # ✅ Added Shared Itineraries
+)
 
 app = FastAPI()
 
-# Include routers
+# ✅ Include routers
 app.include_router(user_routes.user_router, prefix="/users", tags=["Users"])
 app.include_router(itinerary_routes.itinerary_router, prefix="/itineraries", tags=["Itineraries"])
 app.include_router(place_routes.place_router, prefix="/places", tags=["Places"])
 app.include_router(badge_routes.badge_router, prefix="/badges", tags=["Badges"])
 app.include_router(quiz_routes.quiz_router, prefix="/quiz_results", tags=["Quiz Results"])
+app.include_router(user_favorite_routes.user_favorite_router, prefix="/user_favorites", tags=["User Favorites"])
 
 # Dependency to get a database session
 def get_db():
