@@ -37,3 +37,10 @@ def test_db(db: Session = Depends(get_db)):
         return {"Connected to database": result.fetchone()[0]}
     except Exception as e:
         return {"error": str(e)}
+
+import os
+import uvicorn
+
+if __name__ == "__main__":
+    PORT = int(os.getenv("PORT", 8000))  # ✅ Default to 8000 locally
+    uvicorn.run(app, host="0.0.0.0", port=PORT)
