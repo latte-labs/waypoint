@@ -17,4 +17,4 @@ class PlaceResponse(PlaceCreate):
     last_updated: datetime
     
     class Config:
-        orm_mode = True
+        from_attributes=True
