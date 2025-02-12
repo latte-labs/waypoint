@@ -77,15 +77,3 @@ You can now access the app at http://localhost:8000.
 ### 7. Testing API Endpoints
 Use a tool like Postman or REST Client in VSCode to test your API endpoints.
 Project Structure
-
-Here’s an overview of the project structure:
-```bash
-backend/
-│
-├── db.py                # Database setup and connection
-├── main.py              # FastAPI app and routes
-├── .env                 # Environment variables
-├── venv/                # Virtual environment
-├── requirements.txt     # Python dependencies
-└── README.md            # This file
-```
