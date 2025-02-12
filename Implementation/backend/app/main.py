@@ -41,6 +41,7 @@ def test_db(db: Session = Depends(get_db)):
 import os
 import uvicorn
 
+# ✅ Ensure Uvicorn runs with Heroku's $PORT
 if __name__ == "__main__":
-    PORT = int(os.getenv("PORT", 8000))  # ✅ Default to 8000 locally
-    uvicorn.run(app, host="0.0.0.0", port=PORT)
+    port = int(os.environ.get("PORT", 8000))  # Default to 8000 if PORT is not set
+    uvicorn.run(app, host="0.0.0.0", port=port)

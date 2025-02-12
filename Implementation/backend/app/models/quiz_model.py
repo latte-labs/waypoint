@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
-from app.db.db import Base
+from app.db.base import Base  # ✅ Import Base from base.py (Fix Circular Import)
 
 class QuizResult(Base):
     __tablename__ = "quiz_results"

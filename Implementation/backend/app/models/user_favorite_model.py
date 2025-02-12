@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, JSON
 from sqlalchemy.orm import relationship
 from datetime import datetime
-from app.db.db import Base
+from app.db.base import Base  # ✅ Import Base from base.py (Fix Circular Import)
 
 # User Favorite Model
 class UserFavorite(Base):
