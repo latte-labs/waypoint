@@ -21,3 +21,4 @@ class User(Base):
     itineraries = relationship("Itinerary", back_populates="user")
     shared_itineraries = relationship("SharedItinerary", back_populates="user")
     user_badges = relationship("UserBadge", back_populates="user")
+    quiz_results = relationship("QuizResult", back_populates="user")

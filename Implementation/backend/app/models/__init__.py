@@ -9,3 +9,4 @@ from .shared_itinerary_model import SharedItinerary
 from .badge_model import Badge
 from .user_badge_model import UserBadge
 from .api_cache_model import APICache
+from .quiz_model import QuizResult  # ✅ Include QuizResult to avoid missing references
