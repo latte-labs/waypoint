@@ -7,7 +7,7 @@ from app.schemas import user_schema, itinerary_schema, place_schema, badge_schem
 # ========== BADGE ROUTES ==========
 badge_router = APIRouter()
 
-@badge_router.post("/badges", response_model=badge_schema.BadgeResponse)
+@badge_router.post("/", response_model=badge_schema.BadgeResponse)
 def create_badge(badge: badge_schema.BadgeResponse, db: Session = Depends(get_db)):
     db_badge = badge_model.Badge(**badge.dict())
     db.add(db_badge)
@@ -15,7 +15,7 @@ def create_badge(badge: badge_schema.BadgeResponse, db: Session = Depends(get_db
     db.refresh(db_badge)
     return db_badge
 
-@badge_router.get("/badges/{badge_id}", response_model=badge_schema.BadgeResponse)
+@badge_router.get("/{badge_id}", response_model=badge_schema.BadgeResponse)
 def get_badge(badge_id: int, db: Session = Depends(get_db)):
     badge = db.query(badge_model.Badge).filter(badge_model.Badge.id == badge_id).first()
     if not badge:
