@@ -10,7 +10,7 @@ import {
     TouchableOpacity,
 } from 'react-native';
 
-import styles from '../styles/HomeScreenStyle';
+import styles from '../../styles/HomeScreenStyle';
 
 const { width } = Dimensions.get('window');
 

@@ -7,7 +7,7 @@ import {
   ScrollView,
 } from 'react-native';
 import * as Progress from 'react-native-progress';
-import styles from '../styles/QuizScreenStyles';
+import styles from '../../styles/QuizScreenStyles';
 
 const questions = [
   {
