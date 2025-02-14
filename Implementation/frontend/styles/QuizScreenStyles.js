@@ -102,7 +102,59 @@ const QuizStyles = StyleSheet.create({
     },
     hiddenButton: {
        opacity: 0, 
-    }
+    },
+    resultContainer: {
+        width: '75%',
+        flex: 1,
+        backgroundColor: '#fff',
+        padding: 25,
+        borderRadius: 15,
+        alignItems: 'center',
+        elevation: 5,
+        shadowColor: "#000",
+        shadowOpacity: 0.2,
+        shadowRadius: 5,
+        justifyContent: 'center',
+        marginTop: 100,
+        marginBottom:50,
+    },
+    closeButton: {
+        position: 'absolute',
+        top: 60, 
+        right: 55,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        padding: 5,
+        borderRadius: 20,
+        zIndex: 10,
+    },
+    closeButtonText: {
+        color: '#fff',
+        fontSize: 22,
+        fontWeight: 'bold',
+    },
+    quizBackground: {
+        backgroundColor: 'white', 
+    },
+    resultsBackground: {
+        backgroundColor: '#1E3A8A',
+    },
+    resultEmoji: {
+        fontSize: 100, 
+        textAlign: 'center',
+        marginBottom: 10,
+    },
+    resultStyleName: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#1E3A8A',  
+    },
+    resultText: {
+        fontSize: 22,
+        textAlign: 'center',
+        lineHeight: 28,
+        color: 'black', 
+        lineHeight: 40,
+    },
 })
 
 export default QuizStyles;
