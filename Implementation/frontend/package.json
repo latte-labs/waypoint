@@ -10,6 +10,8 @@
     "test": "jest"
   },
   "dependencies": {
+    "@react-native-firebase/app": "^21.10.0",
+    "@react-native-firebase/database": "^21.10.0",
     "@react-native-picker/picker": "^2.11.0",
     "@react-native-vector-icons/ionicons": "^7.4.0",
     "@react-navigation/bottom-tabs": "^7.2.0",
