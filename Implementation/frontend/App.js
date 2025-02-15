@@ -5,7 +5,6 @@ import { createStackNavigator } from '@react-navigation/stack';
 import BottomNavigation from './components/navigation/BottomNavigation';
 import LoginScreen from './components/screens/LoginScreen';
 import SignupScreen from './components/screens/SignupScreen';
-import FirebaseTestScreen from './components/screens/FirebaseTestScreen'; // ✅ Added test screen
 
 const Stack = createStackNavigator();
 
@@ -14,9 +13,6 @@ function App() {
     <NavigationContainer>
       <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}> 
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-          {/* Firebase Test Screen (Temporary, for debugging) */}
-          <Stack.Screen name="FirebaseTest" component={FirebaseTestScreen} /> 
-
           {/* Authentication Screens */}
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Signup" component={SignupScreen} />

@@ -1,8 +1,8 @@
-// components/screens/LoginScreen.js
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
 import axios from 'axios';
 import API_BASE_URL from '../../config';
+import { database } from '../../firebase'; // ✅ Import Firebase Database
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -30,31 +30,46 @@ const LoginScreen = ({ navigation }) => {
     return valid;
   };
 
-const handleLogin = async () => {
-  if (!validateInputs()) return;
+  const handleLogin = async () => {
+    if (!validateInputs()) return;
 
-  setLoading(true);
+    setLoading(true);
 
-  try {
-    const response = await axios.post(`${API_BASE_URL}/users/auth/login`, null, {
-      params: { email: email.toLowerCase(), password },
-    });
+    try {
+      const response = await axios.post(`${API_BASE_URL}/users/auth/login`, null, {
+        params: { email: email.toLowerCase(), password },
+      });
 
-    if (response.status === 200) {
-      Alert.alert('Success', 'Login successful!');
-      navigation.replace('Main');
+      if (response.status === 200) {
+        Alert.alert('Success', 'Login successful!');
+        navigation.replace('Main');
+      }
+    } catch (error) {
+      Alert.alert('Login Failed', error.response?.data?.detail || 'Invalid credentials');
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    Alert.alert('Login Failed', error.response?.data?.detail || 'Invalid credentials');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
+
+  // ✅ Firebase Test Function
+  const testFirebaseWrite = () => {
+    const testRef = database().ref('/test-login');
+    testRef
+      .push({ message: 'Firebase is working from LoginScreen!', timestamp: new Date().toISOString() })
+      .then(() => Alert.alert('Success', 'Data written to Firebase!'))
+      .catch((error) => Alert.alert('Firebase Error', error.message));
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
-      <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={(text) => setEmail(text.toLowerCase())} keyboardType="email-address" />
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        value={email}
+        onChangeText={(text) => setEmail(text.toLowerCase())}
+        keyboardType="email-address"
+      />
       {errors.email ? <Text style={styles.error}>{errors.email}</Text> : null}
 
       <TextInput style={styles.input} placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry />
@@ -62,6 +77,9 @@ const handleLogin = async () => {
 
       <Button title={loading ? 'Logging In...' : 'Login'} onPress={handleLogin} disabled={loading} />
       <Button title="Don't have an account? Sign Up" onPress={() => navigation.navigate('Signup')} />
+      
+      {/* ✅ Firebase Test Button */}
+      <Button title="Test Firebase Write" onPress={testFirebaseWrite} color="green" />
     </View>
   );
 };
