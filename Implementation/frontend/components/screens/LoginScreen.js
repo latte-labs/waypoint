@@ -3,6 +3,7 @@ import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
 import axios from 'axios';
 import API_BASE_URL from '../../config';
 import { database } from '../../firebase'; // ✅ Import Firebase Database
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -41,6 +42,8 @@ const LoginScreen = ({ navigation }) => {
       });
 
       if (response.status === 200) {
+        const userId = response.data.user_id; // Extracting user id
+        await AsyncStorage.setItem('user_id', String(userId)); //Store user ID in AsyncStorage
         Alert.alert('Success', 'Login successful!');
         navigation.replace('Main');
       }

@@ -71,4 +71,5 @@ def login_user(email: str, password: str, db: Session = Depends(get_db)):
     if not user or not pwd_context.verify(password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
+    print(f"✅ User Logged In - ID: {user.id}, Email: {user.email}")  # ✅ Log user info    
     return {"message": "Login successful", "user_id": user.id}

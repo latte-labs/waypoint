@@ -3,14 +3,15 @@ import {
   Text,
   Pressable,
   View,
-  ScrollView,
   TouchableOpacity,
-  StatusBar,
 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Progress from 'react-native-progress';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import API_BASE_URL from '../../config';
 import styles from '../../styles/QuizScreenStyles';
 
 const questions = [
@@ -81,30 +82,41 @@ function QuizScreen() {
   const [travelStyle, setTravelStyle] = useState({ emoji: '', resultStyle: '' });
   const navigation = useNavigation();
 
-
-  const sendResultToBackend = async (travelStyle) => {
+  const getUserId = async () => {
     try {
-      const response = await fetch('https://your-backend-url.com/api/user/travel-style', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId: "USER_ID", travelStyle }),
+      const userId = await AsyncStorage.getItem('user_id');
+        console.log("📥 Retrieved User ID from AsyncStorage:", userId); // ✅ Debugging log
+        if (!userId) {
+            console.error("❌ No user ID found in AsyncStorage!");
+        }
+        return userId;
+    } catch (error) {
+        console.error("Error retrieving user ID:", error);
+        return null;
+    }
+};
+
+const sendResultToBackend = async (userId, travelStyle) => {
+  try {
+      console.log("📤 Sending Quiz Result:", { userId, travelStyle });
+
+      const response = await axios.post(`${API_BASE_URL}/quiz_results`, {
+          user_id: userId,
+          travel_style: travelStyle,
       });
 
-      const data = await response.json();
-      console.log("Response from backend:", data);
-    } catch (error) {
-      console.error("Error sending travel style to backend:", error);
-    }
-  };
+      console.log("✅ Quiz result saved:", response.data);
+  } catch (error) {
+      console.error("❌ Error sending travel style to backend:", error.response?.data || error.message);
+  }
+};
 
-  const handleNextQuestion = () => {
+  const handleNextQuestion = async () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setSelectedAnswer(null);
     } else {
-      determineTravelStyle();
+      await determineTravelStyle();
     }
   };
 
@@ -130,7 +142,7 @@ function QuizScreen() {
     });
   };
 
-  const determineTravelStyle = () => {
+  const determineTravelStyle = async () => {
     const { relaxation, culture, adventure, none } = scores;
     let resultStyle = '';
     let emoji = '';
@@ -160,9 +172,16 @@ function QuizScreen() {
   
     }
 
+    const userId = await getUserId(); 
+    if (userId) {
+      await sendResultToBackend(userId, resultStyle);
+      console.log("Retrieved User ID:", userId);
+    } else {
+      console.error("User ID not found, cannot send quiz result to backend.");
+    }
+
     setTravelStyle({ emoji, resultStyle });
     setQuizCompleted(true);
-    sendResultToBackend(resultStyle);
   };
 
 
