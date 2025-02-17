@@ -112,6 +112,8 @@ const sendResultToBackend = async (userId, travelStyle) => {
 };
 
   const handleNextQuestion = async () => {
+    if (selectedAnswer === null) return; // ✅ Prevent going forward without selection
+
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setSelectedAnswer(null);
@@ -141,6 +143,27 @@ const sendResultToBackend = async (userId, travelStyle) => {
       return updatedScores;
     });
   };
+
+  const handleRetakeQuiz = async () => {
+    console.log("Retaking quiz...");
+
+    // Reset all quiz states
+    setCurrentQuestionIndex(0);
+    setSelectedAnswer(null);
+    setScores({ relaxation: 0, culture: 0, adventure: 0, none: 0 });
+    setQuizCompleted(false);
+    setTravelStyle({ emoji: '', resultStyle: '' });
+
+    // Retrieve user ID again to ensure fresh submission
+    const userId = await getUserId();
+
+    if (userId) {
+        console.log("📤 Sending new quiz attempt...");
+    } else {
+        console.error("❌ User ID not found, cannot send new quiz result.");
+    }
+};
+
 
   const determineTravelStyle = async () => {
     const { relaxation, culture, adventure, none } = scores;
@@ -184,8 +207,6 @@ const sendResultToBackend = async (userId, travelStyle) => {
     setQuizCompleted(true);
   };
 
-
-
   const progress = (currentQuestionIndex + 1) / questions.length;
 
   return (
@@ -206,6 +227,9 @@ const sendResultToBackend = async (userId, travelStyle) => {
                 <Text style={styles.resultStyleName}>{travelStyle.resultStyle}</Text>{'\n'}
                 Traveler!
               </Text>
+              <TouchableOpacity style={styles.retakeQuizButton} onPress={handleRetakeQuiz}>
+                <Text style={styles.retakeQuizButtonText}>RETAKE QUIZ</Text>
+              </TouchableOpacity>
             </View>
           </>
         ) : (
@@ -268,8 +292,13 @@ const sendResultToBackend = async (userId, travelStyle) => {
             </View>
 
             {/* Next Button */}
-            <Pressable style={styles.buttonNext} onPress={handleNextQuestion}>
-              <Text style={styles.buttonNextText}>{currentQuestionIndex === questions.length - 1 ? "SUBMIT" : "NEXT"}</Text>
+            <Pressable 
+              style={[styles.buttonNext, selectedAnswer === null && styles.disabledButton]} 
+              onPress={handleNextQuestion}
+              disabled={selectedAnswer === null}>
+              <Text style={[styles.buttonNextText, selectedAnswer === null && styles.disabledButtonText]}>
+              {currentQuestionIndex === questions.length - 1 ? "SUBMIT" : "NEXT"}
+              </Text>
             </Pressable>
           </>
         )}

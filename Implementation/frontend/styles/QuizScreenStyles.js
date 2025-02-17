@@ -155,6 +155,28 @@ const QuizStyles = StyleSheet.create({
         color: 'black', 
         lineHeight: 40,
     },
+    retakeQuizButton: {
+        backgroundColor: '#FF6F00',
+        paddingVertical: '10',
+        paddingHorizontal: '30',
+        borderRadius: 25,
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: 50,
+        marginTop: 40,
+        minWidth: '40%',
+    },
+    retakeQuizButtonText: {
+        color: '#fff',
+    },
+    disabledButton: {
+        backgroundColor: '#f2f2f2',
+        borderWidth: '0.25',
+    },
+    disabledButtonText: {
+        color: 'black',
+        fontWeight: 'regular',
+    }
 })
 
 export default QuizStyles;
