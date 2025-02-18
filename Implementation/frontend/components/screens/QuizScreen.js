@@ -76,7 +76,7 @@ const questions = [
 function QuizScreen() {
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [selectedAnswers, setSelectedAnswers] = useState(Array(questions.length).fill(null));
   const [scores, setScores] = useState({ relaxation: 0, culture: 0, adventure: 0, none: 0 });
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [travelStyle, setTravelStyle] = useState({ emoji: '', resultStyle: '' });
@@ -112,11 +112,31 @@ const sendResultToBackend = async (userId, travelStyle) => {
 };
 
   const handleNextQuestion = async () => {
-    if (selectedAnswer === null) return; // ✅ Prevent going forward without selection
+    if (selectedAnswers[currentQuestionIndex] === null) return; // ✅ Prevent going forward without selection
 
     if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setSelectedAnswer(null);
+      setCurrentQuestionIndex((prevIndex) => {
+        const nextIndex = prevIndex + 1;
+
+        // Clear future selections when moving forward after going back
+        const updatedAnswers = selectedAnswers.slice(0, nextIndex);
+        updatedAnswers[nextIndex] = null; // Ensure new selection is fresh
+        setSelectedAnswers(updatedAnswers);
+
+        setScores((prevScores) => {
+          // Recalculate scores based only on retained answers
+          const resetScores = { relaxation: 0, culture: 0, adventure: 0, none: 0 };
+          updatedAnswers.forEach((answer) => {
+              if (answer === 0) resetScores.relaxation += 1;
+              else if (answer === 1) resetScores.culture += 1;
+              else if (answer === 2) resetScores.adventure += 1;
+              else if (answer === 3) resetScores.none += 1;
+          });
+          return resetScores;
+      });
+
+        return nextIndex;
+    });
     } else {
       await determineTravelStyle();
     }
@@ -124,17 +144,29 @@ const sendResultToBackend = async (userId, travelStyle) => {
 
   const handlePreviousQuestion = () => {
     if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
-      setSelectedAnswer(null);
+      setCurrentQuestionIndex((prevIndex) => prevIndex - 1);
     }
   }
 
   const handleAnswerSelection = (index) => {
-    setSelectedAnswer(index);
+    const updatedAnswers = [...selectedAnswers];
+
+    const previousAnswer = updatedAnswers[currentQuestionIndex]; // Get the previously selected answer
+    updatedAnswers[currentQuestionIndex] = index; // Store the selected answer for the current question
+    setSelectedAnswers(updatedAnswers);
 
     setScores(prevScores => {
       const updatedScores = { ...prevScores };
 
+      // Remove previous answer's point
+      if (previousAnswer !== null) {
+        if (previousAnswer === 0) updatedScores.relaxation -= 1;
+        else if (previousAnswer === 1) updatedScores.culture -= 1;
+        else if (previousAnswer === 2) updatedScores.adventure -= 1;
+        else if (previousAnswer === 3) updatedScores.none -= 1;
+    }
+
+      // Add new answer's point
       if (index === 0) updatedScores.relaxation += 1;
       else if (index === 1) updatedScores.culture += 1;
       else if (index === 2) updatedScores.adventure += 1;
@@ -149,7 +181,7 @@ const sendResultToBackend = async (userId, travelStyle) => {
 
     // Reset all quiz states
     setCurrentQuestionIndex(0);
-    setSelectedAnswer(null);
+    setSelectedAnswers(Array(questions.length).fill(null));
     setScores({ relaxation: 0, culture: 0, adventure: 0, none: 0 });
     setQuizCompleted(false);
     setTravelStyle({ emoji: '', resultStyle: '' });
@@ -276,14 +308,14 @@ const sendResultToBackend = async (userId, travelStyle) => {
                   key={index}
                   style={[
                     styles.button,
-                    selectedAnswer === index && styles.selectedButton
+                    selectedAnswers[currentQuestionIndex] === index && styles.selectedButton
                   ]}
                   onPress={() => handleAnswerSelection(index)}
                 >
                   <Text
                     style={[
                       styles.buttonText,
-                      selectedAnswer === index && styles.selectedButtonText
+                      selectedAnswers[currentQuestionIndex] === index && styles.selectedButtonText
                     ]}>
                     {letter}
                   </Text>
@@ -293,10 +325,10 @@ const sendResultToBackend = async (userId, travelStyle) => {
 
             {/* Next Button */}
             <Pressable 
-              style={[styles.buttonNext, selectedAnswer === null && styles.disabledButton]} 
+              style={[styles.buttonNext, selectedAnswers[currentQuestionIndex] === null && styles.disabledButton]} 
               onPress={handleNextQuestion}
-              disabled={selectedAnswer === null}>
-              <Text style={[styles.buttonNextText, selectedAnswer === null && styles.disabledButtonText]}>
+              disabled={selectedAnswers[currentQuestionIndex] === null}>
+              <Text style={[styles.buttonNextText, selectedAnswers[currentQuestionIndex] === null && styles.disabledButtonText]}>
               {currentQuestionIndex === questions.length - 1 ? "SUBMIT" : "NEXT"}
               </Text>
             </Pressable>
