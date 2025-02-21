@@ -1,4 +1,5 @@
 import requests
+from pydantic import conint
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.db.db import get_db
@@ -6,6 +7,7 @@ from app.models.place_model import Place
 from app.schemas.place_schema import PlaceCreate, PlaceResponse
 from datetime import datetime, timezone
 from app.config.config import settings  # Import settings class
+from app.models.quiz_model import QuizResult
 
 # ========== PLACE ROUTES ==========
 place_router = APIRouter()
@@ -24,7 +26,7 @@ TRAVEL_STYLE_MAPPING = {
         "rock_climbing_gym", "bungee_jumping", "kayaking", "rafting", "surfing",
         "skydiving", "mountain", "national_park", "cave", "diving_center"
     ],
-    "culture": [
+    "cultural explorer": [
         "museum", "art_gallery", "historical_site", "landmark", "church",
         "mosque", "synagogue", "temple", "library", "theater", "concert_hall",
         "cultural_center", "opera_house", "monument", "castle", "heritage_building"
@@ -148,6 +150,38 @@ def search_places(
 
     return {"newly_added_places": [{"name": p.name, "lat": p.latitude, "lng": p.longitude, "category": p.category} for p in places]}
 
+@place_router.get("/recommendations", response_model=list[PlaceResponse])
+def get_recommendations(
+    user_id: int = Query(..., description="User ID for recommendations"),
+    location: str = Query(..., description="Latitude,Longitude"),
+    radius: int = Query(5000, description="Search radius in meters"),
+    db: Session = Depends(get_db)
+):
+    """
+    Fetch recommended places for a user based on their travel style.
+    """
+    print(f"📥 Received user_id={user_id} (Type: {type(user_id)})")  # ✅ Debugging log
+    print(f"📥 Received location={location}, radius={radius}")
+
+    if not isinstance(user_id, int):
+        raise HTTPException(status_code=400, detail=f"user_id must be an integer! Received: {user_id} ({type(user_id)})")
+
+    user_quiz = db.query(QuizResult).filter(QuizResult.user_id == user_id).execution_options(populate_existing=True).first()
+    if not user_quiz:
+        raise HTTPException(status_code=404, detail=f"User {user_id} has not completed the quiz!")
+
+    travel_style = user_quiz.travel_style.lower()
+    place_types = TRAVEL_STYLE_MAPPING.get(travel_style)
+    if not place_types:
+        raise HTTPException(status_code=400, detail="Invalid travel style.")
+
+    cached_places = db.query(Place).filter(Place.category.in_(place_types)).all()
+    if cached_places:
+        return cached_places
+    
+    return []
+
+
 # ✅ Now, the dynamic route comes AFTER the specific routes
 @place_router.get("/{place_id}", response_model=PlaceResponse)
 def get_place(place_id: int, db: Session = Depends(get_db)):
@@ -155,3 +189,4 @@ def get_place(place_id: int, db: Session = Depends(get_db)):
     if not place:
         raise HTTPException(status_code=404, detail="Place not found")
     return place
+
