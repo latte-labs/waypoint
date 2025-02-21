@@ -162,9 +162,8 @@ def get_recommendations(
     """
     print(f"📥 Received user_id={user_id} (Type: {type(user_id)})")  # ✅ Debugging log
     print(f"📥 Received location={location}, radius={radius}")
+    print(f"🔑 Google Places API Key: {GOOGLE_PLACES_API_KEY}")
 
-    if not isinstance(user_id, int):
-        raise HTTPException(status_code=400, detail=f"user_id must be an integer! Received: {user_id} ({type(user_id)})")
 
     user_quiz = db.query(QuizResult).filter(QuizResult.user_id == user_id).execution_options(populate_existing=True).first()
     if not user_quiz:
@@ -175,11 +174,42 @@ def get_recommendations(
     if not place_types:
         raise HTTPException(status_code=400, detail="Invalid travel style.")
 
-    cached_places = db.query(Place).filter(Place.category.in_(place_types)).all()
-    if cached_places:
-        return cached_places
-    
-    return []
+    print("⚠️ Fetching new places from Google API")
+    places = []
+    for place_type in place_types:
+        url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+        params = {
+            "location": location,
+            "radius": radius,
+            "type": place_type,
+            "key": GOOGLE_PLACES_API_KEY
+        }
+        print(f"🚀 Fetching {place_type} from Google API with params: {params}")
+
+        response = requests.get(url, params=params)
+        if response.status_code != 200:
+            print(f"❌ Google Places API Error: {response.json()}")
+            raise HTTPException(status_code=500, detail=f"Google API Error: {response.json()}")
+
+        data = response.json()
+        print(f"📥 Raw API Response for {place_type}: {data}")
+        for result in data.get("results", []):
+            place = Place(
+                name=result.get("name", "Unknown"),
+                category=place_type,
+                latitude=result["geometry"]["location"]["lat"],
+                longitude=result["geometry"]["location"]["lng"],
+                rating=result.get("rating"),
+                source_api="google_places",
+                cached_data=result
+            )
+            db.add(place)
+            places.append(place)
+
+    db.commit()
+    print(f"📤 Successfully added {len(places)} new places from Google API")
+
+    return places
 
 
 # ✅ Now, the dynamic route comes AFTER the specific routes
