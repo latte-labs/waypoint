@@ -1,87 +1,127 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# WayPoint Frontend
 
-# Getting Started
+This is the frontend for the **WayPoint** project, developed with **React Native** using [`@react-native-community/cli`](https://github.com/react-native-community/cli). It serves as the user interface for interacting with the WayPoint travel planning features.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## Prerequisites
 
-## Step 1: Install dependencies 
+Before setting up the frontend, ensure you have the following installed on your machine:
 
-First, you will need to install the dependencies for the building the app.
+- **Node.js** (LTS version) – Required for running React Native.
+- **npm** or **yarn** – Used for managing dependencies.
+- **React Native CLI** – Command-line tools for React Native development.
+- **CocoaPods** (for macOS/iOS users) – Manages iOS dependencies.
+- **Xcode** (for iOS development) – Required for running iOS apps.
+- **Android Studio** (for Android development) – Required for running Android apps.
 
-Run the following command from the frontend folder:
+## First-Time Installation
+
+Follow these steps to set up the project for the first time:
+
+### 1. Clone the Repository
 
 ```sh
-# Using npm
-cd Implementation/frontend
+git clone https://github.com/russellhanj/W25_4495_S1_SimoneL.git
+cd W25_4495_S1_SimoneL/Implementation/frontend
+```
+
+### 2. Install Dependencies
+
+Install the required dependencies:
+
+```sh
 npm install
 ```
 
-## Step 2: Run the app
+### 3. Install iOS Dependencies (Mac Users Only)
 
-While still inside the frontend folder run the following command to start the simulator:
+If you are running the project on **iOS**, you need to install CocoaPods dependencies:
+
+```sh
+bundle install  # Only the first time
+bundle exec pod install
+```
+
+## Running the App
 
 ### Android
+
+To run the app on an Android emulator or connected device:
 
 ```sh
 npx react-native run-android
 ```
 
-### iOS
+### iOS (Mac Users Only)
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+To run the app on an iOS simulator or connected device:
 
 ```sh
 npx react-native run-ios
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+## Pulling and Updating After Changes
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+If you've already set up the project and need to update after pulling new changes:
 
-## Step 3: Modify your app
+### 1. Pull the Latest Changes
 
-Now that you have successfully run the app, let's make changes!
+Navigate to the frontend folder and pull the latest changes:
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+```sh
+cd W25_4495_S1_SimoneL/Implementation/frontend
+git pull origin main
+```
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+### 2. Install Updated Dependencies (If Required)
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+If new dependencies have been added to the project, reinstall them:
 
-## Congratulations! :tada:
+```sh
+npm install
+```
 
-You've successfully run and modified your React Native App. :partying_face:
+For iOS users, update CocoaPods dependencies as well:
 
-### Now what?
+```sh
+bundle exec pod install
+```
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+### 3. Run the App Again
 
-# Troubleshooting
+Restart the development server and launch the app:
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+```sh
+npx react-native start
+```
 
-# Learn More
+Then run the app on your desired platform:
 
-To learn more about React Native, take a look at the following resources:
+```sh
+npx react-native run-android   # For Android
+npx react-native run-ios       # For iOS (Mac only)
+```
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+## Troubleshooting
+
+If you encounter issues, check out the official [Troubleshooting Guide](https://reactnative.dev/docs/troubleshooting) or try the following steps:
+
+- **Clear cache and reinstall dependencies**:
+
+  ```sh
+  rm -rf node_modules && npm install
+  cd ios && rm -rf Pods && bundle exec pod install && cd ..
+  ````
+
+- **Restart Metro Bundler**:
+
+  ```sh
+  npx react-native start --reset-cache
+  ```
+
+- **Check for conflicting dependencies** using:
+
+  ```sh
+  npm outdated
+  ```
+
+If issues persist, consider checking the official React Native documentation or opening an issue in the project's repository.
