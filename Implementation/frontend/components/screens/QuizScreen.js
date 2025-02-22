@@ -85,31 +85,31 @@ function QuizScreen() {
   const getUserId = async () => {
     try {
       const userId = await AsyncStorage.getItem('user_id');
-        console.log("📥 Retrieved User ID from AsyncStorage:", userId); // ✅ Debugging log
-        if (!userId) {
-            console.error("❌ No user ID found in AsyncStorage!");
-        }
-        return userId;
+      console.log("📥 Retrieved User ID from AsyncStorage:", userId); // ✅ Debugging log
+      if (!userId) {
+        console.error("❌ No user ID found in AsyncStorage!");
+      }
+      return userId;
     } catch (error) {
-        console.error("Error retrieving user ID:", error);
-        return null;
+      console.error("Error retrieving user ID:", error);
+      return null;
     }
-};
+  };
 
-const sendResultToBackend = async (userId, travelStyle) => {
-  try {
+  const sendResultToBackend = async (userId, travelStyle) => {
+    try {
       console.log("📤 Sending Quiz Result:", { userId, travelStyle });
 
       const response = await axios.post(`${API_BASE_URL}/quiz_results`, {
-          user_id: userId,
-          travel_style: travelStyle,
+        user_id: userId,
+        travel_style: travelStyle,
       });
 
       console.log("✅ Quiz result saved:", response.data);
-  } catch (error) {
+    } catch (error) {
       console.error("❌ Error sending travel style to backend:", error.response?.data || error.message);
-  }
-};
+    }
+  };
 
   const handleNextQuestion = async () => {
     if (selectedAnswers[currentQuestionIndex] === null) return; // ✅ Prevent going forward without selection
@@ -127,16 +127,16 @@ const sendResultToBackend = async (userId, travelStyle) => {
           // Recalculate scores based only on retained answers
           const resetScores = { relaxation: 0, culture: 0, adventure: 0, none: 0 };
           updatedAnswers.forEach((answer) => {
-              if (answer === 0) resetScores.relaxation += 1;
-              else if (answer === 1) resetScores.culture += 1;
-              else if (answer === 2) resetScores.adventure += 1;
-              else if (answer === 3) resetScores.none += 1;
+            if (answer === 0) resetScores.relaxation += 1;
+            else if (answer === 1) resetScores.culture += 1;
+            else if (answer === 2) resetScores.adventure += 1;
+            else if (answer === 3) resetScores.none += 1;
           });
           return resetScores;
-      });
+        });
 
         return nextIndex;
-    });
+      });
     } else {
       await determineTravelStyle();
     }
@@ -164,7 +164,7 @@ const sendResultToBackend = async (userId, travelStyle) => {
         else if (previousAnswer === 1) updatedScores.culture -= 1;
         else if (previousAnswer === 2) updatedScores.adventure -= 1;
         else if (previousAnswer === 3) updatedScores.none -= 1;
-    }
+      }
 
       // Add new answer's point
       if (index === 0) updatedScores.relaxation += 1;
@@ -190,11 +190,11 @@ const sendResultToBackend = async (userId, travelStyle) => {
     const userId = await getUserId();
 
     if (userId) {
-        console.log("📤 Sending new quiz attempt...");
+      console.log("📤 Sending new quiz attempt...");
     } else {
-        console.error("❌ User ID not found, cannot send new quiz result.");
+      console.error("❌ User ID not found, cannot send new quiz result.");
     }
-};
+  };
 
 
   const determineTravelStyle = async () => {
@@ -204,30 +204,33 @@ const sendResultToBackend = async (userId, travelStyle) => {
 
     if (none > 3) {
       resultStyle = "You didn’t align with any specific travel style.";
+      emoji = '🔀';
     } else {
       const maxScore = Math.max(relaxation, culture, adventure);
       const dominantStyles = [];
 
-      if (relaxation === maxScore) {
-        dominantStyles.push("Relaxation");
-        emoji = "🏝";
-      }
-      if (culture === maxScore) {
-        dominantStyles.push("Cultural Explorer");
-        emoji = "🎭";
-      }
-      if (adventure === maxScore) {
-        dominantStyles.push("Adventure Seeker");
-        emoji = "🌄";
+      if (relaxation === maxScore) dominantStyles.push("Relaxation");
+      if (culture === maxScore) dominantStyles.push("Cultural");
+      if (adventure === maxScore) dominantStyles.push("Adventure");
+
+      // Determine emoji based on combinations
+      if (dominantStyles.length === 1) {
+        if (dominantStyles[0] === "Relaxation") emoji = "🏝";
+        if (dominantStyles[0] === "Cultural") emoji = "🎭";
+        if (dominantStyles[0] === "Adventure") emoji = "🌄";
+      } else if (dominantStyles.length === 2) {
+        if (dominantStyles.includes("Relaxation") && dominantStyles.includes("Cultural")) emoji = "🏯";
+        if (dominantStyles.includes("Relaxation") && dominantStyles.includes("Adventure")) emoji = "🏕️";
+        if (dominantStyles.includes("Cultural") && dominantStyles.includes("Adventure")) emoji = "🎢";
+      } else {
+        resultStyle = "You have a unique travel style!";
+        emoji = "🔀";  // Default for rare all-tied cases
       }
 
-      resultStyle = dominantStyles.length > 1
-      ? `${dominantStyles.join(" and ")}`
-      : `${dominantStyles[0]}`;
-  
+      resultStyle = dominantStyles.join(" and ");
     }
 
-    const userId = await getUserId(); 
+    const userId = await getUserId();
     if (userId) {
       await sendResultToBackend(userId, resultStyle);
       console.log("Retrieved User ID:", userId);
@@ -254,11 +257,21 @@ const sendResultToBackend = async (userId, travelStyle) => {
             {/* Result Card */}
             <View style={styles.resultContainer}>
               <Text style={styles.resultEmoji}>{travelStyle.emoji}</Text>
-              <Text style={styles.resultText}>
-                You are a {'\n'}
-                <Text style={styles.resultStyleName}>{travelStyle.resultStyle}</Text>{'\n'}
-                Traveler!
-              </Text>
+
+              {travelStyle.resultStyle === "You didn’t align with any specific travel style." ? (
+                // ✅ If no specific style, display only this text (NO extra "You are a / Traveler!")
+                <Text style={styles.resultText}>
+                  {travelStyle.resultStyle}
+                </Text>
+              ) : (
+                // ✅ If a specific style is found, follow the correct format
+                <Text style={styles.resultText}>
+                  {"You are a\n"}
+                  <Text style={styles.resultStyleName}>{travelStyle.resultStyle}</Text>
+                  {"\nTraveler!"}
+                </Text>
+              )}
+
               <TouchableOpacity style={styles.retakeQuizButton} onPress={handleRetakeQuiz}>
                 <Text style={styles.retakeQuizButtonText}>RETAKE QUIZ</Text>
               </TouchableOpacity>
@@ -324,12 +337,12 @@ const sendResultToBackend = async (userId, travelStyle) => {
             </View>
 
             {/* Next Button */}
-            <Pressable 
-              style={[styles.buttonNext, selectedAnswers[currentQuestionIndex] === null && styles.disabledButton]} 
+            <Pressable
+              style={[styles.buttonNext, selectedAnswers[currentQuestionIndex] === null && styles.disabledButton]}
               onPress={handleNextQuestion}
               disabled={selectedAnswers[currentQuestionIndex] === null}>
               <Text style={[styles.buttonNextText, selectedAnswers[currentQuestionIndex] === null && styles.disabledButtonText]}>
-              {currentQuestionIndex === questions.length - 1 ? "SUBMIT" : "NEXT"}
+                {currentQuestionIndex === questions.length - 1 ? "SUBMIT" : "NEXT"}
               </Text>
             </Pressable>
           </>

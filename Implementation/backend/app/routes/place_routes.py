@@ -26,7 +26,7 @@ TRAVEL_STYLE_MAPPING = {
         "rock_climbing_gym", "bungee_jumping", "kayaking", "rafting", "surfing",
         "skydiving", "mountain", "national_park", "cave", "diving_center"
     ],
-    "cultural explorer": [
+    "cultural": [
         "museum", "art_gallery", "historical_site", "landmark", "church",
         "mosque", "synagogue", "temple", "library", "theater", "concert_hall",
         "cultural_center", "opera_house", "monument", "castle", "heritage_building"
