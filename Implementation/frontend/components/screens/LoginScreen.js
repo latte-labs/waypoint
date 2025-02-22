@@ -48,6 +48,9 @@ const LoginScreen = ({ navigation }) => {
         // ✅ Store user details in AsyncStorage
         await AsyncStorage.setItem('user', JSON.stringify(user));
 
+        // ✅ Store user ID separately for easier access (Fixed: Convert to String)
+        await AsyncStorage.setItem('user_id', String(user.id));
+
         // ✅ Write login success to Firebase for tracking/debugging
         const userRef = database().ref(`/users/${user.id}`);
         userRef.update({ lastLogin: new Date().toISOString() });
@@ -62,6 +65,8 @@ const LoginScreen = ({ navigation }) => {
       setLoading(false);
     }
   };
+
+
 
   // ✅ Firebase Test Function (Kept from Original Code)
   const testFirebaseWrite = () => {
