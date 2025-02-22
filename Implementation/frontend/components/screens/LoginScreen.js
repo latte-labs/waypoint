@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
 import axios from 'axios';
 import API_BASE_URL from '../../config';
-import { database } from '../../firebase'; // ✅ Import Firebase Database
+import { database } from '../../firebase'; // ✅ Firebase remains
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LoginScreen = ({ navigation }) => {
@@ -11,7 +11,7 @@ const LoginScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Validation function
+  // ✅ Validation function
   const validateInputs = () => {
     let valid = true;
     let newErrors = {};
@@ -31,21 +31,30 @@ const LoginScreen = ({ navigation }) => {
     return valid;
   };
 
+  // ✅ Handle Login
   const handleLogin = async () => {
     if (!validateInputs()) return;
-
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/users/auth/login`, null, {
-        params: { email: email.toLowerCase(), password },
-      });
+      const response = await axios.post(`${API_BASE_URL}/users/auth/login`, 
+        { email: email.toLowerCase(), password }, 
+        { headers: { 'Content-Type': 'application/json' } }
+      );
 
       if (response.status === 200) {
-        const userId = response.data.user_id; // Extracting user id
-        await AsyncStorage.setItem('user_id', String(userId)); //Store user ID in AsyncStorage
+        const user = response.data.user; // ✅ Fetch full user data
+
+        // ✅ Store user details in AsyncStorage
+        await AsyncStorage.setItem('user', JSON.stringify(user));
+
+        // ✅ Write login success to Firebase for tracking/debugging
+        const userRef = database().ref(`/users/${user.id}`);
+        userRef.update({ lastLogin: new Date().toISOString() });
+
         Alert.alert('Success', 'Login successful!');
-        navigation.replace('Main');
+        
+        navigation.replace('Main'); 
       }
     } catch (error) {
       Alert.alert('Login Failed', error.response?.data?.detail || 'Invalid credentials');
@@ -54,7 +63,7 @@ const LoginScreen = ({ navigation }) => {
     }
   };
 
-  // ✅ Firebase Test Function
+  // ✅ Firebase Test Function (Kept from Original Code)
   const testFirebaseWrite = () => {
     const testRef = database().ref('/test-login');
     testRef
@@ -75,13 +84,19 @@ const LoginScreen = ({ navigation }) => {
       />
       {errors.email ? <Text style={styles.error}>{errors.email}</Text> : null}
 
-      <TextInput style={styles.input} placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry />
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
       {errors.password ? <Text style={styles.error}>{errors.password}</Text> : null}
 
       <Button title={loading ? 'Logging In...' : 'Login'} onPress={handleLogin} disabled={loading} />
       <Button title="Don't have an account? Sign Up" onPress={() => navigation.navigate('Signup')} />
-      
-      {/* ✅ Firebase Test Button */}
+
+      {/* ✅ Firebase Test Button (Kept from Original Code) */}
       <Button title="Test Firebase Write" onPress={testFirebaseWrite} color="green" />
     </View>
   );
