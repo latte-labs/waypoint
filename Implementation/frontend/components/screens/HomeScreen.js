@@ -9,19 +9,20 @@ import {
     Dimensions,
     TouchableOpacity,
 } from 'react-native';
-
+import { useNavigation } from '@react-navigation/native';
 import styles from '../../styles/HomeScreenStyle';
 
 const { width } = Dimensions.get('window');
 
 function HomeScreen() {
+    const navigation = useNavigation();
 
     const [searchQuery, setSearchQuery] = useState('');
     const [trips, setTrips] = useState([
         { id: '1', tripName: 'Hiking Trip in Vancouver', date: 'March 20, 2025' },
         { id: '2', tripName: 'Staycation on Bowen Island', date: 'April 16, 2025' },
         { id: '3', tripName: 'Cafe Hopping', date: 'April 25, 2025' },
-    ])
+    ]);
 
     const renderItem = ({ item }) => (
         <View style={[styles.card, { width: width * 0.8, marginHorizontal: 10 }]}>
@@ -32,7 +33,7 @@ function HomeScreen() {
 
     return (
         <ScrollView contentContainerStyle={styles.scrollContainer}>
-            <View style={styles.container} >
+            <View style={styles.container}>
                 <TextInput
                     style={styles.searchbar}
                     placeholder='Search...'
@@ -56,6 +57,14 @@ function HomeScreen() {
                         </View>
                     )}
                 </View>
+
+                {/* Button to Open Interactive Map */}
+                <TouchableOpacity
+                    style={styles.mapButton}
+                    onPress={() => navigation.navigate('InteractiveMap')}
+                >
+                    <Text style={styles.mapButtonText}>Open Interactive Map</Text>
+                </TouchableOpacity>
             </View>
         </ScrollView>
     );
