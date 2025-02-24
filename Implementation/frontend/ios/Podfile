@@ -5,9 +5,15 @@ require Pod::Executable.execute_command('node', ['-p',
     {paths: [process.argv[1]]},
   )', __dir__]).strip
 
-platform :ios, min_ios_version_supported
+platform :ios, '16.0'  # Ensure minimum iOS version for compatibility
 prepare_react_native_project!
 
+# ✅ Load environment variables from .env
+require 'dotenv'
+Dotenv.load(File.join(__dir__, '..', '.env'))
+
+
+# ✅ Firebase Dependencies
 pod 'Firebase', :modular_headers => true
 pod 'FirebaseCoreInternal', :modular_headers => true  
 pod 'GoogleUtilities', :modular_headers => true
@@ -16,7 +22,11 @@ pod 'FirebaseCore', :modular_headers => true
 pod 'leveldb-library', :modular_headers => true
 pod 'FirebaseDatabase', :modular_headers => true
 
+# ✅ Google Maps SDK (Latest Version)
+pod 'GoogleMaps', '~> 7.0.0'
+pod 'Google-Maps-iOS-Utils', :modular_headers => true  # Optional for clustering & utilities
 
+# ✅ Ensure Framework Linking is Handled Properly
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
   Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
@@ -28,17 +38,27 @@ target 'frontend' do
 
   use_react_native!(
     :path => config[:reactNativePath],
-    # An absolute path to your application root.
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
   post_install do |installer|
-    # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
     react_native_post_install(
       installer,
       config[:reactNativePath],
       :mac_catalyst_enabled => false,
-      # :ccache_enabled => true
     )
+
+    # ✅ Fix: Ensure frameworks build correctly for both iOS Devices & Simulators
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        # ✅ Fix for Apple Silicon & iOS Simulator (Excludes arm64)
+        config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
+        
+        # ✅ Inject Google Maps API Key into Build Settings
+        if ENV['GOOGLE_MAPS_API_KEY']
+          config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)', "GOOGLE_MAPS_API_KEY=#{ENV['GOOGLE_MAPS_API_KEY']}"]
+        end
+      end
+    end
   end
 end

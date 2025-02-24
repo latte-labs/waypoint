@@ -3,6 +3,7 @@ import React
 import React_RCTAppDelegate
 import ReactAppDependencyProvider
 import Firebase  // ✅ Import Firebase
+import GoogleMaps
 
 @main
 class AppDelegate: RCTAppDelegate {
@@ -17,6 +18,14 @@ class AppDelegate: RCTAppDelegate {
     if FirebaseApp.app() == nil {
       FirebaseApp.configure()
       print("✅ Firebase initialized successfully")
+    }
+
+    // ✅ Get API Key from JavaScript
+    if let googleMapsAPIKey = ProcessInfo.processInfo.environment["GOOGLE_MAPS_API_KEY"] {
+      GMSServices.provideAPIKey(googleMapsAPIKey)
+      print("✅ Google Maps API Key Loaded from Environment")
+    } else {
+      print("❌ Google Maps API Key Not Found!")
     }
 
     // You can add your custom initial props in the dictionary below.
