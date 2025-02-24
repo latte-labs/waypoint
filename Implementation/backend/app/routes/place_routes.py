@@ -18,24 +18,25 @@ GOOGLE_PLACES_API_KEY = settings.GOOGLE_PLACES_API_KEY  # ✅ Secure API Key Acc
 TRAVEL_STYLE_MAPPING = {
     "relaxation": [
         "spa", "park", "cafe", "beach", "botanical_garden", "library",
-        "hotel", "natural_feature", "lake", "scenic_lookout", "yoga_studio",
-        "tea_house", "winery", "garden", "wellness_center", "hot_spring"
+        "hotel", "natural_feature", "lake", "scenic_lookout", "tea_house",
+        "winery", "garden", "hot_spring"
     ],
     "adventure": [
-        "hiking", "amusement_park", "zoo", "aquarium", "ski_resort", "campground",
-        "rock_climbing_gym", "bungee_jumping", "kayaking", "rafting", "surfing",
-        "skydiving", "mountain", "national_park", "cave", "diving_center"
+        "amusement_park", "zoo", "aquarium", "campground", "casino",
+        "hiking", "rock_climbing_gym", "bungee_jumping", "kayaking",
+        "rafting", "surfing", "skydiving", "national_park", "mountain",
+        "diving_center", "stadium", "rv_park", "tourist_attraction"
     ],
     "cultural": [
         "museum", "art_gallery", "historical_site", "landmark", "church",
         "mosque", "synagogue", "temple", "library", "theater", "concert_hall",
-        "cultural_center", "opera_house", "monument", "castle", "heritage_building"
+        "cultural_center", "opera_house", "monument", "castle", "university"
     ],
     "foodie": [
-        "restaurant", "bakery", "bar", "coffee_shop", "ice_cream_shop",
+        "restaurant", "bakery", "bar", "cafe", "coffee_shop", "ice_cream_shop",
         "winery", "brewery", "farmers_market", "food_truck", "steakhouse",
         "sushi_restaurant", "vegetarian_restaurant", "seafood_restaurant",
-        "street_food", "gourmet_store"
+        "street_food", "gourmet_store", "shopping_mall"
     ]
 }
 

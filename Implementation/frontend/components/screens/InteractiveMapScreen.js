@@ -6,10 +6,15 @@ import axios from 'axios';
 import { GOOGLE_MAPS_API_KEY } from '@env';
 import API_BASE_URL from '../../config';
 
+const METRO_VANCOUVER_BOUNDARIES = {
+  northEast: { latitude: 49.50, longitude: -122.50 }, // Top-right (Maple Ridge area)
+  southWest: { latitude: 49.00, longitude: -123.30 }, // Bottom-left (Tsawwassen area)
+};
+
 const InteractiveMapScreen = () => {
   const navigation = useNavigation();
-  const mapRef = useRef(null); // Ref for controlling the map
-  const [travelStyle, setTravelStyle] = useState("relaxation"); // Default filter
+  const mapRef = useRef(null);
+  const [travelStyle, setTravelStyle] = useState("relaxation");
   const [places, setPlaces] = useState([]);
   const [loading, setLoading] = useState(false);
   const [region, setRegion] = useState({
@@ -21,9 +26,19 @@ const InteractiveMapScreen = () => {
 
   useEffect(() => {
     fetchPlaces();
-  }, [travelStyle]);
+  }, [travelStyle, region.latitude, region.longitude]); // ✅ Fetch data when location updates
 
   const fetchPlaces = async () => {
+    if (
+      region.latitude < METRO_VANCOUVER_BOUNDARIES.southWest.latitude ||
+      region.latitude > METRO_VANCOUVER_BOUNDARIES.northEast.latitude ||
+      region.longitude < METRO_VANCOUVER_BOUNDARIES.southWest.longitude ||
+      region.longitude > METRO_VANCOUVER_BOUNDARIES.northEast.longitude
+    ) {
+      console.log("Outside Metro Vancouver - No data fetched");
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await axios.get(`${API_BASE_URL}/places/search`, {
@@ -41,9 +56,19 @@ const InteractiveMapScreen = () => {
     setLoading(false);
   };
 
+  // ✅ Update region when user scrolls map
+  const handleRegionChange = (newRegion) => {
+    setRegion((prevRegion) => ({
+      latitude: newRegion.latitude,
+      longitude: newRegion.longitude,
+      latitudeDelta: prevRegion.latitudeDelta,  // Keep zoom level
+      longitudeDelta: prevRegion.longitudeDelta,
+    }));
+  };
+
   // ✅ Zoom In Function
   const zoomIn = () => {
-    setRegion(prevRegion => ({
+    setRegion((prevRegion) => ({
       ...prevRegion,
       latitudeDelta: prevRegion.latitudeDelta / 2,
       longitudeDelta: prevRegion.longitudeDelta / 2,
@@ -57,7 +82,7 @@ const InteractiveMapScreen = () => {
 
   // ✅ Zoom Out Function
   const zoomOut = () => {
-    setRegion(prevRegion => ({
+    setRegion((prevRegion) => ({
       ...prevRegion,
       latitudeDelta: prevRegion.latitudeDelta * 2,
       longitudeDelta: prevRegion.longitudeDelta * 2,
@@ -76,7 +101,7 @@ const InteractiveMapScreen = () => {
         ref={mapRef}
         style={styles.map}
         region={region}
-        onRegionChangeComplete={setRegion}
+        onRegionChangeComplete={handleRegionChange} // ✅ Now updates latitude/longitude
       >
         {places.map((place, index) => (
           <Marker
