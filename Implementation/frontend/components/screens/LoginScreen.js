@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
 import axios from 'axios';
 import API_BASE_URL from '../../config';
-import { database } from '../../firebase'; // ✅ Firebase remains
+import { database } from '../../firebase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LoginScreen = ({ navigation }) => {
@@ -11,7 +11,7 @@ const LoginScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // ✅ Validation function
+  // ✅ Input validation
   const validateInputs = () => {
     let valid = true;
     let newErrors = {};
@@ -31,6 +31,16 @@ const LoginScreen = ({ navigation }) => {
     return valid;
   };
 
+  // ✅ Function to log login event to Firebase
+  const logLoginToFirebase = async (userId) => {
+    try {
+      const userLoginRef = database().ref(`/logins/${userId}`);
+      await userLoginRef.push({ timestamp: new Date().toISOString() });
+    } catch (error) {
+      Alert.alert('Firebase Error', 'Failed to log login event.');
+    }
+  };
+
   // ✅ Handle Login
   const handleLogin = async () => {
     if (!validateInputs()) return;
@@ -43,20 +53,20 @@ const LoginScreen = ({ navigation }) => {
       );
 
       if (response.status === 200) {
-        const user = response.data.user; // ✅ Fetch full user data
+        const user = response.data.user; 
 
         // ✅ Store user details in AsyncStorage
         await AsyncStorage.setItem('user', JSON.stringify(user));
-
-        // ✅ Store user ID separately for easier access (Fixed: Convert to String)
         await AsyncStorage.setItem('user_id', String(user.id));
 
-        // ✅ Write login success to Firebase for tracking/debugging
+        // ✅ Log login event to Firebase
+        await logLoginToFirebase(user.id);
+
+        // ✅ Also update last login timestamp in Firebase
         const userRef = database().ref(`/users/${user.id}`);
-        userRef.update({ lastLogin: new Date().toISOString() });
+        await userRef.update({ lastLogin: new Date().toISOString() });
 
         Alert.alert('Success', 'Login successful!');
-        
         navigation.replace('Main'); 
       }
     } catch (error) {
@@ -64,17 +74,6 @@ const LoginScreen = ({ navigation }) => {
     } finally {
       setLoading(false);
     }
-  };
-
-
-
-  // ✅ Firebase Test Function (Kept from Original Code)
-  const testFirebaseWrite = () => {
-    const testRef = database().ref('/test-login');
-    testRef
-      .push({ message: 'Firebase is working from LoginScreen!', timestamp: new Date().toISOString() })
-      .then(() => Alert.alert('Success', 'Data written to Firebase!'))
-      .catch((error) => Alert.alert('Firebase Error', error.message));
   };
 
   return (
@@ -100,9 +99,6 @@ const LoginScreen = ({ navigation }) => {
 
       <Button title={loading ? 'Logging In...' : 'Login'} onPress={handleLogin} disabled={loading} />
       <Button title="Don't have an account? Sign Up" onPress={() => navigation.navigate('Signup')} />
-
-      {/* ✅ Firebase Test Button (Kept from Original Code) */}
-      <Button title="Test Firebase Write" onPress={testFirebaseWrite} color="green" />
     </View>
   );
 };
