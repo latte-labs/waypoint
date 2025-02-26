@@ -1,5 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Text, Pressable, View, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import {
+  Text,
+  Pressable,
+  View,
+  TouchableOpacity,
+
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Progress from 'react-native-progress';
 import { useNavigation } from '@react-navigation/native';
@@ -106,7 +112,7 @@ function QuizScreen() {
   };
 
   const handleNextQuestion = async () => {
-    if (selectedAnswers[currentQuestionIndex] === null) return; // ✅ Prevent going forward without selection
+    if (selectedAnswers[currentQuestionIndex] === null) return; // Prevent going forward without selection
 
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex((prevIndex) => {

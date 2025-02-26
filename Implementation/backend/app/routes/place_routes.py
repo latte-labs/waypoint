@@ -161,7 +161,7 @@ def get_recommendations(
     """
     Fetch recommended places for a user based on their travel style.
     """
-    print(f"📥 Received user_id={user_id} (Type: {type(user_id)})")  # ✅ Debugging log
+    print(f"📥 Received user_id={user_id} (Type: {type(user_id)})")  # Debugging log
     print(f"📥 Received location={location}, radius={radius}")
     print(f"🔑 Google Places API Key: {GOOGLE_PLACES_API_KEY}")
 

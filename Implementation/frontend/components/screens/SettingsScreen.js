@@ -18,7 +18,7 @@ const SettingsScreen = ({ navigation }) => {
   const travelStyles = [
     { label: 'Adventure', value: 'Adventure' },
     { label: 'Relaxation', value: 'Relaxation' },
-    { label: 'Culture', value: 'Culture' }
+    { label: 'Culture', value: 'Cultural' }
   ];
 
   const languages = [
