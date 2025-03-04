@@ -17,7 +17,7 @@ GOOGLE_PLACES_API_KEY = settings.GOOGLE_PLACES_API_KEY  # ✅ Secure API Key Acc
 # ✅ Travel Style Mapping
 TRAVEL_STYLE_MAPPING = {
     "relaxation": [
-        "spa", "park", "cafe", "beach", "botanical_garden", "library",
+         "spa", "park", "cafe", "beach", "botanical_garden", "library",
         "hotel", "natural_feature", "lake", "scenic_lookout", "tea_house",
         "winery", "garden", "hot_spring"
     ],
