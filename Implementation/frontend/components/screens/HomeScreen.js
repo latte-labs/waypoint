@@ -72,6 +72,13 @@ function HomeScreen() {
                 >
                     <Text style={styles.mapButtonText}>Open Interactive Recommendations</Text>
                 </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.mapButton}
+                    onPress={() => navigation.navigate('ChatBot')}
+                >
+                    <Text style={styles.mapButtonText}>Open Chatbot</Text>
+                </TouchableOpacity>
+
             </View>
         </ScrollView>
     );

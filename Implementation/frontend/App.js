@@ -8,6 +8,7 @@ import SignupScreen from './components/screens/SignupScreen';
 import InteractiveMapScreen from './components/screens/InteractiveMapScreen';
 import firebase from '@react-native-firebase/app';
 import InteractiveRecommendations from './components/screens/InteractiveRecommendations';
+import ChatbotScreen from './components/screens/ChatbotScreen';
 
 const Stack = createStackNavigator();
 
@@ -31,6 +32,7 @@ function App() {
           <Stack.Screen name="Main" component={BottomNavigation} />
           <Stack.Screen name="InteractiveMap" component={InteractiveMapScreen} />
           <Stack.Screen name='InteractiveRecommendations' component={InteractiveRecommendations} />
+          <Stack.Screen name='ChatBot' component={ChatbotScreen} />
         </Stack.Navigator>
       </SafeAreaView>
     </NavigationContainer>

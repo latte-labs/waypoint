@@ -18,7 +18,10 @@ async def chatbot_interaction(request: ChatbotRequest):
     try:
         completion = client.chat.completions.create(
             model="gpt-4o-mini",
-            messages=[{"role": "user", "content": request.user_message}]
+            messages=[
+                {"role": "user", 
+                 "content": request.user_message}
+                 ]
         )
 
         return {"response": completion.choices[0].message.content}
