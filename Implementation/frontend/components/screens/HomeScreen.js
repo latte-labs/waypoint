@@ -12,6 +12,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { database } from '../../firebase';
 import styles from '../../styles/HomeScreenStyle';
+import SafeAreaWrapper from './SafeAreaWrapper';
 
 const { width } = Dimensions.get('window');
 
@@ -98,7 +99,8 @@ function HomeScreen() {
     );
 
     return (
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <SafeAreaWrapper>
+            <ScrollView contentContainerStyle={styles.scrollContainer}>
             <View style={styles.container}>
                 
                 {/* ✅ "Take Quiz" Card (Only Shows If travel_style_id === 4) */}
@@ -161,6 +163,7 @@ function HomeScreen() {
 
             </View>
         </ScrollView>
+        </SafeAreaWrapper>
     );
 }
 

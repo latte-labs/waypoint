@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Button, Image, StyleSheet, SafeAreaView, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { useFocusEffect } from '@react-navigation/native'; // ✅ Ensures profile refreshes on navigation
+import { useFocusEffect } from '@react-navigation/native';
 import API_BASE_URL from '../../config';
 
 const ProfileScreen = ({ navigation }) => {
@@ -10,7 +10,7 @@ const ProfileScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [travelStyle, setTravelStyle] = useState(null);
 
-  // ✅ Refresh profile when the screen is focused
+  // ✅ Load user data from AsyncStorage on Focus
   useFocusEffect(
     React.useCallback(() => {
       const loadUser = async () => {
@@ -21,11 +21,12 @@ const ProfileScreen = ({ navigation }) => {
             setUser(userData);
             
             console.log("📥 Retrieved Travel Style ID:", userData.travel_style_id);
-            
+
             if (userData.travel_style_id && userData.travel_style_id !== 4) {
-              fetchTravelStyle(userData.travel_style_id);
+              console.log("🔄 Travel Style Fetch Scheduled...");
             } else {
-              setTravelStyle(null); // ✅ Ensures UI updates immediately if travel style is set to Undefined
+              console.log("🚫 Travel Style is Undefined (4) or not set.");
+              setTravelStyle(null);
             }
           }
         } catch (error) {
@@ -38,30 +39,36 @@ const ProfileScreen = ({ navigation }) => {
     }, [])
   );
 
+  // ✅ Fetch Travel Style when user.id is available
+  useEffect(() => {
+    if (user?.id && user.travel_style_id && user.travel_style_id !== 4) {
+      fetchTravelStyle(user.travel_style_id);
+    }
+  }, [user]); // ✅ Ensures this runs ONLY when user is updated
+
   // ✅ Fetch Travel Style Details from Backend
   const fetchTravelStyle = async (travelStyleId) => {
     if (!user || !user.id) {
-        console.warn("⚠️ User ID is not available yet. Delaying fetch.");
-        return;
+      console.warn("⚠️ User ID is still not available. Retrying...");
+      return;
     }
 
     try {
-        console.log(`🔄 Fetching travel style for user ID: ${user.id}, travelStyleId: ${travelStyleId}`);
-        const response = await axios.get(`${API_BASE_URL}/users/${user.id}/travel_style`);
+      console.log(`🔄 Fetching travel style for user ID: ${user.id}, travelStyleId: ${travelStyleId}`);
+      const response = await axios.get(`${API_BASE_URL}/users/${user.id}/travel_style`);
 
-        if (response.status === 200 && response.data) {
-            console.log("✅ Travel Style Retrieved:", response.data);
-            setTravelStyle(response.data);  // ✅ Now setting correctly
-        } else {
-            console.warn("⚠️ Travel Style API response missing data.");
-            setTravelStyle(null); // ✅ Ensures UI handles missing data properly
-        }
-    } catch (error) {
-        console.error("❌ Error fetching travel style:", error.response?.data || error.message);
+      if (response.status === 200 && response.data) {
+        console.log("✅ Travel Style Retrieved:", response.data);
+        setTravelStyle(response.data);
+      } else {
+        console.warn("⚠️ Travel Style API response missing data.");
         setTravelStyle(null);
+      }
+    } catch (error) {
+      console.error("❌ Error fetching travel style:", error.response?.data || error.message);
+      setTravelStyle(null);
     }
   };
-
 
   // ✅ Handle Logout
   const handleLogout = async () => {
@@ -83,7 +90,7 @@ const ProfileScreen = ({ navigation }) => {
       <View style={styles.container}>
         {/* Profile Picture */}
         <Image
-          source={{ uri: user?.profile_image || 'https://via.placeholder.com/150' }} // ✅ Show actual profile pic or placeholder
+          source={{ uri: user?.profile_image || 'https://via.placeholder.com/150' }}
           style={styles.profileImage}
         />
 
@@ -94,13 +101,14 @@ const ProfileScreen = ({ navigation }) => {
         {/* Travel Style Info */}
         {travelStyle ? (
           <View style={styles.travelStyleContainer}>
-            <Text style={styles.travelStyleTitle}>Travel Style:</Text>
             <Text style={styles.travelStyleName}>{travelStyle.name}</Text>
-            <Text style={styles.travelStyleDescription}>{travelStyle.description}</Text>
+            {user?.travel_style_id !== 4 && (
+              <Text style={styles.travelStyleDescription}>{travelStyle.description}</Text>
+            )}
           </View>
         ) : (
           <Text style={styles.noTravelStyle}>
-            {user?.travel_style_id === 4 ? "You haven't taken the quiz yet." : "Travel style not set."}
+            {user?.travel_style_id === 4 ? "You haven't taken the quiz yet." : "Fetching travel style..."}
           </Text>
         )}
 
@@ -119,7 +127,6 @@ const styles = StyleSheet.create({
   name: { fontSize: 22, fontWeight: 'bold' },
   email: { fontSize: 16, color: 'gray', marginBottom: 10 },
   travelStyleContainer: { alignItems: 'center', marginVertical: 10 },
-  travelStyleTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
   travelStyleName: { fontSize: 16, fontWeight: '600', color: '#FF6F00' },
   travelStyleDescription: { fontSize: 14, color: '#555', textAlign: 'center', paddingHorizontal: 20 },
   noTravelStyle: { fontSize: 14, fontStyle: 'italic', color: '#888', marginBottom: 10 },

@@ -13,8 +13,7 @@ const Tab = createBottomTabNavigator();
 
 function BottomNavigation() {
   return (
-    <SafeAreaWrapper>
-      <Tab.Navigator
+    <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ color, size }) => {
           let icon;
@@ -41,7 +40,6 @@ function BottomNavigation() {
         <Tab.Screen name="Setting" component={SettingsScreen} />
         <Tab.Screen name="Recommendations" component={RecommendationsScreen} />
       </Tab.Navigator>
-    </SafeAreaWrapper>
   );
 }
 
