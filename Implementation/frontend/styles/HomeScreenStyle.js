@@ -3,7 +3,12 @@ import { StyleSheet, Dimensions } from 'react-native';
 const { width } = Dimensions.get('window');
 
 const HomeScreenStyles = StyleSheet.create({
-
+    // ✅ Ensures Safe Margins for Apple Devices
+    safeContainer: {
+        flex: 1,
+        backgroundColor: 'white',
+        paddingBottom: 20,  // ✅ Prevents UI elements from overlapping with iPhone home bar
+    },
     container: {
         flex: 1,
         justifyContent: 'flex-start',
@@ -52,7 +57,33 @@ const HomeScreenStyles = StyleSheet.create({
     date: {
         fontSize: 12,
         marginTop: 5,
-    }
-})
+    },
+
+    // ✅ New Styles for "Take Quiz" Card
+    quizCard: {
+        width: '100%',
+        backgroundColor: '#FFDD57',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 10,
+        borderRadius: 10,
+        marginBottom: 10,
+    },
+    quizText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 5,
+    },
+    quizButton: {
+        backgroundColor: '#FFAA00',
+        paddingVertical: 8,
+        paddingHorizontal: 15,
+        borderRadius: 5,
+    },
+    quizButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
+    },
+});
 
 export default HomeScreenStyles;

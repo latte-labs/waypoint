@@ -1,6 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';  // ✅ Ensures Safe Margins
 import styles from '../../styles/BottomNavigatorStyle';
 import HomeScreen from '../screens/HomeScreen';
 import QuizScreen from '../screens/QuizScreen';
@@ -12,7 +13,8 @@ const Tab = createBottomTabNavigator();
 
 function BottomNavigation() {
   return (
-    <Tab.Navigator
+    <SafeAreaView style={styles.safeContainer}>  
+      <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ color, size }) => {
           let icon;
@@ -33,13 +35,15 @@ function BottomNavigation() {
         tabBarLabelStyle: styles.tabBarLabel,
         headerShown: false,
       })}
-    >
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Quiz" component={QuizScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
-      <Tab.Screen name="Setting" component={SettingsScreen} />
-      <Tab.Screen name="Recommendations" component={RecommendationsScreen} />
-    </Tab.Navigator>
+      >
+        <Tab.Screen name="Home" component={HomeScreen} />
+        <Tab.Screen name="Quiz" component={QuizScreen} />
+        <Tab.Screen name="Profile" component={ProfileScreen} />
+        <Tab.Screen name="Setting" component={SettingsScreen} />
+        <Tab.Screen name="Recommendations" component={RecommendationsScreen} />
+      </Tab.Navigator>
+    </SafeAreaView>
+    
   );
 }
 

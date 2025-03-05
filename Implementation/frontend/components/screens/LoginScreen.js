@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
 import axios from 'axios';
 import API_BASE_URL from '../../config';
-import { database } from '../../firebase';
+import { database } from '../../firebase'; 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LoginScreen = ({ navigation }) => {
@@ -36,45 +36,69 @@ const LoginScreen = ({ navigation }) => {
     try {
       const userLoginRef = database().ref(`/logins/${userId}`);
       await userLoginRef.push({ timestamp: new Date().toISOString() });
+
+      // ✅ Also update last login timestamp in Firebase
+      const userRef = database().ref(`/users/${userId}`);
+      await userRef.update({ lastLogin: new Date().toISOString() });
     } catch (error) {
+      console.error('Firebase Error:', error);
       Alert.alert('Firebase Error', 'Failed to log login event.');
     }
   };
 
-  // ✅ Handle Login
-  const handleLogin = async () => {
-    if (!validateInputs()) return;
-    setLoading(true);
+  // ✅ Function to store user session in AsyncStorage (now includes travel_style_id)
+const storeUserSession = async (user) => {
+  try {
+    const userData = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      travel_style_id: user.travel_style_id,  // ✅ Now storing travel_style_id
+    };
 
-    try {
-      const response = await axios.post(`${API_BASE_URL}/users/auth/login`, 
-        { email: email.toLowerCase(), password }, 
-        { headers: { 'Content-Type': 'application/json' } }
-      );
+    await AsyncStorage.setItem('user', JSON.stringify(userData));
+    await AsyncStorage.setItem('user_id', String(user.id));
+  } catch (error) {
+    console.error('AsyncStorage Error:', error);
+  }
+};
 
-      if (response.status === 200) {
-        const user = response.data.user; 
+// ✅ Handle Login (modified to ensure `travel_style_id` is included)
+const handleLogin = async () => {
+  if (!validateInputs()) return;
+  setLoading(true);
 
-        // ✅ Store user details in AsyncStorage
-        await AsyncStorage.setItem('user', JSON.stringify(user));
-        await AsyncStorage.setItem('user_id', String(user.id));
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/users/auth/login`,
+      { email: email.toLowerCase(), password },
+      { headers: { 'Content-Type': 'application/json' } }
+    );
 
-        // ✅ Log login event to Firebase
-        await logLoginToFirebase(user.id);
+    if (response.status === 200) {
+      const user = response.data.user;
 
-        // ✅ Also update last login timestamp in Firebase
-        const userRef = database().ref(`/users/${user.id}`);
-        await userRef.update({ lastLogin: new Date().toISOString() });
-
-        Alert.alert('Success', 'Login successful!');
-        navigation.replace('Main'); 
+      if (!user.travel_style_id) {
+        console.warn('⚠ travel_style_id is missing from backend response');
+        user.travel_style_id = 4;  // ✅ Default to Undefined if not present
       }
-    } catch (error) {
-      Alert.alert('Login Failed', error.response?.data?.detail || 'Invalid credentials');
-    } finally {
-      setLoading(false);
+
+      // ✅ Store user details in AsyncStorage (including travel_style_id)
+      await storeUserSession(user);
+
+      // ✅ Log login event to Firebase
+      await logLoginToFirebase(user.id);
+
+      Alert.alert('Success', 'Login successful!');
+      navigation.replace('Main');  // ✅ Redirect to Main screen
     }
-  };
+  } catch (error) {
+    Alert.alert('Login Failed', error.response?.data?.detail || 'Invalid credentials');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <View style={styles.container}>

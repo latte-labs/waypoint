@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
 import axios from 'axios';
 import API_BASE_URL from '../../config';
+import { database } from '../../firebase';  // ✅ Import Firebase Realtime Database
 
 const SignupScreen = ({ navigation }) => {
   const [name, setName] = useState('');
@@ -11,7 +12,7 @@ const SignupScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Validation function
+  // ✅ Validate Input Fields
   const validateInputs = () => {
     let valid = true;
     let newErrors = {};
@@ -36,19 +37,45 @@ const SignupScreen = ({ navigation }) => {
     return valid;
   };
 
+  // ✅ Function to Log Signup Event in Firebase
+  const logSignupToFirebase = async (userId) => {
+    try {
+      const userSignupRef = database().ref(`/signups/${userId}`);
+      await userSignupRef.push({ timestamp: new Date().toISOString() });
+    } catch (error) {
+      Alert.alert('Firebase Error', 'Failed to log signup event.');
+    }
+  };
+
+  // ✅ Handle Signup
   const handleSignup = async () => {
     if (!validateInputs()) return;
-  
+
     setLoading(true);
-  
+
     try {
       const response = await axios.post(`${API_BASE_URL}/users/`, {
         name,
         email: email.toLowerCase(),
         password,
+        travel_style_id: 4, // ✅ Default travel style to "Undefined"
       });
-  
+
       if (response.status === 200) {
+        const user = response.data;
+
+        // ✅ Log signup event to Firebase
+        await logSignupToFirebase(user.id);
+
+        // ✅ Also update Firebase `/users/{userId}` with user details
+        const userRef = database().ref(`/users/${user.id}`);
+        await userRef.set({
+          name: user.name,
+          email: user.email,
+          createdAt: new Date().toISOString(),
+          travel_style_id: user.travel_style_id,  // ✅ Save travel style in Firebase
+        });
+
         Alert.alert('Success', 'Account created successfully!');
         navigation.replace('Login');
       }
