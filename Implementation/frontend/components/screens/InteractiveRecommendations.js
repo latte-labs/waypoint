@@ -151,23 +151,36 @@ const InteractiveRecommendations = () => {
 
             {/* Recommended Places List */}
             {!isFullscreen && (
-                <View style={styles.listContainer}>
-                    <FlatList
-                        data={selectedCategory ? mapPlaces.filter(place => place.category === selectedCategory) : mapPlaces}
-                        keyExtractor={(item) => item.place_id || `${item.name}-${item.latitude}-${item.longitude}`}
-                        renderItem={({ item }) => (
-                            <View style={styles.card}>
-                                <Image source={{ uri: item.icon || 'https://via.placeholder.com/400' }} style={styles.image} />
-                                <View style={styles.cardContent}>
-                                    <Text style={styles.cardTitle}>{item.name}</Text>
-                                    <Text>{item.category}</Text>
-                                    <Text>⭐ {item.rating || "N/A"}</Text>
-                                </View>
-                            </View>
-                        )}
-                    />
-                </View>
-            )}
+    <View style={styles.listContainer}>
+        <FlatList
+            data={selectedCategory ? mapPlaces.filter(place => place.category === selectedCategory) : mapPlaces}
+            keyExtractor={(item) => item.place_id || `${item.name}-${item.latitude}-${item.longitude}`}
+            renderItem={({ item }) => {
+                let imageUrl;
+
+                if (item.cached_data?.photos?.[0]?.photo_reference) {
+                    imageUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${item.cached_data.photos[0].photo_reference}&key=${GOOGLE_PLACES_API_KEY}`;
+                } else if (item.cached_data?.icon) {
+                    imageUrl = item.cached_data.icon;  // Fallback to Google Maps icon
+                } else {
+                    imageUrl = 'https://via.placeholder.com/400';  // Fallback if no photo exists
+                }
+
+                return (
+                    <View style={styles.card}>
+                        <Image source={{ uri: imageUrl }} style={styles.image} />
+                        <View style={styles.cardContent}>
+                            <Text style={styles.cardTitle}>{item.name}</Text>
+                            <Text>{item.category}</Text>
+                            <Text>⭐ {item.rating || "N/A"}</Text>
+                        </View>
+                    </View>
+                );
+            }}
+        />
+    </View>
+)}
+
         </View>
         </SafeAreaWrapper>
     );
