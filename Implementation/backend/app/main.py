@@ -13,6 +13,7 @@ from app.routes import (
     user_favorite_routes,  # ✅ Added User Favorites
     shared_itinerary_routes,  # ✅ Added Shared Itineraries
     chatbot_routes,
+    travel_style_routes
 )
 
 app = FastAPI()
@@ -25,6 +26,7 @@ app.include_router(badge_routes.badge_router, prefix="/badges", tags=["Badges"])
 app.include_router(quiz_routes.quiz_router, prefix="/quiz_results", tags=["Quiz Results"])
 app.include_router(user_favorite_routes.user_favorite_router, prefix="/user_favorites", tags=["User Favorites"])
 app.include_router(chatbot_routes.chatbot_router, prefix="/chatbot", tags=["Chatbot"])
+app.include_router(travel_style_routes.travel_style_router, prefix="/travel-style", tags=["Travel Style"])
 
 # Dependency to get a database session
 def get_db():
