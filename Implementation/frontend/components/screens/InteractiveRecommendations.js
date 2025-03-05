@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GOOGLE_PLACES_API_KEY } from '@env';
 import { useNavigation } from '@react-navigation/native';
 import styles from '../../styles/InteractiveRecommendationsStyle';
+import SafeAreaWrapper from './SafeAreaWrapper';
 
 const { width, height } = Dimensions.get('window');
 
@@ -70,7 +71,8 @@ const InteractiveRecommendations = () => {
     ];
 
     return (
-        <View style={styles.container}>
+        <SafeAreaWrapper>
+            <View style={styles.container}>
             {/* Travel Style Warning Message */}
             {!travelStyle && (
                 <View style={styles.warningBox}>
@@ -167,6 +169,7 @@ const InteractiveRecommendations = () => {
                 </View>
             )}
         </View>
+        </SafeAreaWrapper>
     );
 };
 

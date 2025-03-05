@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView
 import axios from "axios";
 import styles from "../../styles/ChatbotScreenStyles";
 import API_BASE_URL from "../../config";  // backend API
+import SafeAreaWrapper from "./SafeAreaWrapper";
 
 const ChatbotScreen = () => {
   const [messages, setMessages] = useState([]);
@@ -28,7 +29,8 @@ const ChatbotScreen = () => {
 
   return (
     //prevents keyboard from covering the input field on ios
-    <KeyboardAvoidingView behavior="padding" style={styles.container}>
+    <SafeAreaWrapper>
+      <KeyboardAvoidingView behavior="padding" style={styles.container}>
       {/* Chat Display */}
       <FlatList
         data={messages} //messages array to display a chat history
@@ -55,6 +57,7 @@ const ChatbotScreen = () => {
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
+    </SafeAreaWrapper>
   );
 };
 

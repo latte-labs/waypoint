@@ -9,6 +9,8 @@ import InteractiveRecommendations from './components/screens/InteractiveRecommen
 import ChatbotScreen from './components/screens/ChatbotScreen';
 import QuizScreen from './components/screens/QuizScreen';
 import firebase from '@react-native-firebase/app';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
 
 const Stack = createStackNavigator();
 
@@ -24,7 +26,8 @@ function App() {
   }, []);
 
   return (
-    <NavigationContainer>
+    <SafeAreaProvider>
+      <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Signup" component={SignupScreen} />
@@ -35,6 +38,7 @@ function App() {
         <Stack.Screen name="QuizScreen" component={QuizScreen} />
       </Stack.Navigator>
     </NavigationContainer>
+    </SafeAreaProvider>
   );
 }
 
