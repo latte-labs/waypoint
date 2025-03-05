@@ -25,7 +25,7 @@ const InteractiveRecommendationsStyle = StyleSheet.create({
   filterText: { fontSize: 14, color: '#333' },
 
   /* Recommendations List Styles */
-  listContainer: { width: '100%', flex: 1, paddingHorizontal: 10},
+  listContainer: { width: '100%', paddingHorizontal: 10, height: height*0.36},
   card: { flexDirection: 'row', backgroundColor: '#f9f9f9', padding: 12, marginVertical: 6, borderRadius: 8, alignItems: 'center' },
   image: { width: 80, height: 80, borderRadius: 8, marginRight: 12 },
   cardContent: { flex: 1 },
