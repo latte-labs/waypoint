@@ -268,9 +268,13 @@ function QuizScreen() {
         {quizCompleted ? (
           <>
             {/* X Button */}
-            <TouchableOpacity style={styles.closeButton} onPress={() => navigation.navigate('Home')}>
-              <Text style={styles.closeButtonText}>✖</Text>
+            <TouchableOpacity 
+            style={styles.closeButton} 
+            onPress={() => navigation.navigate('Main', { screen: 'Home' })}  // ✅ Navigates to Home inside BottomNavigation
+             >
+            <Text style={styles.closeButtonText}>✖</Text>
             </TouchableOpacity>
+
 
             {/* Result Card */}
             <View style={styles.resultContainer}>
