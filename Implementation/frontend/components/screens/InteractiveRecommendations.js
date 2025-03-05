@@ -118,8 +118,15 @@ const InteractiveRecommendations = () => {
                 </MapView>
             </View>
 
-            {/* Zoom & Fullscreen Buttons Positioned at Bottom Right of Map */}
-            <View style={[styles.zoomControlsContainer, { top: height * 0.2 - 60 }]}>
+            {/* Zoom & Fullscreen Buttons */}
+            <View
+                style={[
+                    styles.zoomControlsContainer,
+                    isFullscreen
+                        ? { bottom: 20, right: 20, top: 'auto' }  // Fullscreen mode (bottom-right)
+                        : { top: height * 0.2 - 60 },             // Non-fullscreen mode (current position)
+                ]}
+            >
                 <TouchableOpacity style={styles.fullscreenButton} onPress={() => setIsFullscreen(!isFullscreen)}>
                     <Text style={styles.zoomText}>{isFullscreen ? "x" : "x"}</Text>
                 </TouchableOpacity>
@@ -130,6 +137,7 @@ const InteractiveRecommendations = () => {
                     <Text style={styles.zoomText}>-</Text>
                 </TouchableOpacity>
             </View>
+
 
             {/* Scrollable Category Filter */}
             {!isFullscreen && (
