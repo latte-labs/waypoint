@@ -9,7 +9,7 @@ import {
     Dimensions
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { database } from '../../firebase';
 import styles from '../../styles/HomeScreenStyle';
@@ -27,34 +27,44 @@ function HomeScreen() {
     const [showQuizPrompt, setShowQuizPrompt] = useState(false);
     const [userId, setUserId] = useState(null);
 
-    // ✅ Load `travel_style_id` from AsyncStorage & Sync with Firebase
-    useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                const userData = await AsyncStorage.getItem('user');
-                if (userData) {
-                    const user = JSON.parse(userData);
-                    setUserId(user.id);
+    // ✅ Load `travel_style_id` from AsyncStorage & Sync with Firebase on Screen Focus
+    useFocusEffect(
+        React.useCallback(() => {
+            const fetchUserData = async () => {
+                try {
+                    const userData = await AsyncStorage.getItem('user');
+                    if (userData) {
+                        const user = JSON.parse(userData);
+                        setUserId(user.id);
 
-                    // ✅ Fetch `travel_style_id` from Firebase
-                    const userRef = database().ref(`/users/${user.id}`);
-                    userRef.once('value', snapshot => {
-                        const travelStyleId = snapshot.val()?.travel_style_id || 4;
-                        if (travelStyleId === 4) {
-                            setShowQuizPrompt(true);
-                        }
-                    });
+                        console.log("📥 Retrieved Travel Style ID from AsyncStorage:", user.travel_style_id);
 
-                    // ✅ Log screen view in Firebase
-                    logScreenView(user.id);
+                        // ✅ Fetch latest `travel_style_id` from Firebase
+                        const userRef = database().ref(`/users/${user.id}`);
+                        userRef.once('value', snapshot => {
+                            const firebaseTravelStyleId = snapshot.val()?.travel_style_id ?? user.travel_style_id;
+                            console.log("🔥 Firebase Travel Style ID:", firebaseTravelStyleId);
+
+                            if (firebaseTravelStyleId === 4) {
+                                console.log("✅ Showing Take Quiz Card");
+                                setShowQuizPrompt(true);
+                            } else {
+                                console.log("🚫 Hiding Take Quiz Card");
+                                setShowQuizPrompt(false);
+                            }
+                        });
+
+                        // ✅ Log screen view in Firebase
+                        logScreenView(user.id);
+                    }
+                } catch (error) {
+                    console.error('Error retrieving user data:', error);
                 }
-            } catch (error) {
-                console.error('Error retrieving user data:', error);
-            }
-        };
+            };
 
-        fetchUserData();
-    }, []);
+            fetchUserData();
+        }, [])
+    );
 
     // ✅ Log screen view in Firebase
     const logScreenView = async (userId) => {
@@ -74,7 +84,7 @@ function HomeScreen() {
             const quizAttemptRef = database().ref(`/quiz_attempts/${userId}`);
             await quizAttemptRef.push({ timestamp: new Date().toISOString() });
 
-            // ✅ Navigate to QuizScreen (Now works due to `App.js` update)
+            // ✅ Navigate to QuizScreen
             navigation.navigate('QuizScreen');
         } catch (error) {
             console.error('Firebase Error:', error);
@@ -90,69 +100,68 @@ function HomeScreen() {
 
     return (
         <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.container}>
-            
-            {/* ✅ "Take Quiz" Card (Only Shows If travel_style_id === 4) */}
-            {showQuizPrompt && (
-                <View style={styles.quizCard}>
-                    <Text style={styles.quizText}>Discover your travel style!</Text>
-                    <TouchableOpacity
-                        style={styles.quizButton}
-                        onPress={handleQuizStart} // ✅ Logs in Firebase before navigation
-                    >
-                        <Text style={styles.quizButtonText}>Take Quiz</Text>
-                    </TouchableOpacity>
-                </View>
-            )}
-
-            <TextInput
-                style={styles.searchbar}
-                placeholder='Search...'
-                value={searchQuery}
-                onChangeText={(text) => setSearchQuery(text)}
-            />
-
-            <View style={styles.myTrips}>
-                <Text style={styles.myTripsTitle}>My Trips</Text>
-                {trips.length > 0 ? (
-                    <FlatList
-                        data={trips}
-                        renderItem={renderItem}
-                        keyExtractor={(item) => item.id}
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{ paddingLeft: 0, paddingRight: 0 }}
-                    />
-                ) : (
-                    <View style={[styles.card, { width: width * 0.8, marginHorizontal: 10 }]}>
-                        <Text style={styles.tripName}>No upcoming trips</Text>
+            <View style={styles.container}>
+                
+                {/* ✅ "Take Quiz" Card (Only Shows If travel_style_id === 4) */}
+                {showQuizPrompt && (
+                    <View style={styles.quizCard}>
+                        <Text style={styles.quizText}>Discover your travel style!</Text>
+                        <TouchableOpacity
+                            style={styles.quizButton}
+                            onPress={handleQuizStart} // ✅ Logs in Firebase before navigation
+                        >
+                            <Text style={styles.quizButtonText}>Take Quiz</Text>
+                        </TouchableOpacity>
                     </View>
                 )}
+
+                <TextInput
+                    style={styles.searchbar}
+                    placeholder='Search...'
+                    value={searchQuery}
+                    onChangeText={(text) => setSearchQuery(text)}
+                />
+
+                <View style={styles.myTrips}>
+                    <Text style={styles.myTripsTitle}>My Trips</Text>
+                    {trips.length > 0 ? (
+                        <FlatList
+                            data={trips}
+                            renderItem={renderItem}
+                            keyExtractor={(item) => item.id}
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={{ paddingLeft: 0, paddingRight: 0 }}
+                        />
+                    ) : (
+                        <View style={[styles.card, { width: width * 0.8, marginHorizontal: 10 }]}>
+                            <Text style={styles.tripName}>No upcoming trips</Text>
+                        </View>
+                    )}
+                </View>
+
+                {/* Buttons */}
+                <TouchableOpacity
+                    style={styles.mapButton}
+                    onPress={() => navigation.navigate('InteractiveMap')}
+                >
+                    <Text style={styles.mapButtonText}>Open Interactive Map</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.mapButton}
+                    onPress={() => navigation.navigate('InteractiveRecommendations')}
+                >
+                    <Text style={styles.mapButtonText}>Open Interactive Recommendations</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.mapButton}
+                    onPress={() => navigation.navigate('ChatBot')}
+                >
+                    <Text style={styles.mapButtonText}>Open Chatbot</Text>
+                </TouchableOpacity>
+
             </View>
-
-            {/* Buttons */}
-            <TouchableOpacity
-                style={styles.mapButton}
-                onPress={() => navigation.navigate('InteractiveMap')}
-            >
-                <Text style={styles.mapButtonText}>Open Interactive Map</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                style={styles.mapButton}
-                onPress={() => navigation.navigate('InteractiveRecommendations')}
-            >
-                <Text style={styles.mapButtonText}>Open Interactive Recommendations</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                style={styles.mapButton}
-                onPress={() => navigation.navigate('ChatBot')}
-            >
-                <Text style={styles.mapButtonText}>Open Chatbot</Text>
-            </TouchableOpacity>
-
-        </View>
         </ScrollView>
-        
     );
 }
 

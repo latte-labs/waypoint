@@ -1,14 +1,18 @@
 // components/screens/SettingsScreen.js
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, Switch, StyleSheet, SafeAreaView, Platform, StatusBar, KeyboardAvoidingView, ActivityIndicator } from 'react-native';
+import { 
+    View, Text, Button, Switch, StyleSheet, SafeAreaView, Platform, 
+    StatusBar, KeyboardAvoidingView, ActivityIndicator 
+} from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { database } from '../../firebase'; // ✅ Import Firebase
 import API_BASE_URL from '../../config';
 
 const SettingsScreen = ({ navigation }) => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [travelStyle, setTravelStyle] = useState('Adventure');
+  const [travelStyle, setTravelStyle] = useState(null);
   const [language, setLanguage] = useState('English');
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState(null);
@@ -16,10 +20,12 @@ const SettingsScreen = ({ navigation }) => {
   const [openLanguage, setOpenLanguage] = useState(false);
 
   const travelStyles = [
-    { label: 'Adventure', value: 'Adventure' },
-    { label: 'Relaxation', value: 'Relaxation' },
-    { label: 'Culture', value: 'Cultural' }
+    { label: 'Adventure', value: 2 },
+    { label: 'Relaxation', value: 1 },
+    { label: 'Cultural', value: 3 },
+    { label: 'Undefined', value: 4 }  // ✅ Now includes "Undefined" option
   ];
+
 
   const languages = [
     { label: 'English', value: 'English' },
@@ -43,13 +49,20 @@ const SettingsScreen = ({ navigation }) => {
         setUserId(userData.id);
         console.log("📥 Retrieved User ID:", userData.id);
 
-        const response = await axios.get(`${API_BASE_URL}/quiz_results/user/${userData.id}`);
+        // ✅ Fetch travel style from Firebase
+        const userRef = database().ref(`/users/${userData.id}`);
+        userRef.once('value', snapshot => {
+          const data = snapshot.val();
+          if (data?.travel_style_id) {
+            setTravelStyle(data.travel_style_id);
+          }
+        });
 
-        console.log("📥 API Response:", response.data);
-
+        // ✅ Fetch travel style details from Backend
+        const response = await axios.get(`${API_BASE_URL}/users/${userData.id}/travel_style`);
         if (response.status === 200) {
-          setTravelStyle(response.data.travel_style || "Adventure");
-          setLanguage(response.data.language || "English");
+          console.log("📥 API Response:", response.data);
+          setTravelStyle(response.data.id || 2);
         } else {
           console.warn("⚠️ Travel style not found in API response.");
         }
@@ -64,7 +77,7 @@ const SettingsScreen = ({ navigation }) => {
   }, []);
 
   const updateTravelStyle = async (newStyle) => {
-    console.log(`🔄 Updating travel style to: ${newStyle}`);
+    console.log(`🔄 Updating travel style to ID: ${newStyle}`);
     setTravelStyle(newStyle);
 
     try {
@@ -73,21 +86,20 @@ const SettingsScreen = ({ navigation }) => {
         return;
       }
 
-      console.log("📤 Sending PUT Request with body:", { travel_style: newStyle });
+      // ✅ Update in Firebase
+      await database().ref(`/users/${userId}`).update({ travel_style_id: newStyle });
 
-      const response = await axios.put(`${API_BASE_URL}/quiz_results/user/${userId}`, 
-        { travel_style: newStyle }, 
-        { headers: { 'Content-Type': 'application/json' } }
-      );
-
-      if (response.status === 200) {
-        console.log("✅ Travel style updated successfully!");
-        const storedUser = await AsyncStorage.getItem('user');
-        if (storedUser) {
-          const updatedUser = { ...JSON.parse(storedUser), travel_style: newStyle };
-          await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
-        }
+      // ✅ Update in AsyncStorage
+      const storedUser = await AsyncStorage.getItem('user');
+      if (storedUser) {
+        const updatedUser = { ...JSON.parse(storedUser), travel_style_id: newStyle };
+        await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
       }
+
+      // ✅ Update in Backend (Updated API)
+      await axios.put(`${API_BASE_URL}/users/${userId}/travel_style`, { travel_style_id: newStyle });
+
+      console.log("✅ Travel style updated successfully!");
     } catch (error) {
       console.error("❌ Error updating travel style:", error.response?.data || error.message);
     }
@@ -121,6 +133,7 @@ const SettingsScreen = ({ navigation }) => {
       </SafeAreaView>
     );
   }
+
 
   return (
     <SafeAreaView style={styles.safeContainer}>
