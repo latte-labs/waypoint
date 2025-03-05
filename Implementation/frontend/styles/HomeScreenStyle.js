@@ -6,19 +6,17 @@ const HomeScreenStyles = StyleSheet.create({
     // ✅ Ensures Safe Margins for Apple Devices
     safeContainer: {
         flex: 1,
-        backgroundColor: 'white',
-        paddingBottom: 20,  // ✅ Prevents UI elements from overlapping with iPhone home bar
+        backgroundColor: 'black'
     },
     container: {
         flex: 1,
         justifyContent: 'flex-start',
         alignContent: 'center',
-        padding: 20,
+        padding: 10,
         backgroundColor: 'white',
     },
     scrollContainer: {
         flexGrow: 1,
-        paddingBottom: 20,
         backgroundColor: 'white'
     },
     searchbar: {
@@ -47,7 +45,7 @@ const HomeScreenStyles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         width: width * 0.8,
-        height: 200,
+        height: 150,
         marginTop: 15,
         marginStart: 0,
     },

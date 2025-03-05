@@ -8,7 +8,7 @@ import {
     TouchableOpacity,
     Dimensions
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';  // ✅ Ensures Safe Margins
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { database } from '../../firebase';
@@ -89,71 +89,69 @@ function HomeScreen() {
     );
 
     return (
-        <SafeAreaView style={styles.safeContainer}>  
-            <ScrollView contentContainerStyle={styles.scrollContainer}>
-            <View style={styles.container}>
-                
-                {/* ✅ "Take Quiz" Card (Only Shows If travel_style_id === 4) */}
-                {showQuizPrompt && (
-                    <View style={styles.quizCard}>
-                        <Text style={styles.quizText}>Discover your travel style!</Text>
-                        <TouchableOpacity
-                            style={styles.quizButton}
-                            onPress={handleQuizStart} // ✅ Logs in Firebase before navigation
-                        >
-                            <Text style={styles.quizButtonText}>Take Quiz</Text>
-                        </TouchableOpacity>
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.container}>
+            
+            {/* ✅ "Take Quiz" Card (Only Shows If travel_style_id === 4) */}
+            {showQuizPrompt && (
+                <View style={styles.quizCard}>
+                    <Text style={styles.quizText}>Discover your travel style!</Text>
+                    <TouchableOpacity
+                        style={styles.quizButton}
+                        onPress={handleQuizStart} // ✅ Logs in Firebase before navigation
+                    >
+                        <Text style={styles.quizButtonText}>Take Quiz</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
+
+            <TextInput
+                style={styles.searchbar}
+                placeholder='Search...'
+                value={searchQuery}
+                onChangeText={(text) => setSearchQuery(text)}
+            />
+
+            <View style={styles.myTrips}>
+                <Text style={styles.myTripsTitle}>My Trips</Text>
+                {trips.length > 0 ? (
+                    <FlatList
+                        data={trips}
+                        renderItem={renderItem}
+                        keyExtractor={(item) => item.id}
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={{ paddingLeft: 0, paddingRight: 0 }}
+                    />
+                ) : (
+                    <View style={[styles.card, { width: width * 0.8, marginHorizontal: 10 }]}>
+                        <Text style={styles.tripName}>No upcoming trips</Text>
                     </View>
                 )}
-
-                <TextInput
-                    style={styles.searchbar}
-                    placeholder='Search...'
-                    value={searchQuery}
-                    onChangeText={(text) => setSearchQuery(text)}
-                />
-
-                <View style={styles.myTrips}>
-                    <Text style={styles.myTripsTitle}>My Trips</Text>
-                    {trips.length > 0 ? (
-                        <FlatList
-                            data={trips}
-                            renderItem={renderItem}
-                            keyExtractor={(item) => item.id}
-                            horizontal
-                            showsHorizontalScrollIndicator={false}
-                            contentContainerStyle={{ paddingLeft: 0, paddingRight: 0 }}
-                        />
-                    ) : (
-                        <View style={[styles.card, { width: width * 0.8, marginHorizontal: 10 }]}>
-                            <Text style={styles.tripName}>No upcoming trips</Text>
-                        </View>
-                    )}
-                </View>
-
-                {/* Buttons */}
-                <TouchableOpacity
-                    style={styles.mapButton}
-                    onPress={() => navigation.navigate('InteractiveMap')}
-                >
-                    <Text style={styles.mapButtonText}>Open Interactive Map</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.mapButton}
-                    onPress={() => navigation.navigate('InteractiveRecommendations')}
-                >
-                    <Text style={styles.mapButtonText}>Open Interactive Recommendations</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.mapButton}
-                    onPress={() => navigation.navigate('ChatBot')}
-                >
-                    <Text style={styles.mapButtonText}>Open Chatbot</Text>
-                </TouchableOpacity>
-
             </View>
-            </ScrollView>
-        </SafeAreaView>
+
+            {/* Buttons */}
+            <TouchableOpacity
+                style={styles.mapButton}
+                onPress={() => navigation.navigate('InteractiveMap')}
+            >
+                <Text style={styles.mapButtonText}>Open Interactive Map</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+                style={styles.mapButton}
+                onPress={() => navigation.navigate('InteractiveRecommendations')}
+            >
+                <Text style={styles.mapButtonText}>Open Interactive Recommendations</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+                style={styles.mapButton}
+                onPress={() => navigation.navigate('ChatBot')}
+            >
+                <Text style={styles.mapButtonText}>Open Chatbot</Text>
+            </TouchableOpacity>
+
+        </View>
+        </ScrollView>
         
     );
 }
