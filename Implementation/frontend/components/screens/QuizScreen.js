@@ -43,7 +43,7 @@ const questions = [
     question: "What is your preference in food experience?",
     options: [
       "Fine dining with scenic ambiance",
-      "Local street foor and cultural experiences",
+      "Local street foot and cultural experiences",
       "Outdoor cooking or unique survival experiences",
       "None of the above"]
   },
@@ -92,6 +92,18 @@ function QuizScreen() {
     } catch (error) {
       console.error("Error retrieving user ID:", error);
       return null;
+    }
+  };
+  const updateQuizProgress = async (userId, currentQuestionIndex) => {
+    try {
+      const progressPercentage = Math.round(((currentQuestionIndex + 1) / questions.length) * 100);
+      await database().ref(`/Realtime_Quiz_Progress/${userId}`).set({
+        progress: progressPercentage,
+        current_question: currentQuestionIndex + 1
+      });
+      console.log(`✅ Quiz progress updated for ${userId}: ${progressPercentage}% (Question ${currentQuestionIndex + 1})`);
+    } catch (error) {
+      console.error("❌ Error updating quiz progress in Firebase:", error);
     }
   };
 
@@ -151,6 +163,12 @@ function QuizScreen() {
             else if (answer === 3) resetScores.none += 1;
           });
           return resetScores;
+        });
+        // ✅ Update Firebase with new quiz progress
+        getUserId().then((userId) => {
+          if (userId) {
+              updateQuizProgress(userId, nextIndex);
+          }
         });
 
         return nextIndex;
