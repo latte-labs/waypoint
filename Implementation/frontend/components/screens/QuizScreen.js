@@ -4,7 +4,6 @@ import {
   Pressable,
   View,
   TouchableOpacity,
-
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Progress from 'react-native-progress';
@@ -12,6 +11,7 @@ import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import API_BASE_URL from '../../config';
+import { database } from '../../firebase';
 import styles from '../../styles/QuizScreenStyles';
 
 const questions = [
@@ -74,12 +74,11 @@ const questions = [
 ];
 
 function QuizScreen() {
-
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState(Array(questions.length).fill(null));
   const [scores, setScores] = useState({ relaxation: 0, culture: 0, adventure: 0, none: 0 });
   const [quizCompleted, setQuizCompleted] = useState(false);
-  const [travelStyle, setTravelStyle] = useState({ emoji: '', resultStyle: '' });
+  const [travelStyle, setTravelStyle] = useState({ emoji: '', name: '', description: '' });
   const navigation = useNavigation();
 
   const getUserId = async () => {
@@ -98,22 +97,41 @@ function QuizScreen() {
 
   const sendResultToBackend = async (userId, travelStyle) => {
     try {
-      console.log("📤 Sending Quiz Result:", { userId, travelStyle });
+        console.log("📤 Sending Quiz Result:", { userId, travelStyle });
 
-      const response = await axios.post(`${API_BASE_URL}/quiz_results`, {
-        user_id: userId,
-        travel_style: travelStyle,
-      });
+        // ✅ Determine travel style ID based on the final result
+        let travelStyleId = 4; // Default to Undefined
+        if (travelStyle.includes("Relaxation")) travelStyleId = 1;
+        if (travelStyle.includes("Cultural")) travelStyleId = 3;
+        if (travelStyle.includes("Adventure")) travelStyleId = 2;
 
-      console.log("✅ Quiz result saved:", response.data);
+        // ✅ Update user travel_style_id in Firebase
+        await database().ref(`/users/${userId}`).update({ travel_style_id: travelStyleId });
+
+        // ✅ Update user travel_style_id in AsyncStorage
+        await AsyncStorage.setItem('user_travel_style', JSON.stringify(travelStyleId));
+
+        // ✅ Send only `travel_style_id` in the request body (Fixes error)
+        await axios.put(`${API_BASE_URL}/users/${userId}/travel_style`, { travel_style_id: travelStyleId });
+
+        // ✅ Fetch Travel Style details from `travel_style_routes.py`
+        const response = await axios.get(`${API_BASE_URL}/travel-styles/${travelStyleId}`);
+        setTravelStyle({
+            emoji: travelStyleId === 1 ? "🏝" : travelStyleId === 2 ? "🌄" : travelStyleId === 3 ? "🎭" : "🔀",
+            resultStyle: response.data.name,
+            description: response.data.description
+        });
+
+        console.log("✅ Quiz result saved successfully:", response.data);
     } catch (error) {
-      console.error("❌ Error sending travel style to backend:", error.response?.data || error.message);
+        console.error("❌ Error sending travel style to backend:", error.response?.data || error.message);
     }
   };
 
+
+
   const handleNextQuestion = async () => {
     if (selectedAnswers[currentQuestionIndex] === null) return; // Prevent going forward without selection
-
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex((prevIndex) => {
         const nextIndex = prevIndex + 1;
