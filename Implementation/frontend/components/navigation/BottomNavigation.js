@@ -38,7 +38,6 @@ function BottomNavigation() {
         <Tab.Screen name="Home" component={HomeScreen} />
         <Tab.Screen name="Profile" component={ProfileScreen} />
         <Tab.Screen name="Setting" component={SettingsScreen} />
-        <Tab.Screen name="Recommendations" component={RecommendationsScreen} />
       </Tab.Navigator>
   );
 }

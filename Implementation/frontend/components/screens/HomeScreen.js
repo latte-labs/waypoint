@@ -144,12 +144,6 @@ function HomeScreen() {
                 {/* Buttons */}
                 <TouchableOpacity
                     style={styles.mapButton}
-                    onPress={() => navigation.navigate('InteractiveMap')}
-                >
-                    <Text style={styles.mapButtonText}>Open Interactive Map</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.mapButton}
                     onPress={() => navigation.navigate('InteractiveRecommendations')}
                 >
                     <Text style={styles.mapButtonText}>Open Interactive Recommendations</Text>
