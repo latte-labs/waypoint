@@ -8,3 +8,4 @@ Implementation/frontend/ios/GoogleService-Info.plist
 Implementation/frontend/ios/GoogleService-Info.plist
 Implementation/firebase.json
 Implementation/frontend/ios/Podfile.lock
+Implementation/frontend/package-lock.json
