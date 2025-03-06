@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.db.db import get_db
-from app.models import user_model, itinerary_model, place_model, badge_model, quiz_model
+from app.models import user_model, place_model, badge_model, quiz_model
 from app.schemas import user_schema, itinerary_schema, place_schema, badge_schema, quiz_schema
 
 # ========== BADGE ROUTES ==========

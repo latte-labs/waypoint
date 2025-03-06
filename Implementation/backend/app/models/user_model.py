@@ -1,13 +1,16 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import Column, String, ForeignKey, DateTime, Integer  # ✅ Added Integer
+from sqlalchemy.dialects.postgresql import UUID  # ✅ Use UUID for user_id only
 from sqlalchemy.orm import relationship
 from datetime import datetime
-from app.db.base import Base  # ✅ Import Base from base.py (Fix Circular Import)
+import uuid  # ✅ Required for UUID default values
+
+from app.db.base import Base  # ✅ Import Base from base.py
 
 # User Model
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)  # ✅ UUID for user ID
     name = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False, index=True)
     password_hash = Column(String, nullable=False)
@@ -22,3 +25,5 @@ class User(Base):
     shared_itineraries = relationship("SharedItinerary", back_populates="user")
     user_badges = relationship("UserBadge", back_populates="user")
     quiz_results = relationship("QuizResult", back_populates="user")
+    itineraries = relationship("Itinerary", back_populates="owner")  # ✅ Fix: Ensure back_populates matches `owner`
+

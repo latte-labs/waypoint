@@ -1,4 +1,3 @@
-// components/screens/SignupScreen.js
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
 import axios from 'axios';
@@ -47,18 +46,46 @@ const SignupScreen = ({ navigation }) => {
     }
   };
 
-  // ✅ Handle Signup
+  // ✅ Function to Check if Email Already Exists
+  const checkEmailAvailability = async (email) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/users/check_email/`, { params: { email } });
+      return response.data.exists;
+    } catch (error) {
+      console.error("❌ Error checking email:", error.response?.data || error.message);
+      return false;
+    }
+  };
+
+  // ✅ Handle Signup with Email Check
   const handleSignup = async () => {
     if (!validateInputs()) return;
-
     setLoading(true);
 
     try {
+      console.log("🔄 Checking if email exists...");
+      const emailExists = await checkEmailAvailability(email);
+      if (emailExists) {
+        Alert.alert("Signup Failed", "Email already in use.");
+        setLoading(false);
+        return;
+      }
+
+      console.log("📥 Fetching default travel style...");
+      let defaultTravelStyleId = 4;
+      try {
+        const travelStyleResponse = await axios.get(`${API_BASE_URL}/default_travel_style`);
+        defaultTravelStyleId = travelStyleResponse.data.travel_style_id || 4;
+      } catch (error) {
+        console.warn("⚠️ Warning: Unable to fetch default travel style. Using fallback value (4).");
+      }
+
+      console.log("🔄 Sending signup request...");
       const response = await axios.post(`${API_BASE_URL}/users/`, {
         name,
         email: email.toLowerCase(),
         password,
-        travel_style_id: 4, // ✅ Default travel style to "Undefined"
+        travel_style_id: defaultTravelStyleId, 
       });
 
       if (response.status === 200) {

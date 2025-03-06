@@ -18,4 +18,3 @@ class Place(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     
     favorites = relationship("UserFavorite", back_populates="place")
-    itinerary_details = relationship("ItineraryDetail", back_populates="place")

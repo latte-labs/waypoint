@@ -1,16 +1,20 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, JSON
+from sqlalchemy import Column, String, ForeignKey, DateTime
+from sqlalchemy.dialects.postgresql import UUID  # ✅ Import UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
-from app.db.base import Base  # ✅ Import Base from base.py (Fix Circular Import)
+import uuid  # ✅ Required for UUID default values
 
-# Shared Itinerary Model
+from app.db.base import Base  # ✅ Import Base
+
 class SharedItinerary(Base):
     __tablename__ = "shared_itineraries"
-    id = Column(Integer, primary_key=True, index=True)
-    itinerary_id = Column(Integer, ForeignKey("itineraries.id"), nullable=False)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    role = Column(String, default="viewer")
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)  # ✅ Changed to UUID
+    itinerary_id = Column(UUID(as_uuid=True), ForeignKey("itineraries.id", ondelete="CASCADE"), nullable=False)  # ✅ Must match Itinerary.id
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)  # ✅ Ensure user_id is also UUID
+    role = Column(String, nullable=True)
     added_at = Column(DateTime, default=datetime.utcnow)
-    
-    itinerary = relationship("Itinerary", back_populates="shared_users")
-    user = relationship("User", back_populates="shared_itineraries")
+
+    itinerary = relationship("Itinerary", back_populates="shared_itineraries")
+    user = relationship("User", back_populates="shared_itineraries")  # ✅ Fix: Add relationship to User
+

@@ -47,21 +47,25 @@ const LoginScreen = ({ navigation }) => {
   };
 
   // ✅ Function to store user session in AsyncStorage (now includes travel_style_id)
-const storeUserSession = async (user) => {
-  try {
-    const userData = {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      travel_style_id: user.travel_style_id,  // ✅ Now storing travel_style_id
-    };
+  const storeUserSession = async (user) => {
+    try {
+        const userData = {
+            id: String(user.id),  // ✅ Ensure `user_id` is stored as a string (UUID)
+            name: user.name,
+            email: user.email,
+            travel_style_id: user.travel_style_id,  
+        };
 
-    await AsyncStorage.setItem('user', JSON.stringify(userData));
-    await AsyncStorage.setItem('user_id', String(user.id));
-  } catch (error) {
-    console.error('AsyncStorage Error:', error);
-  }
+        await AsyncStorage.setItem('user', JSON.stringify(userData));
+        await AsyncStorage.setItem('user_id', String(user.id));  // ✅ Store `user_id` separately for quick access
+
+        console.log("✅ User session stored:", userData);
+    } catch (error) {
+        console.error('❌ AsyncStorage Error:', error);
+    }
 };
+
+  
 
 // ✅ Handle Login (modified to ensure `travel_style_id` is included)
 const handleLogin = async () => {
@@ -69,33 +73,30 @@ const handleLogin = async () => {
   setLoading(true);
 
   try {
-    const response = await axios.post(
-      `${API_BASE_URL}/users/auth/login`,
-      { email: email.toLowerCase(), password },
-      { headers: { 'Content-Type': 'application/json' } }
-    );
+      const response = await axios.post(
+          `${API_BASE_URL}/users/auth/login`,
+          { email: email.toLowerCase(), password },
+          { headers: { 'Content-Type': 'application/json' } }
+      );
 
-    if (response.status === 200) {
-      const user = response.data.user;
+      if (response.status === 200) {
+          const user = response.data.user;
 
-      if (!user.travel_style_id) {
-        console.warn('⚠ travel_style_id is missing from backend response');
-        user.travel_style_id = 4;  // ✅ Default to Undefined if not present
+          if (!user.travel_style_id) {
+              console.warn("⚠ travel_style_id is missing from backend response");
+              user.travel_style_id = 4;  // ✅ Default to Undefined if not present
+          }
+
+          // ✅ Store user details in AsyncStorage
+          await storeUserSession(user);
+
+          // ✅ Navigate to HomeScreen with user details
+          navigation.replace('Main', { user });  
       }
-
-      // ✅ Store user details in AsyncStorage (including travel_style_id)
-      await storeUserSession(user);
-
-      // ✅ Log login event to Firebase
-      await logLoginToFirebase(user.id);
-
-      Alert.alert('Success', 'Login successful!');
-      navigation.replace('Main');  // ✅ Redirect to Main screen
-    }
   } catch (error) {
-    Alert.alert('Login Failed', error.response?.data?.detail || 'Invalid credentials');
+      Alert.alert("Login Failed", error.response?.data?.detail || "Invalid credentials");
   } finally {
-    setLoading(false);
+      setLoading(false);
   }
 };
 

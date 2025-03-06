@@ -1,13 +1,14 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, String, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID  # ✅ Use UUID Type
 from sqlalchemy.orm import relationship
-from app.db.base import Base  # ✅ Import Base from base.py
+from app.db.base import Base  # ✅ Fix Circular Import
+import uuid
 
 class QuizResult(Base):
     __tablename__ = "quiz_results"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # ✅ Ensure correct foreign key reference
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)  # ✅ Changed to UUID
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)  # ✅ Updated to UUID
     travel_style = Column(String(50), nullable=False)
 
-    # ✅ Fix: Explicitly define relationship with User model
     user = relationship("User", back_populates="quiz_results")

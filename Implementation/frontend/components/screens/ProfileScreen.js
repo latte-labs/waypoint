@@ -15,19 +15,24 @@ const ProfileScreen = ({ navigation }) => {
     React.useCallback(() => {
       const loadUser = async () => {
         try {
+          console.log("🔄 Fetching user data from AsyncStorage...");
           const storedUser = await AsyncStorage.getItem('user');
-          if (storedUser) {
-            const userData = JSON.parse(storedUser);
-            setUser(userData);
-            
-            console.log("📥 Retrieved Travel Style ID:", userData.travel_style_id);
+          if (!storedUser) {
+            console.error("❌ No user found in AsyncStorage!");
+            return;
+          }
 
-            if (userData.travel_style_id && userData.travel_style_id !== 4) {
-              console.log("🔄 Travel Style Fetch Scheduled...");
-            } else {
-              console.log("🚫 Travel Style is Undefined (4) or not set.");
-              setTravelStyle(null);
-            }
+          const userData = JSON.parse(storedUser);
+          setUser(userData);
+          
+          console.log("📥 Retrieved Travel Style ID:", userData.travel_style_id);
+
+          if (userData.travel_style_id && userData.travel_style_id !== 4) {
+            console.log("🔄 Fetching travel style details...");
+            fetchTravelStyle(userData.travel_style_id);
+          } else {
+            console.log("🚫 Travel Style is Undefined (4) or not set.");
+            setTravelStyle(null);
           }
         } catch (error) {
           console.error("❌ Error loading user data:", error);
@@ -39,23 +44,11 @@ const ProfileScreen = ({ navigation }) => {
     }, [])
   );
 
-  // ✅ Fetch Travel Style when user.id is available
-  useEffect(() => {
-    if (user?.id && user.travel_style_id && user.travel_style_id !== 4) {
-      fetchTravelStyle(user.travel_style_id);
-    }
-  }, [user]); // ✅ Ensures this runs ONLY when user is updated
-
   // ✅ Fetch Travel Style Details from Backend
   const fetchTravelStyle = async (travelStyleId) => {
-    if (!user || !user.id) {
-      console.warn("⚠️ User ID is still not available. Retrying...");
-      return;
-    }
-
     try {
-      console.log(`🔄 Fetching travel style for user ID: ${user.id}, travelStyleId: ${travelStyleId}`);
-      const response = await axios.get(`${API_BASE_URL}/users/${user.id}/travel_style`);
+      console.log(`🔄 Fetching travel style details for ID: ${travelStyleId}`);
+      const response = await axios.get(`${API_BASE_URL}/travel-styles/${travelStyleId}`);
 
       if (response.status === 200 && response.data) {
         console.log("✅ Travel Style Retrieved:", response.data);
@@ -102,9 +95,7 @@ const ProfileScreen = ({ navigation }) => {
         {travelStyle ? (
           <View style={styles.travelStyleContainer}>
             <Text style={styles.travelStyleName}>{travelStyle.name}</Text>
-            {user?.travel_style_id !== 4 && (
-              <Text style={styles.travelStyleDescription}>{travelStyle.description}</Text>
-            )}
+            <Text style={styles.travelStyleDescription}>{travelStyle.description}</Text>
           </View>
         ) : (
           <Text style={styles.noTravelStyle}>

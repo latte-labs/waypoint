@@ -11,7 +11,6 @@ from app.routes import (
     badge_routes, 
     quiz_routes, 
     user_favorite_routes,  # ✅ Added User Favorites
-    shared_itinerary_routes,  # ✅ Added Shared Itineraries
     chatbot_routes,
     travel_style_routes
 )

@@ -1,14 +1,16 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, JSON
+from sqlalchemy import Column, ForeignKey, DateTime
+from sqlalchemy.dialects.postgresql import UUID  # ✅ Use UUID Type
 from sqlalchemy.orm import relationship
 from datetime import datetime
-from app.db.base import Base  # ✅ Import Base from base.py (Fix Circular Import)
+import uuid
+from app.db.base import Base  # ✅ Fix Circular Import
 
 # User Badge Model
 class UserBadge(Base):
     __tablename__ = "user_badges"
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    badge_id = Column(Integer, ForeignKey("badges.id"), nullable=False)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)  # ✅ Changed to UUID
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)  # ✅ Updated to UUID
+    badge_id = Column(UUID(as_uuid=True), ForeignKey("badges.id"), nullable=False)  # ✅ Updated to UUID
     unlocked_at = Column(DateTime, default=datetime.utcnow)
     
     user = relationship("User", back_populates="user_badges")

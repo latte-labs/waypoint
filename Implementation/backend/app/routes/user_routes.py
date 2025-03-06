@@ -4,9 +4,16 @@ from pydantic import BaseModel
 from app.db.db import get_db
 from app.models.user_model import User
 from app.models.travel_style_model import TravelStyle  # ✅ Ensure this model exists
-from app.schemas.user_schema import UserCreate, UserResponse
+from app.schemas.user_schema import UserCreate, UserResponse, UpdateTravelStyle
+from passlib.context import CryptContext  # ✅ Import Password Hashing
+from uuid import UUID
 
 user_router = APIRouter()
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
+
 
 # ✅ Pydantic model for login request
 class LoginRequest(BaseModel):
@@ -18,10 +25,11 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     """
     ✅ Set default travel_style_id = 4 (Undefined) when creating a new user.
     """
+    hashed_password = hash_password(user.password)
     db_user = User(
         name=user.name,
         email=user.email,
-        password_hash=user.password,  # Ensure password is hashed before storing
+        password_hash=hashed_password,  # Ensure password is hashed before storing
         status="active",
         travel_style_id=4  # ✅ Default to Undefined
     )
@@ -110,12 +118,9 @@ def login_user(login_data: LoginRequest, db: Session = Depends(get_db)):
         }
     }
 
-# ✅ Define a new model to accept only `travel_style_id`
-class UpdateTravelStyle(BaseModel):
-    travel_style_id: int
 
 @user_router.put("/{user_id}/travel_style")
-def update_user_travel_style(user_id: int, data: UpdateTravelStyle, db: Session = Depends(get_db)):
+def update_user_travel_style(user_id: UUID, data: UpdateTravelStyle, db: Session = Depends(get_db)):  # ✅ Fix: Change `user_id` to UUID
     """
     ✅ Updates only `travel_style_id` for a user.
     """
@@ -135,8 +140,16 @@ def update_user_travel_style(user_id: int, data: UpdateTravelStyle, db: Session 
     # ✅ Explicitly return a proper JSON response
     return {
         "message": "Travel style updated successfully",
-        "user_id": user_id,
+        "user_id": str(user_id),  # ✅ Convert UUID to string for JSON response
         "travel_style_id": db_user.travel_style_id,
         "travel_style_name": travel_style.name,
         "travel_style_description": travel_style.description
     }
+
+@user_router.get("/check_email/", tags=["Users"])  # ✅ Ensure correct path with trailing slash
+def check_email_exists(email: str, db: Session = Depends(get_db)):
+    """
+    ✅ Checks if an email already exists in the database.
+    """
+    existing_user = db.query(User).filter(User.email == email.lower()).first()
+    return {"exists": existing_user is not None}

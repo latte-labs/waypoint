@@ -13,6 +13,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { database } from '../../firebase';
 import styles from '../../styles/HomeScreenStyle';
 import SafeAreaWrapper from './SafeAreaWrapper';
+import axios from 'axios';
+import API_BASE_URL from '../../config';
 
 const { width } = Dimensions.get('window');
 
@@ -27,38 +29,47 @@ function HomeScreen() {
     const [showQuizPrompt, setShowQuizPrompt] = useState(false);
     const [userId, setUserId] = useState(null);
 
-    // ✅ Load `travel_style_id` from AsyncStorage & Sync with Firebase on Screen Focus
+    // ✅ Load `travel_style_id` from AsyncStorage, Sync with PostgreSQL & Firebase
     useFocusEffect(
         React.useCallback(() => {
             const fetchUserData = async () => {
                 try {
-                    const userData = await AsyncStorage.getItem('user');
-                    if (userData) {
-                        const user = JSON.parse(userData);
-                        setUserId(user.id);
-
-                        console.log("📥 Retrieved Travel Style ID from AsyncStorage:", user.travel_style_id);
-
-                        // ✅ Fetch latest `travel_style_id` from Firebase
-                        const userRef = database().ref(`/users/${user.id}`);
-                        userRef.once('value', snapshot => {
-                            const firebaseTravelStyleId = snapshot.val()?.travel_style_id ?? user.travel_style_id;
-                            console.log("🔥 Firebase Travel Style ID:", firebaseTravelStyleId);
-
-                            if (firebaseTravelStyleId === 4) {
-                                console.log("✅ Showing Take Quiz Card");
-                                setShowQuizPrompt(true);
-                            } else {
-                                console.log("🚫 Hiding Take Quiz Card");
-                                setShowQuizPrompt(false);
-                            }
-                        });
-
-                        // ✅ Log screen view in Firebase
-                        logScreenView(user.id);
+                    console.log("🔄 Fetching user data from AsyncStorage...");
+                    const storedUser = await AsyncStorage.getItem('user');
+                    if (!storedUser) {
+                        console.error("❌ No user data found in AsyncStorage!");
+                        return;
                     }
+
+                    const user = JSON.parse(storedUser);
+                    setUserId(String(user.id));  // ✅ Ensure UUID is stored as a string
+
+                    console.log("📥 Retrieved Travel Style ID from AsyncStorage:", user.travel_style_id);
+
+
+                    // ✅ Sync with Firebase for real-time updates
+                    const userRef = database().ref(`/users/${user.id}`);
+                    userRef.once('value', snapshot => {
+                        const firebaseTravelStyleId = snapshot.val()?.travel_style_id ?? user.travel_style_id;
+                        console.log("🔥 Firebase Travel Style ID:", firebaseTravelStyleId);
+
+                        if (firebaseTravelStyleId === 4) {
+                            console.log("✅ Showing Take Quiz Card");
+                            setShowQuizPrompt(true);
+                        } else {
+                            console.log("🚫 Hiding Take Quiz Card");
+                            setShowQuizPrompt(false);
+                        }
+
+                        // ✅ Update AsyncStorage with the latest travel style
+                        user.travel_style_id = firebaseTravelStyleId;
+                        AsyncStorage.setItem('user', JSON.stringify(user));
+                    });
+
+                    // ✅ Log screen view in Firebase
+                    logScreenView(user.id);
                 } catch (error) {
-                    console.error('Error retrieving user data:', error);
+                    console.error('❌ Error retrieving user data:', error);
                 }
             };
 
@@ -72,7 +83,7 @@ function HomeScreen() {
             const screenViewRef = database().ref(`/screen_views/home/${userId}`);
             await screenViewRef.push({ timestamp: new Date().toISOString() });
         } catch (error) {
-            console.error('Firebase Error:', error);
+            console.error('❌ Firebase Error:', error);
         }
     };
 
@@ -87,7 +98,7 @@ function HomeScreen() {
             // ✅ Navigate to QuizScreen
             navigation.navigate('QuizScreen');
         } catch (error) {
-            console.error('Firebase Error:', error);
+            console.error('❌ Firebase Error:', error);
         }
     };
 
