@@ -33,7 +33,7 @@ function App() {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Signup" component={SignupScreen} />
         <Stack.Screen name="Main" component={BottomNavigation} />
-        <Stack.Screen name="InteractiveRecommendations" component={InteractiveRecommendations} />
+        <Stack.Screen name="Map" component={InteractiveRecommendations} />
         <Stack.Screen name="ChatBot" component={ChatbotScreen} />
         <Stack.Screen name="QuizScreen" component={QuizScreen} />
         <Stack.Screen name='Profile' component={ProfileScreen} />
