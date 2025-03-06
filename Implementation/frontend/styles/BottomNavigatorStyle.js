@@ -32,6 +32,18 @@ const BottomNavigatorStyles = StyleSheet.create({
         paddingBottom: 10, 
         
     },
+    /* ✅ Overlay to Detect Clicks Outside */
+    overlay: {
+        ...StyleSheet.absoluteFillObject,
+        zIndex: 1,
+    },
+    blurBackground: {
+        ...StyleSheet.absoluteFillObject,
+        zIndex: 1,
+    },
+    fullScreenTouchable: {
+        flex: 1,
+    },
     /* Small Popup Menu Styles */
     popupMenu: {
         position: 'absolute',
@@ -46,6 +58,7 @@ const BottomNavigatorStyles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 5,
         overflow: 'hidden',
+        zIndex: 2,
     },
     menuItem: {
         paddingVertical: 10,

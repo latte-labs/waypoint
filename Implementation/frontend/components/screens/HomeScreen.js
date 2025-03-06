@@ -140,21 +140,6 @@ function HomeScreen() {
                         </View>
                     )}
                 </View>
-
-                {/* Buttons */}
-                <TouchableOpacity
-                    style={styles.mapButton}
-                    onPress={() => navigation.navigate('InteractiveRecommendations')}
-                >
-                    <Text style={styles.mapButtonText}>Open Interactive Recommendations</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.mapButton}
-                    onPress={() => navigation.navigate('ChatBot')}
-                >
-                    <Text style={styles.mapButtonText}>Open Chatbot</Text>
-                </TouchableOpacity>
-
             </View>
         </ScrollView>
         </SafeAreaWrapper>
