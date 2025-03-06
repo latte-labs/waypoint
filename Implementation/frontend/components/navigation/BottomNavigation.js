@@ -1,14 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, TouchableOpacity, Animated, Easing, View } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { Text, TouchableOpacity, Animated, Easing, View, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import styles from '../../styles/BottomNavigatorStyle';
 import HomeScreen from '../screens/HomeScreen';
-import { BlurView } from '@react-native-community/blur';
 import InteractiveRecommendations from '../screens/InteractiveRecommendations';
 import ChatbotScreen from '../screens/ChatbotScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import { BlurView } from '@react-native-community/blur';
 
 // Dummy Placeholder Component for "More" tab
 const MorePlaceholder = () => <View style={{ flex: 1, backgroundColor: 'transparent' }} />;
@@ -37,28 +37,43 @@ function BottomNavigation() {
 
   // Closes "More" Menu
   const closeMenu = () => {
-    setMenuVisible(false);
-    Animated.timing(animation, {
-      toValue: 0,
-      duration: 200,
-      easing: Easing.ease,
-      useNativeDriver: false,
-    }).start();
+    if (menuVisible) {
+      setMenuVisible(false);
+      Animated.timing(animation, {
+        toValue: 0,
+        duration: 200,
+        easing: Easing.ease,
+        useNativeDriver: false,
+      }).start();
+    }
   };
 
   // Hide Bottom Navigation after 5 seconds of inactivity
   const resetInactivityTimer = () => {
-    setIsTabBarVisible(true); // Show the bottom navigation
+    setIsTabBarVisible(true);
+    Animated.timing(tabBarAnimation, {
+      toValue: 1, // Show tab bar
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+
     clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
-      setIsTabBarVisible(false); // Hide the bottom navigation after 5s
+      Animated.timing(tabBarAnimation, {
+        toValue: 0, // Hide tab bar
+        duration: 300,
+        useNativeDriver: false,
+      }).start();
+      setIsTabBarVisible(false);
     }, 5000);
   };
 
-  useEffect(() => {
-    resetInactivityTimer();
-    return () => clearTimeout(timeoutRef.current); // Cleanup
-  }, []);
+  // Reset the timer when the screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      resetInactivityTimer();
+    }, [])
+  );
 
   const navigateToScreen = (screen) => {
     closeMenu();
@@ -72,54 +87,54 @@ function BottomNavigation() {
   });
 
   return (
-    <>
-      <TouchableOpacity
-        style={{ flex: 1 }}
-        activeOpacity={1}
-        onPress={resetInactivityTimer}
-        pointerEvents="auto"
-      >
+    <TouchableWithoutFeedback onPress={() => { resetInactivityTimer(); closeMenu(); }}>
+      <View style={{ flex: 1 }}>
         <Tab.Navigator
           screenOptions={({ route }) => ({
             tabBarIcon: ({ color, size }) => {
               let icon;
-              if (route.name === 'Home') icon = '🏠';
-              else if (route.name === 'Map') icon = '📍';
-              else if (route.name === 'Itinerary') icon = '🗺';
-              else if (route.name === 'More') icon = '≡';
-
+              if (route.name === 'Home') {
+                icon = '🏠';
+              } else if (route.name === 'Map') {
+                icon = '📍';
+              } else if (route.name === 'Itinerary') {
+                icon = '🗺';
+              } else if (route.name === 'More') {
+                icon = '≡';
+              }
               return <Text style={{ fontSize: size, color, paddingBottom: 25 }}>{icon}</Text>;
             },
             tabBarActiveTintColor: '#FF6F00',
             tabBarInactiveTintColor: 'gray',
-            tabBarStyle: isMapScreen ? { display: "none" } : [styles.tabBar, {
-              transform: [{
-                translateY: tabBarAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [200, 0],
-                }),
-              }],
-              zIndex: 100,
-            }],
+            tabBarStyle: isTabBarVisible
+              ? [styles.tabBar, { transform: [{ translateY: tabBarAnimation.interpolate({ inputRange: [0, 1], outputRange: [200, 0] }) }], zIndex: 100 }]
+              : { display: "none" },
             tabBarHideOnKeyboard: true,
             tabBarLabelStyle: styles.tabBarLabel,
             headerShown: false,
           })}
-          screenListeners={{ focus: resetInactivityTimer }}
+          screenListeners={{
+            focus: resetInactivityTimer,
+            tabPress: resetInactivityTimer,
+          }}
         >
           <Tab.Screen name="Home" component={HomeScreen} listeners={{ focus: resetInactivityTimer }} />
           <Tab.Screen name="Map" component={InteractiveRecommendations} options={{ tabBarStyle: { display: "none" } }} />
           <Tab.Screen name="Itinerary" component={ChatbotScreen} listeners={{ focus: resetInactivityTimer }} />
-          <Tab.Screen name="More" component={MorePlaceholder} listeners={() => ({
-            tabPress: (e) => {
-              e.preventDefault();
-              resetInactivityTimer();
-              toggleMenu();
-            },
-          })} />
+          <Tab.Screen
+            name="More"
+            component={MorePlaceholder}
+            listeners={() => ({
+              tabPress: (e) => {
+                e.preventDefault();
+                resetInactivityTimer();
+                toggleMenu();
+              },
+            })}
+          />
         </Tab.Navigator>
 
-        {/* Detect Tap Outside & Close "More" Menu */}
+        {/* Detect Tap Outside to Close "More" Popup */}
         {menuVisible && !isMapScreen && (
           <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={closeMenu}>
             <BlurView style={styles.blurBackground} blurType="light" blurAmount={10} />
@@ -146,8 +161,8 @@ function BottomNavigation() {
             </TouchableOpacity>
           </Animated.View>
         )}
-      </TouchableOpacity>
-    </>
+      </View>
+    </TouchableWithoutFeedback>
   );
 }
 
