@@ -1,30 +1,55 @@
 import React, { useState, useEffect } from 'react';
 import { 
-    View, Text, FlatList, TouchableOpacity, Alert, ActivityIndicator, StyleSheet 
+    View, Text, ActivityIndicator, Alert, StyleSheet, TouchableOpacity
 } from 'react-native';
+import { useRoute, useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { useRoute } from '@react-navigation/native';
-import API_BASE_URL from '../../config';
+import API_BASE_URL from '../../../config';
+import SafeAreaWrapper from '../SafeAreaWrapper';
 
 const ItineraryDetailScreen = () => {
     const route = useRoute();
-    const { itineraryId } = route.params; // ✅ Get itinerary ID from navigation params
+    const navigation = useNavigation();
+    const { itineraryId } = route.params;  // ✅ Only getting itineraryId from navigation
+
     const [itinerary, setItinerary] = useState(null);
+    const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // ✅ Fetch Itinerary Details from API
+    // ✅ Load user data from AsyncStorage
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                console.log("🔄 Retrieving user from AsyncStorage...");
+                const storedUser = await AsyncStorage.getItem('user');
+                if (storedUser) {
+                    const userData = JSON.parse(storedUser);
+                    setUser(userData);
+                } else {
+                    console.error("❌ No user found in AsyncStorage!");
+                }
+            } catch (error) {
+                console.error("❌ Error retrieving user:", error);
+            }
+        };
+
+        fetchUserData();
+    }, []);
+
+    // ✅ Fetch Itinerary Details from PostgreSQL
     useEffect(() => {
         const fetchItineraryDetails = async () => {
             try {
-                console.log(`🔄 Fetching itinerary details for ID: ${itineraryId}`);
+                console.log(`📥 Fetching itinerary details for ID: ${itineraryId}`);
+                
                 const response = await axios.get(`${API_BASE_URL}/itineraries/${itineraryId}`);
-
                 if (response.status === 200) {
                     setItinerary(response.data);
                 }
             } catch (error) {
-                console.error("❌ Error fetching itinerary details:", error.response?.data || error.message);
-                Alert.alert("Error", "Failed to fetch itinerary details.");
+                console.error("❌ Error fetching itinerary:", error.response?.data || error.message);
+                Alert.alert("Error", "Failed to load itinerary details.");
             } finally {
                 setLoading(false);
             }
@@ -33,96 +58,68 @@ const ItineraryDetailScreen = () => {
         fetchItineraryDetails();
     }, [itineraryId]);
 
-    // ✅ Handle Adding a New Day (For now, shows an alert)
-    const handleAddDay = () => {
-        Alert.alert("Coming Soon!", "Feature to add a new itinerary day is under development.");
+    // ✅ Handle itinerary deletion
+    const handleDeleteItinerary = async () => {
+        Alert.alert(
+            "Delete Itinerary",
+            "Are you sure you want to delete this itinerary?",
+            [
+                { text: "Cancel", style: "cancel" },
+                { text: "Delete", onPress: async () => {
+                    try {
+                        await axios.delete(`${API_BASE_URL}/itineraries/${itineraryId}`);
+                        Alert.alert("Success", "Itinerary deleted successfully.");
+                        navigation.goBack(); // ✅ Navigate back after deletion
+                    } catch (error) {
+                        console.error("❌ Error deleting itinerary:", error.response?.data || error.message);
+                        Alert.alert("Error", "Failed to delete itinerary.");
+                    }
+                }}
+            ]
+        );
     };
-
-    // ✅ Handle Adding a New Activity (For now, shows an alert)
-    const handleAddActivity = (dayId) => {
-        Alert.alert("Coming Soon!", `Feature to add an activity to Day ID: ${dayId}`);
-    };
-
-    // ✅ Render Individual Itinerary Day
-    const renderDayItem = ({ item }) => (
-        <View style={styles.dayCard}>
-            <Text style={styles.dayTitle}>{item.title} ({item.date})</Text>
-
-            {/* Activities List */}
-            {item.activities.length > 0 ? (
-                item.activities.map(activity => (
-                    <View key={activity.id} style={styles.activityItem}>
-                        <Text style={styles.activityTime}>{activity.time}</Text>
-                        <Text style={styles.activityName}>{activity.name} - {activity.location}</Text>
-                    </View>
-                ))
-            ) : (
-                <Text style={styles.noActivities}>No activities added.</Text>
-            )}
-
-            {/* Add Activity Button */}
-            <TouchableOpacity 
-                style={styles.addActivityButton} 
-                onPress={() => handleAddActivity(item.id)}
-            >
-                <Text style={styles.addActivityButtonText}>+ Add Activity</Text>
-            </TouchableOpacity>
-        </View>
-    );
-
-    if (loading) {
-        return <ActivityIndicator size="large" color="#007bff" style={styles.loading} />;
-    }
 
     return (
-        <View style={styles.container}>
-            {itinerary ? (
-                <>
-                    {/* Itinerary Details */}
-                    <Text style={styles.itineraryName}>{itinerary.name}</Text>
-                    <Text style={styles.itineraryDetails}>
-                        {itinerary.destination} | {itinerary.start_date} - {itinerary.end_date}
-                    </Text>
-                    <Text style={styles.itineraryBudget}>Budget: ${itinerary.budget}</Text>
-
-                    {/* Itinerary Days List */}
-                    <FlatList 
-                        data={itinerary.days}
-                        renderItem={renderDayItem}
-                        keyExtractor={(item) => item.id}
-                        ListEmptyComponent={<Text style={styles.noDays}>No days added yet.</Text>}
-                    />
-
-                    {/* Add Day Button */}
-                    <TouchableOpacity style={styles.addButton} onPress={handleAddDay}>
-                        <Text style={styles.addButtonText}>+ Add Itinerary Day</Text>
-                    </TouchableOpacity>
-                </>
-            ) : (
-                <Text style={styles.errorText}>Itinerary not found.</Text>
-            )}
-        </View>
+        <SafeAreaWrapper>
+            <View style={styles.container}>
+                {loading ? (
+                    <ActivityIndicator size="large" color="#007bff" />
+                ) : itinerary ? (
+                    <>
+                        <Text style={styles.title}>{itinerary.name}</Text>
+                        <Text style={styles.detail}>Destination: {itinerary.destination}</Text>
+                        <Text style={styles.detail}>
+                            {new Date(itinerary.start_date).toLocaleDateString()} - 
+                            {new Date(itinerary.end_date).toLocaleDateString()}
+                        </Text>
+                        {user ? (
+                            <Text style={styles.detail}>Created by: {user.name} ({user.email})</Text>
+                        ) : (
+                            <Text style={styles.errorText}>⚠ Unable to load user details.</Text>
+                        )}
+                        
+                        {/* ✅ Delete Itinerary Button */}
+                        <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteItinerary}>
+                            <Text style={styles.deleteButtonText}>Delete Itinerary</Text>
+                        </TouchableOpacity>
+                    </>
+                ) : (
+                    <Text style={styles.errorText}>Itinerary not found.</Text>
+                )}
+            </View>
+        </SafeAreaWrapper>
     );
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20, backgroundColor: '#fff' },
-    itineraryName: { fontSize: 22, fontWeight: 'bold', textAlign: 'center', marginBottom: 10 },
-    itineraryDetails: { fontSize: 16, textAlign: 'center', marginBottom: 5, color: '#555' },
-    itineraryBudget: { fontSize: 16, textAlign: 'center', fontWeight: 'bold', marginBottom: 10 },
-    loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    dayCard: { backgroundColor: '#f9f9f9', padding: 15, borderRadius: 8, marginVertical: 10 },
-    dayTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 5 },
-    activityItem: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 5 },
-    activityTime: { fontWeight: 'bold', color: '#007bff' },
-    activityName: { fontSize: 16, color: '#333' },
-    noActivities: { fontStyle: 'italic', color: '#888', marginTop: 5 },
-    addActivityButton: { marginTop: 10, padding: 10, backgroundColor: '#007bff', borderRadius: 5, alignItems: 'center' },
-    addActivityButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-    addButton: { marginTop: 20, padding: 15, backgroundColor: '#28a745', borderRadius: 8, alignItems: 'center' },
-    addButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-    noDays: { textAlign: 'center', fontSize: 16, color: '#888', marginTop: 20 },
-    errorText: { textAlign: 'center', fontSize: 16, color: 'red', marginTop: 20 },
+    container: { flex: 1, padding: 20, backgroundColor: '#fff', justifyContent: 'center' },
+    title: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },
+    detail: { fontSize: 16, marginBottom: 5, color: '#333' },
+    errorText: { textAlign: 'center', fontSize: 16, color: 'red' },
+    deleteButton: { 
+        marginTop: 20, padding: 15, backgroundColor: 'red', borderRadius: 8, alignItems: 'center' 
+    },
+    deleteButtonText: { color: '#fff', fontSize: 14 }
 });
 
 export default ItineraryDetailScreen;

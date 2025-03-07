@@ -12,6 +12,7 @@ import SettingsScreen from './components/screens/SettingsScreen';
 import firebase from '@react-native-firebase/app';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import ItineraryListScreen from './components/screens/itinerary/ItineraryListScreen';
+import ItineraryDetailScreen from './components/screens/itinerary/ItineraryDetailScreen';
 
 
 const Stack = createStackNavigator();
@@ -40,6 +41,7 @@ function App() {
         <Stack.Screen name='Profile' component={ProfileScreen} />
         <Stack.Screen name='Settings' component={SettingsScreen} />
         <Stack.Screen name='ItineraryList' component={ItineraryListScreen} />
+        <Stack.Screen name='ItineraryDetail' component={ItineraryDetailScreen} />
       </Stack.Navigator>
     </NavigationContainer>
     </SafeAreaProvider>

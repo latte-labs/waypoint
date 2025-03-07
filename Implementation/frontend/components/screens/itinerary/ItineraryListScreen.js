@@ -58,8 +58,8 @@ const ItineraryListScreen = () => {
     // ✅ Handle Itinerary Selection (Navigates to Detail Screen)
     const handleSelectItinerary = (itinerary) => {
         console.log(`🔄 Navigating to itinerary: ${itinerary.id}`);
-        Alert.alert("Itinerary Selected", `UUID: ${itinerary.id}`);
-        // navigation.navigate('ItineraryDetailScreen', { itineraryId: itinerary.id });
+        // Alert.alert("Itinerary Selected", `UUID: ${itinerary.id}`);
+        navigation.navigate('ItineraryDetail', { itineraryId: itinerary.id });
     };
 
     // ✅ Handle Adding New Itinerary (For Now, Just Alert)
