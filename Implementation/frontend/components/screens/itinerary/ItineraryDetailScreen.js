@@ -158,15 +158,23 @@ const styles = StyleSheet.create({
     title: { fontSize: 22, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },
     detail: { fontSize: 16, marginBottom: 5, color: '#333' },
 
-    daysContainer: { marginTop: 20 },
+    daysContainer: {
+        marginTop: 20,
+        width: '100%',  // ✅ Makes sure all items stay aligned
+        alignSelf: 'center',
+    },
     dayCard: { 
-        backgroundColor: '#f8f9fa', 
-        padding: 15, 
-        borderRadius: 8, 
+        backgroundColor: '#f8f9fa',
+        padding: 15,
+        borderRadius: 8,
         marginBottom: 15,
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'flex-start',
+        width: '100%',  // ✅ Ensure it matches the full available width
+        alignSelf: 'center',  // ✅ Prevents shrinking based on text
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
     },
     dayTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
     dayDate: { fontSize: 14, color: '#555', marginBottom: 10 },
@@ -193,6 +201,8 @@ const styles = StyleSheet.create({
         marginVertical: 5,
         borderLeftWidth: 5,
         borderLeftColor: '#007bff',
+        width: '100%',  // ✅ Ensures same width as day card
+        alignSelf: 'center',
     },
     activityTime: { fontSize: 14, fontWeight: 'bold', color: '#007bff' },
     activityName: { fontSize: 16, fontWeight: '600', color: '#222' },
