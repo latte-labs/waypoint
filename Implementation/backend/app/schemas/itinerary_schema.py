@@ -82,3 +82,15 @@ class ItineraryMemberResponse(ItineraryMemberBase):
 
     class Config:
         from_attributes = True
+
+class ItinerarySchema(BaseModel):
+    id: UUID
+    name: str
+    destination: str
+    start_date: datetime
+    end_date: datetime
+    created_by: UUID
+    budget: Optional[float] = None
+
+    class Config:
+        from_attributes = True

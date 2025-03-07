@@ -4,7 +4,7 @@ from app.db.db import get_db  # ✅ Import database session from db.py
 from app.models.itinerary_models import Itinerary, ItineraryDay, Activity, ItineraryMember
 from app.schemas import itinerary_schema
 from app.schemas.itinerary_detail_schema import ItineraryDetailResponseSchema
-
+from typing import List
 import uuid
 
 itinerary_router = APIRouter()
@@ -162,3 +162,15 @@ def get_itinerary_members(itinerary_id: uuid.UUID, db: Session = Depends(get_db)
     if not members:
         raise HTTPException(status_code=404, detail="No members found for this itinerary")
     return members
+
+@itinerary_router.get("/users/{user_id}/itineraries", response_model=List[itinerary_schema.ItinerarySchema])
+def get_user_itineraries(user_id: str, db: Session = Depends(get_db)):
+    """
+    ✅ Fetches all itineraries for a specific user.
+    """
+    itineraries = db.query(Itinerary).filter(Itinerary.created_by == user_id).all()
+
+    if not itineraries:
+        return []  # ✅ Instead of 404, return an empty list if no itineraries exist.
+
+    return itineraries
