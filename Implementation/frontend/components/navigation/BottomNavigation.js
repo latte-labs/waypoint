@@ -8,6 +8,7 @@ import InteractiveRecommendations from '../screens/InteractiveRecommendations';
 import ChatbotScreen from '../screens/ChatbotScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import ItineraryListScreen from '../screens/itinerary/ItineraryListScreen';
 import { BlurView } from '@react-native-community/blur';
 
 // Dummy Placeholder Component for "More" tab

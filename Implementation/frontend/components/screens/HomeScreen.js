@@ -69,7 +69,7 @@ function HomeScreen() {
     };
 
     const handleProfileClick = () => {
-        navigation.navigate('Profile');
+        navigation.navigate('ItineraryList'); // temporarily used for itinerary to allow back swiping
     };
 
     return (
