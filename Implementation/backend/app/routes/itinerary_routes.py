@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.db.db import get_db  # ✅ Import database session from db.py
-from app.models import itinerary_models
+from app.models.itinerary_models import Itinerary, ItineraryDay, Activity, ItineraryMember
 from app.schemas import itinerary_schema
+from app.schemas.itinerary_detail_schema import ItineraryDetailResponseSchema
 
 import uuid
 
@@ -12,7 +13,7 @@ itinerary_router = APIRouter()
 
 @itinerary_router.post("/", response_model=itinerary_schema.ItineraryResponse)
 def create_itinerary(itinerary: itinerary_schema.ItineraryCreate, db: Session = Depends(get_db)):
-    new_itinerary = itinerary_models.Itinerary(
+    new_itinerary = Itinerary(
         id=uuid.uuid4(),
         name=itinerary.name,
         destination=itinerary.destination,
@@ -29,23 +30,69 @@ def create_itinerary(itinerary: itinerary_schema.ItineraryCreate, db: Session = 
     return new_itinerary
 
 
-@itinerary_router.get("/{itinerary_id}", response_model=itinerary_schema.ItineraryResponse)
-def get_itinerary(itinerary_id: uuid.UUID, db: Session = Depends(get_db)):
-    itinerary = db.query(itinerary_models.Itinerary).filter(itinerary_models.Itinerary.id == itinerary_id).first()
+# @itinerary_router.get("/{itinerary_id}", response_model=itinerary_schema.ItineraryResponse)
+# def get_itinerary(itinerary_id: uuid.UUID, db: Session = Depends(get_db)):
+#     itinerary = db.query(itinerary_models.Itinerary).filter(itinerary_models.Itinerary.id == itinerary_id).first()
+#     if not itinerary:
+#         raise HTTPException(status_code=404, detail="Itinerary not found")
+#     return itinerary
+
+itinerary_router = APIRouter()
+
+@itinerary_router.get("/{itinerary_id}", response_model= ItineraryDetailResponseSchema)
+def get_itinerary(itinerary_id: str, db: Session = Depends(get_db)):
+    """
+    ✅ Fetches full itinerary details, including days & activities.
+    """
+    # 🔍 Fetch the itinerary
+    itinerary = db.query(Itinerary).filter(Itinerary.id == itinerary_id).first()
     if not itinerary:
         raise HTTPException(status_code=404, detail="Itinerary not found")
-    return itinerary
+
+    # 🔍 Fetch linked itinerary days
+    itinerary_days = db.query(ItineraryDay).filter(ItineraryDay.itinerary_id == itinerary_id).all()
+
+    # 🔍 Fetch activities for each day and structure the response
+    itinerary_data = ItineraryDetailResponseSchema(
+        id=itinerary.id,
+        name=itinerary.name,
+        destination=itinerary.destination,
+        start_date=itinerary.start_date,
+        end_date=itinerary.end_date,
+        created_by=itinerary.created_by,
+        budget=itinerary.budget,
+        days=[
+            {
+                "id": day.id,
+                "date": day.date,
+                "title": day.title,
+                "activities": [
+                    {
+                        "id": activity.id,
+                        "time": activity.time,
+                        "name": activity.name,
+                        "location": activity.location
+                    }
+                    for activity in db.query(Activity).filter(Activity.itinerary_day_id == day.id).all()
+                ]
+            }
+            for day in itinerary_days
+        ]
+    )
+
+    return itinerary_data
+
 
 
 # -------------------- Itinerary Day Routes --------------------
 
 @itinerary_router.post("/{itinerary_id}/days/", response_model=itinerary_schema.ItineraryDayResponse)
 def add_day_to_itinerary(itinerary_id: uuid.UUID, day: itinerary_schema.ItineraryDayCreate, db: Session = Depends(get_db)):
-    itinerary = db.query(itinerary_models.Itinerary).filter(itinerary_models.Itinerary.id == itinerary_id).first()
+    itinerary = db.query(Itinerary).filter(Itinerary.id == itinerary_id).first()
     if not itinerary:
         raise HTTPException(status_code=404, detail="Itinerary not found")
     
-    new_day = itinerary_models.ItineraryDay(
+    new_day = ItineraryDay(
         id=uuid.uuid4(),
         itinerary_id=itinerary_id,
         date=day.date,
@@ -61,11 +108,11 @@ def add_day_to_itinerary(itinerary_id: uuid.UUID, day: itinerary_schema.Itinerar
 
 @itinerary_router.post("/{itinerary_id}/days/{day_id}/activities/", response_model=itinerary_schema.ActivityResponse)
 def add_activity(day_id: uuid.UUID, activity: itinerary_schema.ActivityCreate, db: Session = Depends(get_db)):
-    day = db.query(itinerary_models.ItineraryDay).filter(itinerary_models.ItineraryDay.id == day_id).first()
+    day = db.query(ItineraryDay).filter(ItineraryDay.id == day_id).first()
     if not day:
         raise HTTPException(status_code=404, detail="Itinerary day not found")
     
-    new_activity = itinerary_models.Activity(
+    new_activity = Activity(
         id=uuid.uuid4(),
         itinerary_day_id=day_id,
         time=activity.time,
@@ -85,19 +132,19 @@ def add_activity(day_id: uuid.UUID, activity: itinerary_schema.ActivityCreate, d
 
 @itinerary_router.post("/{itinerary_id}/members/", response_model=itinerary_schema.ItineraryMemberResponse)
 def add_member(itinerary_id: uuid.UUID, member: itinerary_schema.ItineraryMemberCreate, db: Session = Depends(get_db)):
-    itinerary = db.query(itinerary_models.Itinerary).filter(itinerary_models.Itinerary.id == itinerary_id).first()
+    itinerary = db.query(Itinerary).filter(Itinerary.id == itinerary_id).first()
     if not itinerary:
         raise HTTPException(status_code=404, detail="Itinerary not found")
 
-    existing_member = db.query(itinerary_models.ItineraryMember).filter(
-        itinerary_models.ItineraryMember.itinerary_id == itinerary_id,
-        itinerary_models.ItineraryMember.user_id == member.user_id
+    existing_member = db.query(ItineraryMember).filter(
+        ItineraryMember.itinerary_id == itinerary_id,
+        ItineraryMember.user_id == member.user_id
     ).first()
     
     if existing_member:
         raise HTTPException(status_code=400, detail="User is already a member of this itinerary")
 
-    new_member = itinerary_models.ItineraryMember(
+    new_member = ItineraryMember(
         id=uuid.uuid4(),
         itinerary_id=itinerary_id,
         user_id=member.user_id,
@@ -111,7 +158,7 @@ def add_member(itinerary_id: uuid.UUID, member: itinerary_schema.ItineraryMember
 
 @itinerary_router.get("/{itinerary_id}/members/", response_model=list[itinerary_schema.ItineraryMemberResponse])
 def get_itinerary_members(itinerary_id: uuid.UUID, db: Session = Depends(get_db)):
-    members = db.query(itinerary_models.ItineraryMember).filter(itinerary_models.ItineraryMember.itinerary_id == itinerary_id).all()
+    members = db.query(ItineraryMember).filter(ItineraryMember.itinerary_id == itinerary_id).all()
     if not members:
         raise HTTPException(status_code=404, detail="No members found for this itinerary")
     return members
