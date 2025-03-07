@@ -29,16 +29,6 @@ def create_itinerary(itinerary: itinerary_schema.ItineraryCreate, db: Session = 
     db.refresh(new_itinerary)
     return new_itinerary
 
-
-# @itinerary_router.get("/{itinerary_id}", response_model=itinerary_schema.ItineraryResponse)
-# def get_itinerary(itinerary_id: uuid.UUID, db: Session = Depends(get_db)):
-#     itinerary = db.query(itinerary_models.Itinerary).filter(itinerary_models.Itinerary.id == itinerary_id).first()
-#     if not itinerary:
-#         raise HTTPException(status_code=404, detail="Itinerary not found")
-#     return itinerary
-
-itinerary_router = APIRouter()
-
 @itinerary_router.get("/{itinerary_id}", response_model= ItineraryDetailResponseSchema)
 def get_itinerary(itinerary_id: str, db: Session = Depends(get_db)):
     """
