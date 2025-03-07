@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, TouchableOpacity, Animated, Easing, View, TouchableWithoutFeedback, Keyboard } from 'react-native';
-import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
+import { Text, TouchableOpacity, Animated, View, TouchableWithoutFeedback } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import styles from '../../styles/BottomNavigatorStyle';
 import HomeScreen from '../screens/HomeScreen';
 import InteractiveRecommendations from '../screens/InteractiveRecommendations';
@@ -12,13 +12,11 @@ import { BlurView } from '@react-native-community/blur';
 
 // Dummy Placeholder Component for "More" tab
 const MorePlaceholder = () => <View style={{ flex: 1, backgroundColor: 'transparent' }} />;
+
 const Tab = createBottomTabNavigator();
 
 function BottomNavigation() {
-  const tabBarAnimation = useRef(new Animated.Value(1)).current;
-  const [isTabBarVisible, setIsTabBarVisible] = useState(true);
   const [menuVisible, setMenuVisible] = useState(false);
-  const timeoutRef = useRef(null);
   const animation = useRef(new Animated.Value(0)).current;
   const navigation = useNavigation();
   const route = useRoute();
@@ -30,7 +28,6 @@ function BottomNavigation() {
     Animated.timing(animation, {
       toValue: menuVisible ? 0 : 1,
       duration: 200,
-      easing: Easing.ease,
       useNativeDriver: false,
     }).start();
   };
@@ -42,95 +39,57 @@ function BottomNavigation() {
       Animated.timing(animation, {
         toValue: 0,
         duration: 200,
-        easing: Easing.ease,
         useNativeDriver: false,
       }).start();
     }
   };
 
-  // Hide Bottom Navigation after 5 seconds of inactivity
-  const resetInactivityTimer = () => {
-    setIsTabBarVisible(true);
-    Animated.timing(tabBarAnimation, {
-      toValue: 1, // Show tab bar
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
-
-    clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => {
-      Animated.timing(tabBarAnimation, {
-        toValue: 0, // Hide tab bar
-        duration: 300,
-        useNativeDriver: false,
-      }).start();
-      setIsTabBarVisible(false);
-    }, 5000);
-  };
-
-  // Reset the timer when the screen is focused
-  useFocusEffect(
-    React.useCallback(() => {
-      resetInactivityTimer();
-    }, [])
-  );
-
+  // Navigate to screen and close menu
   const navigateToScreen = (screen) => {
     closeMenu();
     navigation.navigate(screen);
   };
 
-  // Animates Popup Menu
+  // Popup menu animation height
   const menuHeight = animation.interpolate({
     inputRange: [0, 1],
     outputRange: [0, 200], // Adjust height of the popup
   });
 
   return (
-    <TouchableWithoutFeedback onPress={() => { resetInactivityTimer(); closeMenu(); }}>
+    <TouchableWithoutFeedback onPress={closeMenu}>
       <View style={{ flex: 1 }}>
         <Tab.Navigator
           screenOptions={({ route }) => ({
             tabBarIcon: ({ color, size }) => {
-              let icon;
-              if (route.name === 'Home') {
-                icon = '🏠';
-              } else if (route.name === 'Map') {
-                icon = '📍';
-              } else if (route.name === 'Itinerary') {
-                icon = '🗺';
-              } else if (route.name === 'More') {
-                icon = '≡';
-              }
-              return <Text style={{ fontSize: size, color, paddingBottom: 25 }}>{icon}</Text>;
+              const icons = {
+                Home: '🏠',
+                Map: '📍',
+                Itinerary: '🗺',
+                More: '≡',
+              };
+              return <Text style={{ fontSize: size, color, paddingBottom: 25 }}>{icons[route.name]}</Text>;
             },
             tabBarActiveTintColor: '#FF6F00',
             tabBarInactiveTintColor: 'gray',
-            tabBarStyle: isTabBarVisible
-              ? [styles.tabBar, { transform: [{ translateY: tabBarAnimation.interpolate({ inputRange: [0, 1], outputRange: [200, 0] }) }], zIndex: 100 }]
-              : { display: "none" },
+            tabBarStyle: styles.tabBar,
             tabBarHideOnKeyboard: true,
             tabBarLabelStyle: styles.tabBarLabel,
             headerShown: false,
           })}
-          screenListeners={{
-            focus: resetInactivityTimer,
-            tabPress: resetInactivityTimer,
-          }}
         >
-          <Tab.Screen name="Home" component={HomeScreen} listeners={{ focus: resetInactivityTimer }} />
+          <Tab.Screen name="Home" component={HomeScreen} />
           <Tab.Screen name="Map" component={InteractiveRecommendations} options={{ tabBarStyle: { display: "none" } }} />
-          <Tab.Screen name="Itinerary" component={ChatbotScreen} listeners={{ focus: resetInactivityTimer }} />
+          <Tab.Screen name="Itinerary" component={ChatbotScreen} />
           <Tab.Screen
             name="More"
             component={MorePlaceholder}
-            listeners={() => ({
+            listeners={{
               tabPress: (e) => {
                 e.preventDefault();
-                resetInactivityTimer();
                 toggleMenu();
               },
-            })}
+            }}
           />
         </Tab.Navigator>
 
@@ -144,21 +103,17 @@ function BottomNavigation() {
         {/* Small Animated Popup Menu */}
         {menuVisible && !isMapScreen && (
           <Animated.View style={[styles.popupMenu, { height: menuHeight }]}>
-            <TouchableOpacity style={styles.menuItem} onPress={() => navigateToScreen('Profile')}>
-              <Text style={styles.menuText}>👤 Profile</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem} onPress={() => navigateToScreen('Settings')}>
-              <Text style={styles.menuText}>⚙️ Settings</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem} onPress={() => navigateToScreen('ChatBot')}>
-              <Text style={styles.menuText}>🤖 Chatbot</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem} onPress={() => console.log('Go to Game')}>
-              <Text style={styles.menuText}>⭐ Game</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem} onPress={() => console.log('Go to Events')}>
-              <Text style={styles.menuText}>🔔 Events</Text>
-            </TouchableOpacity>
+            {[
+              { label: "👤 Profile", screen: "Profile" },
+              { label: "⚙️ Settings", screen: "Settings" },
+              { label: "🤖 Chatbot", screen: "ChatBot" },
+              { label: "⭐ Game", screen: "" },
+              { label: "🔔 Events", screen: "" },
+            ].map((item, index) => (
+              <TouchableOpacity key={index} style={styles.menuItem} onPress={() => navigateToScreen(item.screen)}>
+                <Text style={styles.menuText}>{item.label}</Text>
+              </TouchableOpacity>
+            ))}
           </Animated.View>
         )}
       </View>
