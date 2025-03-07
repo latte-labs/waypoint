@@ -37,20 +37,16 @@ npm install
 If you are running the project on **iOS**, you need to install CocoaPods dependencies:
 
 ```sh
-bundle install  # Only the first time
+gem install cocoapods
+gem install bundler
+
+
+cd ios 
+bundle install  
 bundle exec pod install
 ```
 
 ## Running the App
-
-### Android
-
-To run the app on an Android emulator or connected device:
-
-```sh
-npx react-native run-android
-```
-
 ### iOS (Mac Users Only)
 
 To run the app on an iOS simulator or connected device:
@@ -83,7 +79,8 @@ npm install
 For iOS users, update CocoaPods dependencies as well:
 
 ```sh
-bundle exec pod install
+cd ios
+pod install
 ```
 
 ### 3. Run the App Again
