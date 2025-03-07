@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Alert, ActivityIndicator, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { database } from '../../firebase';
+import { database } from '../../../firebase';
+import SafeAreaWrapper from '../SafeAreaWrapper';
 
 const ItineraryListScreen = () => {
     const [itineraries, setItineraries] = useState([]);
@@ -73,7 +74,8 @@ const ItineraryListScreen = () => {
     );
 
     return (
-        <View style={styles.container}>
+        <SafeAreaWrapper>
+            <View style={styles.container}>
             <Text style={styles.title}>My Itineraries</Text>
 
             {loading ? (
@@ -93,18 +95,19 @@ const ItineraryListScreen = () => {
                 <Text style={styles.addButtonText}>+ Create New Itinerary</Text>
             </TouchableOpacity>
         </View>
+        </SafeAreaWrapper>
     );
 };
 
 const styles = StyleSheet.create({
     container: { flex: 1, padding: 20, backgroundColor: '#fff' },
-    title: { fontSize: 22, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
+    title: { fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
     itineraryCard: { padding: 15, marginVertical: 10, backgroundColor: '#f1f1f1', borderRadius: 8 },
     itineraryName: { fontSize: 18, fontWeight: '600' },
     itineraryDate: { fontSize: 14, color: '#666' },
     noItineraries: { textAlign: 'center', fontSize: 16, color: '#888', marginTop: 20 },
     addButton: { marginTop: 20, padding: 15, backgroundColor: '#007bff', borderRadius: 8, alignItems: 'center' },
-    addButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' }
+    addButtonText: { color: '#fff', fontSize: 12, fontWeight: 'bold' }
 });
 
 export default ItineraryListScreen;
