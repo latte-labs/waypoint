@@ -94,3 +94,10 @@ class ItinerarySchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ReorderDayItem(BaseModel):
+    id: UUID
+    order_index: int
+
+class ReorderDaysRequest(BaseModel):
+    days: List[ReorderDayItem]

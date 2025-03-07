@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, ForeignKey, DateTime, JSON, Float, Enum
+from sqlalchemy import Column, String, ForeignKey, DateTime, JSON, Float, Enum, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -50,7 +50,9 @@ class ItineraryDay(Base):
     itinerary_id = Column(UUID(as_uuid=True), ForeignKey("itineraries.id", ondelete="CASCADE"), nullable=False)
     date = Column(DateTime, nullable=False)
     title = Column(String, nullable=False)
+    order_index = Column(Integer, nullable=False, default=0)  # ✅ New column
     created_at = Column(DateTime, default=datetime.utcnow)
+
 
     itinerary = relationship("Itinerary", back_populates="days")
     activities = relationship("Activity", back_populates="day", cascade="all, delete")

@@ -6,6 +6,7 @@ from app.schemas import itinerary_schema
 from app.schemas.itinerary_detail_schema import ItineraryDetailResponseSchema
 from typing import List
 import uuid
+from sqlalchemy.sql import func
 
 itinerary_router = APIRouter()
 
@@ -29,21 +30,16 @@ def create_itinerary(itinerary: itinerary_schema.ItineraryCreate, db: Session = 
     db.refresh(new_itinerary)
     return new_itinerary
 
-@itinerary_router.get("/{itinerary_id}", response_model= ItineraryDetailResponseSchema)
+@itinerary_router.get("/{itinerary_id}", response_model=ItineraryDetailResponseSchema)
 def get_itinerary(itinerary_id: str, db: Session = Depends(get_db)):
-    """
-    ✅ Fetches full itinerary details, including days & activities.
-    """
-    # 🔍 Fetch the itinerary
     itinerary = db.query(Itinerary).filter(Itinerary.id == itinerary_id).first()
     if not itinerary:
         raise HTTPException(status_code=404, detail="Itinerary not found")
 
-    # 🔍 Fetch linked itinerary days
-    itinerary_days = db.query(ItineraryDay).filter(ItineraryDay.itinerary_id == itinerary_id).all()
+    # ✅ Fetch days ordered by `order_index`
+    itinerary_days = db.query(ItineraryDay).filter(ItineraryDay.itinerary_id == itinerary_id).order_by(ItineraryDay.order_index).all()
 
-    # 🔍 Fetch activities for each day and structure the response
-    itinerary_data = ItineraryDetailResponseSchema(
+    return ItineraryDetailResponseSchema(
         id=itinerary.id,
         name=itinerary.name,
         destination=itinerary.destination,
@@ -70,7 +66,6 @@ def get_itinerary(itinerary_id: str, db: Session = Depends(get_db)):
         ]
     )
 
-    return itinerary_data
 
 
 
@@ -81,13 +76,19 @@ def add_day_to_itinerary(itinerary_id: uuid.UUID, day: itinerary_schema.Itinerar
     itinerary = db.query(Itinerary).filter(Itinerary.id == itinerary_id).first()
     if not itinerary:
         raise HTTPException(status_code=404, detail="Itinerary not found")
-    
+
+    # ✅ Find the highest order_index in this itinerary
+    max_order = db.query(func.max(ItineraryDay.order_index)).filter(ItineraryDay.itinerary_id == itinerary_id).scalar()
+    new_order_index = (max_order + 1) if max_order is not None else 0  # ✅ Set next order_index
+
     new_day = ItineraryDay(
         id=uuid.uuid4(),
         itinerary_id=itinerary_id,
         date=day.date,
-        title=day.title
+        title=day.title,
+        order_index=new_order_index  # ✅ Assign next order index
     )
+
     db.add(new_day)
     db.commit()
     db.refresh(new_day)
@@ -164,3 +165,29 @@ def get_user_itineraries(user_id: str, db: Session = Depends(get_db)):
         return []  # ✅ Instead of 404, return an empty list if no itineraries exist.
 
     return itineraries
+
+@itinerary_router.patch("/{itinerary_id}/days/reorder", response_model=dict)
+def reorder_days(itinerary_id: str, reorder_request: itinerary_schema.ReorderDaysRequest, db: Session = Depends(get_db)):
+    """
+    ✅ Updates the order of days inside an itinerary.
+    """
+    try:
+        # Validate that all provided days exist
+        day_ids = [d.id for d in reorder_request.days]
+        days = db.query(ItineraryDay).filter(ItineraryDay.id.in_(day_ids)).all()
+
+        if len(days) != len(day_ids):
+            raise HTTPException(status_code=400, detail="One or more day IDs are invalid.")
+
+        # ✅ Update order_index based on frontend request
+        for item in reorder_request.days:
+            day = next((d for d in days if d.id == item.id), None)
+            if day:
+                day.order_index = item.order_index
+
+        db.commit()
+        return {"message": "Days reordered successfully"}
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
