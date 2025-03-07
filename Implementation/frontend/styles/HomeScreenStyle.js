@@ -1,86 +1,176 @@
 import { StyleSheet, Dimensions } from 'react-native';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 const HomeScreenStyles = StyleSheet.create({
-    // ✅ Ensures Safe Margins for Apple Devices
-    safeContainer: {
-        flex: 1,
-        backgroundColor: 'black'
-    },
     container: {
         flex: 1,
-        justifyContent: 'flex-start',
-        alignContent: 'center',
-        padding: 10,
         backgroundColor: 'white',
+        padding: 15,
+        marginBottom: 70,
     },
-    scrollContainer: {
-        flexGrow: 1,
-        backgroundColor: 'white'
+
+    // ✅ HEADER SECTION (30% HEIGHT)
+    headerContainer: {
+        height: height * 0.1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 15,
     },
-    searchbar: {
-        width: '70%',
+
+    takeQuizContainer: {
+        backgroundColor: '#FFDD57',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 12,
+        borderRadius: 12,
+        height: '80%',
+        width: '100%',
+    },
+
+    takeQuizText: {
+        fontSize: 12,
+        marginBottom: 4,
+    },
+
+    takeQuizButton: {
+        backgroundColor: '#FFAA00',
+        paddingVertical: 8,
+        paddingHorizontal: 15,
+        borderRadius: 12,
+        marginTop: 5,
+    },
+
+    takeQuizButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: 14,
+    },
+
+    waypointText: {
+        fontSize: 22,
+        fontWeight: 'bold',
+    },
+
+    weatherBox: {
+        width: '25%',
+        height: '80%',
+        backgroundColor: '#D3D3D3',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 12,
+        padding: 5,
+    },
+
+    weatherText: {
+        fontSize: 16,
+    },
+
+    weatherLocation: {
+        fontSize: 9,
+    },
+
+    profileButton: {
+        width: height * 0.08,
+        height: height * 0.08,
+        borderRadius: 50,
+        backgroundColor: '#FF6F00',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginLeft: 10,
+    },
+
+    profileIcon: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: 'white',
+    },
+
+    // ✅ SEARCH BAR (10% HEIGHT)
+    searchContainer: {
+        height: height * 0.05,
+        justifyContent: 'center',
+    },
+
+    searchInput: {
+        width: '100%',
         height: 40,
         backgroundColor: '#f2f2f2',
         borderRadius: 20,
         borderWidth: 0.25,
         paddingHorizontal: 20,
-        marginStart: 15,
     },
-    myTrips: {
-        flex: 1,
-        marginTop: 20,
-        marginHorizontal: 15,
+
+    // ✅ TITLE SECTION (5% HEIGHT)
+    titleContainer: {
+        height: height * 0.05,
+        justifyContent: 'center',
     },
-    myTripsTitle: {
-        fontSize: 22,   
-        marginTop: 10,
+
+    titleText: {
+        fontSize: 18,
+        fontWeight: 'bold',
     },
-    card: {
-        backgroundColor: "#f2f2f2",
+
+    // ✅ TRIPS LIST (30% HEIGHT)
+    tripScrollView: {
+        height: height * 0.3,
+    },
+
+    tripCard: {
+        backgroundColor: '#f2f2f2',
         borderRadius: 15,
         borderWidth: 0.25,
-        padding: 0,
+        padding: 15,
         alignItems: 'center',
         justifyContent: 'center',
-        width: width * 0.8,
-        height: 150,
-        marginTop: 15,
-        marginStart: 0,
+        width: 250,
+        height: '80%',
+        marginRight: 15,
     },
-    tripName: {
-        fontSize: 20,
+
+    tripTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
     },
-    date: {
+
+    tripDate: {
         fontSize: 12,
         marginTop: 5,
     },
 
-    // ✅ New Styles for "Take Quiz" Card
-    quizCard: {
-        width: '100%',
-        backgroundColor: '#FFDD57',
-        justifyContent: 'center',
+    // ✅ CURRENT FAVORITE DESTINATIONS (20% HEIGHT)
+    favoriteTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginTop: 10,
+    },
+
+    favoriteScrollView: {
+        height: height * 0.2,
+    },
+
+    favoriteCard: {
+        backgroundColor: "#D3E3FC",
+        borderRadius: 15,
+        borderWidth: 0.25,
+        padding: 15,
         alignItems: 'center',
-        padding: 10,
-        borderRadius: 10,
-        marginBottom: 10,
+        justifyContent: 'center',
+        width: 220,
+        height: '80%',
+        marginRight: 15,
     },
-    quizText: {
-        fontSize: 16,
+
+    favoritePlace: {
+        fontSize: 18,
         fontWeight: 'bold',
-        marginBottom: 5,
     },
-    quizButton: {
-        backgroundColor: '#FFAA00',
-        paddingVertical: 8,
-        paddingHorizontal: 15,
-        borderRadius: 5,
-    },
-    quizButtonText: {
-        color: 'white',
-        fontWeight: 'bold',
+
+    favoriteLocation: {
+        fontSize: 12,
+        marginTop: 5,
     },
 });
 

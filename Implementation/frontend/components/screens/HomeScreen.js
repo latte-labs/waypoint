@@ -12,6 +12,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { database } from '../../firebase';
 import SafeAreaWrapper from './SafeAreaWrapper';
+import HomeScreenStyles from '../../styles/HomeScreenStyle';
 
 const { width, height } = Dimensions.get('window');
 
@@ -77,99 +78,39 @@ function HomeScreen() {
 
                 {/* ✅ 1. HEADER SECTION (30% HEIGHT) */}
                 <View 
-                    style={{
-                        height: height * 0.1,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',  // ✅ Spaces out elements
-                        paddingHorizontal: 15,  // ✅ Adds balanced padding on the sides
-                    }}
-                >
-                    {/* Left Side: 60% - Take Quiz OR WayPoint */}
+                    style={HomeScreenStyles.headerContainer}>
+                    {/* Left: Take Quiz or WayPoint */}
                     <View style={{ width: '50%', height: '100%', justifyContent: 'center' }}>
                         {showQuizPrompt ? (
-                            <TouchableOpacity 
-                                style={{
-                                    backgroundColor: '#FFDD57',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    padding: 12,
-                                    borderRadius: 12,
-                                    height: '80%',
-                                    width: '100%', // ✅ Ensures proper spacing inside parent container
-                                }} 
-                                onPress={handleQuizStart}
-                            >
-                                <Text style={{ fontSize: 12, marginBottom: 4 }}>
-                                    Discover your travel style!
-                                </Text>
-
-                                <TouchableOpacity 
-                                    style={{
-                                        backgroundColor: '#FFAA00',
-                                        paddingVertical: 8,
-                                        paddingHorizontal: 15,
-                                        borderRadius: 12,
-                                        marginTop: 5, // ✅ Adds spacing between text and button
-                                    }} 
-                                    onPress={handleQuizStart}
-                                >
-                                    <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 14 }}>
-                                        Start
-                                    </Text>
+                            <TouchableOpacity style={HomeScreenStyles.takeQuizContainer} onPress={handleQuizStart}>
+                                <Text style={HomeScreenStyles.takeQuizText}>Discover your travel style!</Text>
+                                <TouchableOpacity style={HomeScreenStyles.takeQuizButton} onPress={handleQuizStart}>
+                                    <Text style={HomeScreenStyles.takeQuizButtonText}>Start</Text>
                                 </TouchableOpacity>
                             </TouchableOpacity>
                         ) : (
                             <View style={{ justifyContent: 'center', alignItems: 'center', height: '80%' }}>
-                                <Text style={{ fontSize: 22, fontWeight: 'bold' }}>WayPoint</Text>
+                                <Text style={HomeScreenStyles.waypointText}>WayPoint</Text>
                             </View>
                         )}
                     </View>
 
-
                     {/* Middle: 20% - Weather Placeholder */}
-                    <View style={{
-                        width: '25%',
-                        height: '80%',
-                        backgroundColor: '#D3D3D3',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        borderRadius: 12,
-                        padding: 5,  // ✅ Ensures content is centered with space
-                    }}>
-                        <Text style={{ fontSize: 16}}>☀️ 21°C</Text>
-                        <Text style={{ fontSize: 9}}>Vancouver</Text>
+                    <View style={HomeScreenStyles.weatherBox}>
+                        <Text style={HomeScreenStyles.weatherText}>☀️ 21°C</Text>
+                        <Text style={HomeScreenStyles.weatherLocation}>Vancouver</Text>
                     </View>
 
                     {/* Right: 20% - Profile Clickable Circle */}
-                    <TouchableOpacity 
-                        style={{
-                            width: height * 0.08, 
-                            height: height * 0.08, 
-                            borderRadius: 50, 
-                            backgroundColor: '#FF6F00',
-                            justifyContent: 'center', 
-                            alignItems: 'center',
-                            marginLeft: 10,  // ✅ Creates some space from the weather box
-                        }} 
-                        onPress={handleProfileClick}
-                    >
-                        <Text style={{ fontSize: 16, fontWeight: 'bold', color: 'white' }}>👤</Text>
+                    <TouchableOpacity style={HomeScreenStyles.profileButton} onPress={handleProfileClick}>
+                        <Text style={HomeScreenStyles.profileIcon}>👤</Text>
                     </TouchableOpacity>
                 </View>
 
-
-                {/* ✅ 2. SEARCH BAR (10% HEIGHT) */}
-                <View style={{height: height * 0.05, justifyContent: 'center' }}>
+                {/* ✅ 2. SEARCH BAR */}
+                <View style={HomeScreenStyles.searchContainer}>
                     <TextInput
-                        style={{
-                            width: '100%',
-                            height: 40,
-                            backgroundColor: '#f2f2f2',
-                            borderRadius: 20,
-                            borderWidth: 0.25,
-                            paddingHorizontal: 20,
-                        }}
+                        style={HomeScreenStyles.searchInput}
                         placeholder="Search..."
                         value={searchQuery}
                         onChangeText={setSearchQuery}
@@ -177,69 +118,50 @@ function HomeScreen() {
                 </View>
 
                 {/* ✅ 3. TITLE SECTION (5% HEIGHT) */}
-                <View style={{ height: height * 0.05, justifyContent: 'center' }}>
-                    <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Trip Plans</Text>
+                <View style={HomeScreenStyles.titleContainer}>
+                    <Text style={HomeScreenStyles.titleText}>Trip Plans</Text>
                 </View>
 
-                {/* ✅ 4. TRIPS LIST (30% HEIGHT) */}
+                {/* ✅ 4. TRIPS LIST */}
                 <ScrollView 
                     horizontal 
                     showsHorizontalScrollIndicator={true}
                     contentContainerStyle={{ flexDirection: 'row', alignItems: 'center' }}
-                    style={{ height: height * 0.3 }}
+                    style={HomeScreenStyles.tripScrollView}
                 >
                     {trips.map((trip) => (
                         <TouchableOpacity 
                             key={trip.id} 
                             onPress={handleTripClick}
-                            style={{
-                                backgroundColor: "#f2f2f2",
-                                borderRadius: 15,
-                                borderWidth: 0.25,
-                                padding: 15,
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                width: 250,
-                                height: '80%',
-                                marginRight: 15,
-                            }}
+                            style={HomeScreenStyles.tripCard}
                         >
-                            <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{trip.tripName}</Text>
-                            <Text style={{ fontSize: 12, marginTop: 5 }}>{trip.date}</Text>
+                            <Text style={HomeScreenStyles.tripTitle}>{trip.tripName}</Text>
+                            <Text style={HomeScreenStyles.tripDate}>{trip.date}</Text>
                         </TouchableOpacity>
                     ))}
                 </ScrollView>
 
+
                 {/* ✅ 5. CURRENT FAVORITE DESTINATIONS (20% HEIGHT) */}
-                <Text style={{ fontSize: 18, fontWeight: 'bold', marginTop: 10 }}>Current Favorite Destinations</Text>
+                <Text style={HomeScreenStyles.favoriteTitle}>Current Favorite Destinations</Text>
+
                 <ScrollView 
                     horizontal 
                     showsHorizontalScrollIndicator={true}
                     contentContainerStyle={{ paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center' }}
-                    style={{ height: height * 0.2 }}
+                    style={HomeScreenStyles.favoriteScrollView}
                 >
                     {favorites.map((fav) => (
                         <TouchableOpacity 
                             key={fav.id} 
                             onPress={handleTripClick}
-                            style={{
-                                backgroundColor: "#D3E3FC",
-                                borderRadius: 15,
-                                borderWidth: 0.25,
-                                padding: 15,
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                width: 220,
-                                height: '80%',
-                                marginRight: 15,
-                            }}
+                            style={HomeScreenStyles.favoriteCard}
                         >
-                            <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{fav.placeName}</Text>
-                            <Text style={{ fontSize: 12, marginTop: 5 }}>{fav.location}</Text>
+                            <Text style={HomeScreenStyles.favoritePlace}>{fav.placeName}</Text>
+                            <Text style={HomeScreenStyles.favoriteLocation}>{fav.location}</Text>
                         </TouchableOpacity>
                     ))}
                 </ScrollView>
-
             </View>
         </SafeAreaWrapper>
     );
