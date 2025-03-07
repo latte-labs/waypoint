@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-    View, Text, ActivityIndicator, Alert, StyleSheet, TouchableOpacity
+    View, Text, ActivityIndicator, Alert, StyleSheet, TouchableOpacity, ScrollView 
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -81,7 +81,7 @@ const ItineraryDetailScreen = () => {
 
     return (
         <SafeAreaWrapper>
-            <View style={styles.container}>
+            <ScrollView style={styles.container}>
                 {loading ? (
                     <ActivityIndicator size="large" color="#007bff" />
                 ) : itinerary ? (
@@ -97,7 +97,38 @@ const ItineraryDetailScreen = () => {
                         ) : (
                             <Text style={styles.errorText}>⚠ Unable to load user details.</Text>
                         )}
-                        
+
+                        {/* ✅ Render Days & Activities */}
+                        <View style={styles.daysContainer}>
+                            {itinerary.days && itinerary.days.length > 0 ? (
+                                itinerary.days.map((day) => (
+                                    <View key={day.id} style={styles.dayCard}>
+                                        <Text style={styles.dayTitle}>{day.title}</Text>
+                                        <Text style={styles.dayDate}>
+                                            {new Date(day.date).toLocaleDateString()}
+                                        </Text>
+
+                                        {/* Render activities */}
+                                        {day.activities && day.activities.length > 0 ? (
+                                            day.activities.map((activity) => (
+                                                <View key={activity.id} style={styles.activityCard}>
+                                                    <Text style={styles.activityTime}>{activity.time}</Text>
+                                                    <Text style={styles.activityName}>{activity.name}</Text>
+                                                    <Text style={styles.activityLocation}>
+                                                        📍 {activity.location}
+                                                    </Text>
+                                                </View>
+                                            ))
+                                        ) : (
+                                            <Text style={styles.noActivities}>No activities planned.</Text>
+                                        )}
+                                    </View>
+                                ))
+                            ) : (
+                                <Text style={styles.noDaysText}>No days added to this itinerary.</Text>
+                            )}
+                        </View>
+
                         {/* ✅ Delete Itinerary Button */}
                         <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteItinerary}>
                             <Text style={styles.deleteButtonText}>Delete Itinerary</Text>
@@ -106,19 +137,49 @@ const ItineraryDetailScreen = () => {
                 ) : (
                     <Text style={styles.errorText}>Itinerary not found.</Text>
                 )}
-            </View>
+            </ScrollView>
         </SafeAreaWrapper>
     );
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20, backgroundColor: '#fff', justifyContent: 'center' },
-    title: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },
+    container: { flex: 1, padding: 20, backgroundColor: '#fff' },
+    title: { fontSize: 22, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },
     detail: { fontSize: 16, marginBottom: 5, color: '#333' },
     errorText: { textAlign: 'center', fontSize: 16, color: 'red' },
-    deleteButton: { 
-        marginTop: 20, padding: 15, backgroundColor: 'red', borderRadius: 8, alignItems: 'center' 
+    
+    // Days container
+    daysContainer: { marginTop: 20 },
+    dayCard: {
+        backgroundColor: '#f8f9fa',
+        padding: 15,
+        borderRadius: 8,
+        marginBottom: 15,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
     },
+    dayTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
+    dayDate: { fontSize: 14, color: '#555', marginBottom: 10 },
+
+    // Activities styling
+    activityCard: {
+        backgroundColor: '#fff',
+        padding: 10,
+        borderRadius: 5,
+        marginVertical: 5,
+        borderLeftWidth: 5,
+        borderLeftColor: '#007bff',
+    },
+    activityTime: { fontSize: 14, fontWeight: 'bold', color: '#007bff' },
+    activityName: { fontSize: 16, fontWeight: '600', color: '#222' },
+    activityLocation: { fontSize: 14, color: '#555' },
+    noActivities: { fontSize: 14, color: '#888', fontStyle: 'italic' },
+    noDaysText: { fontSize: 14, textAlign: 'center', color: '#888' },
+
+    deleteButton: { marginTop: 20, padding: 15, backgroundColor: 'red', borderRadius: 8, alignItems: 'center' },
     deleteButtonText: { color: '#fff', fontSize: 14 }
 });
 
