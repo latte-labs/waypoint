@@ -13,24 +13,28 @@ const ChatbotScreen = () => {
     if (!input || !input.trim()) return; //checking for null, undefined and empty string or empty result
 
     const userMessage = { role: "user", content: input };
-    setMessages([...messages, userMessage]);
+    setMessages((prevMessages) => [userMessage, ...prevMessages]);
     setInput("");
 
     try {
       const response = await axios.post(`${API_BASE_URL}/chatbot/`, { user_message: input });
 
       const botReply = { role: "assistant", content: response.data.response };
-      setMessages([...messages, userMessage, botReply]);
+      setMessages((prevMessages) => [botReply, ...prevMessages]);
     } catch (error) {
       console.error("Chatbot API Error:", error);
-      setMessages([...messages, userMessage, { role: "assistant", content: "Sorry, I couldn't process that request." }]);
+      setMessages((prevMessages) => [ 
+        { role: "assistant", content: "Sorry, I couldn't process that request." },
+        ...prevMessages
+      ]);
     }
   };
 
   return (
     //prevents keyboard from covering the input field on ios
     <SafeAreaWrapper>
-      <KeyboardAvoidingView behavior="padding" style={styles.container}>
+      <KeyboardAvoidingView behavior="padding" style={{flex : 1}}>
+        <View style={styles.container}>
       {/* Chat Display */}
       <FlatList
         data={messages} //messages array to display a chat history
@@ -40,7 +44,7 @@ const ChatbotScreen = () => {
             <Text style={styles.messageText}>{item.content}</Text>
           </View>
         )}
-        inverted //supposed to make the latest message appear at the bottom but its not working as intended!!!! FIX THIS
+        inverted 
       />
 
       {/* Input Field & Send Button */}
@@ -55,6 +59,7 @@ const ChatbotScreen = () => {
         <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
           <Text style={styles.sendButtonText}>Send</Text>
         </TouchableOpacity>
+      </View>
       </View>
     </KeyboardAvoidingView>
     </SafeAreaWrapper>
