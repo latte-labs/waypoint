@@ -7,6 +7,8 @@ from app.schemas.itinerary_detail_schema import ItineraryDetailResponseSchema
 from typing import List
 import uuid
 from sqlalchemy.sql import func
+from datetime import datetime
+
 
 itinerary_router = APIRouter()
 
@@ -98,25 +100,44 @@ def add_day_to_itinerary(itinerary_id: uuid.UUID, day: itinerary_schema.Itinerar
 # -------------------- Activity Routes --------------------
 
 @itinerary_router.post("/{itinerary_id}/days/{day_id}/activities/", response_model=itinerary_schema.ActivityResponse)
-def add_activity(day_id: uuid.UUID, activity: itinerary_schema.ActivityCreate, db: Session = Depends(get_db)):
-    day = db.query(ItineraryDay).filter(ItineraryDay.id == day_id).first()
+def add_activity(itinerary_id: uuid.UUID, day_id: uuid.UUID, activity: itinerary_schema.ActivityCreate, db: Session = Depends(get_db)):
+    """
+    Add a new activity to a specific itinerary day.
+    """
+    # ✅ Validate the itinerary day exists
+    day = db.query(ItineraryDay).filter(ItineraryDay.id == day_id, ItineraryDay.itinerary_id == itinerary_id).first()
     if not day:
         raise HTTPException(status_code=404, detail="Itinerary day not found")
-    
+
+    # ✅ Ensure time is properly formatted before saving
+    def format_time(time_str):
+        """Convert input time into HH:MM AM/PM format."""
+        try:
+            return datetime.strptime(time_str, "%I%p").strftime("%I:%M %p")  # "8AM" -> "08:00 AM"
+        except ValueError:
+            try:
+                return datetime.strptime(time_str, "%I:%M%p").strftime("%I:%M %p")  # "8:30AM" -> "08:30 AM"
+            except ValueError:
+                return time_str  # Keep it unchanged if format is unknown
+
+    # ✅ Create the new activity
     new_activity = Activity(
         id=uuid.uuid4(),
         itinerary_day_id=day_id,
-        time=activity.time,
+        time=format_time(activity.time),  # ✅ Ensure time is stored correctly
         name=activity.name,
         location=activity.location,
-        notes=activity.notes,
-        estimated_cost=activity.estimated_cost,
-        extra_data=activity.extra_data,
+        notes=activity.notes if activity.notes else "",
+        estimated_cost=float(activity.estimated_cost) if activity.estimated_cost is not None else 0.0,
+        extra_data=activity.extra_data if activity.extra_data else {},
+        created_at=datetime.utcnow(),
     )
+
     db.add(new_activity)
     db.commit()
     db.refresh(new_activity)
-    return new_activity
+
+    return new_activity  # ✅ Returns properly formatted response
 
 
 # -------------------- Itinerary Member Routes (For Collaboration) --------------------
@@ -191,3 +212,52 @@ def reorder_days(itinerary_id: str, reorder_request: itinerary_schema.ReorderDay
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+
+@itinerary_router.get("/{itinerary_id}/days/{day_id}", response_model=itinerary_schema.ItineraryDayResponse)
+def get_day_activities(itinerary_id: uuid.UUID, day_id: uuid.UUID, db: Session = Depends(get_db)):
+    """
+    Fetch all activities for a specific day in an itinerary.
+    """
+    from datetime import datetime
+
+    # ✅ Validate that the day exists
+    day = db.query(ItineraryDay).filter(ItineraryDay.id == day_id, ItineraryDay.itinerary_id == itinerary_id).first()
+    
+    if not day:
+        raise HTTPException(status_code=404, detail="Day not found")
+
+    # ✅ Function to format time before returning response
+    def format_time(time_str):
+        """Convert stored time into HH:MM AM/PM format."""
+        try:
+            return datetime.strptime(time_str, "%I%p").strftime("%I:%M %p")  # "8AM" -> "08:00 AM"
+        except ValueError:
+            try:
+                return datetime.strptime(time_str, "%I:%M%p").strftime("%I:%M %p")  # "8:30AM" -> "08:30 AM"
+            except ValueError:
+                return time_str  # 🚨 If format is unknown, keep it unchanged
+
+    # ✅ Fetch activities and format them for response
+    activities = db.query(Activity).filter(Activity.itinerary_day_id == day_id).all()
+    activity_list = [
+        itinerary_schema.ActivityResponse(
+            id=activity.id, 
+            name=activity.name, 
+            time=format_time(activity.time),  # ✅ Ensure time format is consistent
+            location=activity.location, 
+            notes=activity.notes if activity.notes else "",  # ✅ Ensure notes are never `null`
+            estimated_cost=float(activity.estimated_cost) if activity.estimated_cost is not None else 0.0,  # ✅ Convert to float to avoid issues
+            extra_data=activity.extra_data if activity.extra_data else {},  # ✅ Ensure extra_data is not `null`
+            created_at=activity.created_at
+        ) 
+        for activity in activities
+    ]
+
+    # ✅ Return the response with actual `title` and formatted activities
+    return {
+        "id": day.id,
+        "date": day.date,
+        "title": day.title,  # ✅ Returns correct title from DB
+        "created_at": day.created_at,
+        "activities": activity_list
+    }
