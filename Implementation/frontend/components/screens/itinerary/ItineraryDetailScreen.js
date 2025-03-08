@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { 
     View, Text, ActivityIndicator, Alert, StyleSheet, TouchableOpacity, ScrollView 
 } from 'react-native';
@@ -22,6 +23,7 @@ const ItineraryDetailScreen = () => {
     const [days, setDays] = useState([]); // Store ordered days
     const [dayHeights, setDayHeights] = useState({}); // Store heights dynamically
     
+    
 
     // ✅ Load user data from AsyncStorage
     useEffect(() => {
@@ -38,24 +40,49 @@ const ItineraryDetailScreen = () => {
         fetchUserData();
     }, []);
 
-    // ✅ Fetch Itinerary Details from PostgreSQL
-    useEffect(() => {
-        const fetchItineraryDetails = async () => {
-            try {
-                const response = await axios.get(`${API_BASE_URL}/itineraries/${itineraryId}`);
-                if (response.status === 200) {
-                    setItinerary(response.data);
-                    setDays(response.data.days); // ✅ Store sorted days
-                }
-            } catch (error) {
-                Alert.alert("Error", "Failed to load itinerary details.");
-            } finally {
-                setLoading(false);
+    const sortActivitiesByTime = (activities) => {
+        return activities.sort((a, b) => {
+            const parseTime = (time) => {
+                const match = time.match(/^(\d+):?(\d*)\s*(AM|PM)$/i);
+                if (!match) return 0; // If time is invalid, push it to the end
+                let hours = parseInt(match[1], 10);
+                let minutes = match[2] ? parseInt(match[2], 10) : 0;
+                const period = match[3].toUpperCase();
+    
+                if (period === "PM" && hours !== 12) hours += 12;
+                if (period === "AM" && hours === 12) hours = 0;
+    
+                return hours * 60 + minutes; // Convert to minutes for easy comparison
+            };
+    
+            return parseTime(a.time) - parseTime(b.time);
+        });
+    };
+    // ✅ Fetch Itinerary Details Function
+    const fetchItineraryDetails = async () => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/itineraries/${itineraryId}`);
+            if (response.status === 200) {
+                const sortedDays = response.data.days.map(day => ({
+                    ...day,
+                    activities: sortActivitiesByTime(day.activities), // ✅ Sort activities
+                }));
+                setItinerary(response.data);
+                setDays(sortedDays);
             }
-        };
+        } catch (error) {
+            Alert.alert("Error", "Failed to load itinerary details.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
-        fetchItineraryDetails();
-    }, [itineraryId]);
+    // ✅ Use `useFocusEffect` to Refresh Data When Screen Comes Back into Focus
+    useFocusEffect(
+        useCallback(() => {
+            fetchItineraryDetails();
+        }, [itineraryId])
+    );
 
     // ✅ Handle Drag & Drop Reordering
     const handleDragEnd = async ({ data }) => {
