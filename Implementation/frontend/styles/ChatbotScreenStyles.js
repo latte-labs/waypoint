@@ -14,6 +14,10 @@ export default StyleSheet.create({
   
   userMessageContainer: {
     justifyContent: "flex-end",
+    flexDirection: "row",
+    alignItems: "flex-end",
+    marginRight: 0,
+    paddingRight: 10,
   },
   
   botMessageContainer: {
@@ -21,7 +25,7 @@ export default StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-end",
     marginLeft: 0,
-    paddingLeft: 10
+    paddingLeft: 10,
   },
   
   botAvatar: {
@@ -31,6 +35,14 @@ export default StyleSheet.create({
     marginRight: 8,
     alignSelf: "flex-end",
   },
+
+  userAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginLeft: 8, 
+    alignSelf: "flex-end", 
+  },
   
   userMessage: {
     alignSelf: "flex-end",
@@ -39,6 +51,7 @@ export default StyleSheet.create({
     borderRadius: 20,
     borderBottomRightRadius: 0,
     marginVertical: 4,
+    marginBottom: 17,
     marginRight: 5,
     maxWidth: "70%",
   },
@@ -62,13 +75,13 @@ export default StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#fff",
     borderRadius: 30,
-    borderWidth: 1,
     paddingVertical: 10,
     paddingHorizontal: 15,
-    borderColor: "#ddd",
     marginHorizontal: 20,
     marginBottom: 120,
     marginTop: 15,
+    borderWidth: 1,
+    borderColor: "#ddd",
     shadowColor: "#000",
     shadowOffset: {width: 0, height: 5},
     shadowOpacity: 0.3,

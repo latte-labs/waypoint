@@ -107,7 +107,7 @@ function BottomNavigation() {
             {[
               { label: "👤 Profile", screen: "Profile" },
               { label: "⚙️ Settings", screen: "Settings" },
-              { label: "🤖 Chatbot", screen: "ChatBot" },
+              { label: "🤖 Chatbot", screen: "ChatBot"},
               { label: "⭐ Game", screen: "" },
               { label: "🔔 Events", screen: "" },
             ].map((item, index) => (

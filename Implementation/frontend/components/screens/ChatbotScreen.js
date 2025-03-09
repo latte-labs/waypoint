@@ -98,14 +98,31 @@ const ChatbotScreen = () => {
           <FlatList
             data={messages} //messages array to display a chat history
             keyExtractor={(item, index) => index.toString()} //each message has a unique key
-            renderItem={({ item }) => ( //if the message item has role of user, then use user styling (blue chat), otherwise its a bot response
+            renderItem={({ item }) => (
               <View style={[styles.messageContainer, item.role === "user" ? styles.userMessageContainer : styles.botMessageContainer]}>
+                
+                {/* Chatbot Avatar */}
                 {item.role === "assistant" && (
                   <Image source={require("../../assets/images/chatbot.png")} style={styles.botAvatar} />
                 )}
-                <View style={item.role === "user" ? styles.userMessage : styles.botMessage}>
-                  <Text style={styles.messageText}>{item.content}</Text>
-                </View>
+            
+                {/* User Message */}
+                {item.role === "user" && (
+                  <>
+                    <View style={item.role === "user" ? styles.userMessage : styles.botMessage}>
+                      <Text style={styles.messageText}>{item.content}</Text>
+                    </View>
+                    <Image source={require("../../assets/images/woman.png")} style={styles.userAvatar} />
+                  </>
+                )}
+            
+                {/* Bot Message */}
+                {item.role === "assistant" && (
+                  <View style={styles.botMessage}>
+                    <Text style={styles.messageText}>{item.content}</Text>
+                  </View>
+                )}
+                
               </View>
             )}
             inverted
