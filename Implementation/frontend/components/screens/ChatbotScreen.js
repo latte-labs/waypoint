@@ -11,6 +11,8 @@ const ChatbotScreen = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [travelStyle, setTravelStyle] = useState(null);
+  const [isTyping, setIsTyping] = useState(false); // Track when bot is typing
+  const [typingDots, setTypingDots] = useState("");
 
   // ✅ Fetch User & Travel Style on Component Mount
   useEffect(() => {
@@ -44,6 +46,16 @@ const ChatbotScreen = () => {
     fetchUserTravelStyle();
   }, []);
 
+  useEffect(() => {
+    if (!isTyping) return;
+  
+    const interval = setInterval(() => {
+      setTypingDots((prev) => (prev.length < 3 ? prev + "." : ""));
+    }, 500); // Updates every 500ms
+  
+    return () => clearInterval(interval);
+  }, [isTyping]);
+
   // ✅ Fetch Travel Style Name from Backend
   const fetchTravelStyle = async (travelStyleId) => {
     try {
@@ -75,16 +87,26 @@ const ChatbotScreen = () => {
     setMessages((prevMessages) => [userMessage, ...prevMessages]);
     setInput("");
 
+    // Show animated ellipses while waiting for response
+    setIsTyping(true);
+    setMessages((prevMessages) => [
+        { role: "assistant", content: "..." }, // Initial typing indicator
+        ...prevMessages
+    ]);
+
     try {
       const response = await axios.post(`${API_BASE_URL}/chatbot/`, { user_message: input, travel_style: travelStyle });
 
+      setIsTyping(false); // Stop typing indicator
+
       const botReply = { role: "assistant", content: response.data.response };
-      setMessages((prevMessages) => [botReply, ...prevMessages]);
+      setMessages((prevMessages) => [botReply, ...prevMessages.filter(msg => msg.content !== "...")]); // Remove typing indicator
     } catch (error) {
       console.error("Chatbot API Error:", error);
+      setIsTyping(false);
       setMessages((prevMessages) => [
         { role: "assistant", content: "Sorry, I couldn't process that request." },
-        ...prevMessages
+        ...prevMessages.filter(msg => msg.content !== "...")
       ]);
     }
   };
@@ -94,18 +116,24 @@ const ChatbotScreen = () => {
     <SafeAreaWrapper>
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <View style={styles.container}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>WayPointer</Text>
+            <Text style={styles.headerAvatar}>💬</Text>
+          </View>
+
           {/* Chat Display */}
           <FlatList
             data={messages} //messages array to display a chat history
             keyExtractor={(item, index) => index.toString()} //each message has a unique key
             renderItem={({ item }) => (
               <View style={[styles.messageContainer, item.role === "user" ? styles.userMessageContainer : styles.botMessageContainer]}>
-                
+
                 {/* Chatbot Avatar */}
                 {item.role === "assistant" && (
                   <Image source={require("../../assets/images/chatbot.png")} style={styles.botAvatar} />
                 )}
-            
+
                 {/* User Message */}
                 {item.role === "user" && (
                   <>
@@ -115,14 +143,14 @@ const ChatbotScreen = () => {
                     <Image source={require("../../assets/images/woman.png")} style={styles.userAvatar} />
                   </>
                 )}
-            
+
                 {/* Bot Message */}
                 {item.role === "assistant" && (
                   <View style={styles.botMessage}>
-                    <Text style={styles.messageText}>{item.content}</Text>
+                    <Text style={styles.messageText}>{item.content === "..." ? typingDots : item.content}</Text>
                   </View>
                 )}
-                
+
               </View>
             )}
             inverted

@@ -81,7 +81,7 @@ function BottomNavigation() {
         >
           <Tab.Screen name="Home" component={HomeScreen} />
           <Tab.Screen name="Map" component={InteractiveRecommendations} options={{ tabBarStyle: { display: "none" } }} />
-          <Tab.Screen name="Itinerary" component={ChatbotScreen} />
+          <Tab.Screen name="Itinerary" component={HomeScreen} />
           <Tab.Screen
             name="More"
             component={MorePlaceholder}
@@ -107,7 +107,7 @@ function BottomNavigation() {
             {[
               { label: "👤 Profile", screen: "Profile" },
               { label: "⚙️ Settings", screen: "Settings" },
-              { label: "🤖 Chatbot", screen: "ChatBot"},
+              { label: "🤖 Chatbot", screen: "Chatbot" },
               { label: "⭐ Game", screen: "" },
               { label: "🔔 Events", screen: "" },
             ].map((item, index) => (

@@ -1,6 +1,34 @@
 import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    height: 55,
+  },
+  
+  headerAvatar: {
+    width: 40,
+    height: 30,
+    borderRadius: 20,
+    marginTop: 15,
+    marginLeft: 15,
+  },
+  
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#000",
+  },
+
   container: {
     flex: 1,
     backgroundColor: "#fff",
@@ -106,5 +134,13 @@ export default StyleSheet.create({
     fontSize: 35,
     color: "#0084ff",
     textAlign: "center",
+  },
+
+  typingIndicator: {
+    fontSize: 18,
+    color: "#555",
+    fontWeight: "bold",
+    letterSpacing: 2,
+    animation: "dots 1.5s steps(3, end) infinite",
   },
 });
