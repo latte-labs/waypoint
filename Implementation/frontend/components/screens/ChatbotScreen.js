@@ -121,7 +121,7 @@ const ChatbotScreen = () => {
               onSubmitEditing={sendMessage} //submits when enter is pressed
             />
             <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
-              <Text style={styles.sendButtonText}>Send</Text>
+              <Text style={styles.sendButtonText}>➤</Text>
             </TouchableOpacity>
           </View>
         </View>
