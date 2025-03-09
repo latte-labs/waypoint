@@ -81,7 +81,7 @@ function BottomNavigation() {
         >
           <Tab.Screen name="Home" component={HomeScreen} />
           <Tab.Screen name="Map" component={InteractiveRecommendations} options={{ tabBarStyle: { display: "none" } }} />
-          <Tab.Screen name="Itinerary" component={HomeScreen} />
+          <Tab.Screen name="Itinerary" component={ItineraryListScreen} />
           <Tab.Screen
             name="More"
             component={MorePlaceholder}

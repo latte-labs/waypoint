@@ -36,13 +36,6 @@ function App() {
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Signup" component={SignupScreen} />
           <Stack.Screen name="Main" component={AppNavigator} />
-          <Stack.Screen name="Map" component={InteractiveRecommendations} />
-          <Stack.Screen name="Chatbot" component={ChatbotScreen} />
-          <Stack.Screen name="Profile" component={ProfileScreen} />
-          <Stack.Screen name="Settings" component={SettingsScreen} />
-          <Stack.Screen name='ItineraryList' component={ItineraryListScreen} />
-          <Stack.Screen name='ItineraryDetail' component={ItineraryDetailScreen} />
-          <Stack.Screen name='ItineraryDay' component={ItineraryDayScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
