@@ -1,5 +1,5 @@
-import React, { useState, useEffect} from "react";
-import { View, Text, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Platform } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Image, Platform } from "react-native";
 import axios from "axios";
 import styles from "../../styles/ChatbotScreenStyles";
 import API_BASE_URL from "../../config";  // backend API
@@ -82,7 +82,7 @@ const ChatbotScreen = () => {
       setMessages((prevMessages) => [botReply, ...prevMessages]);
     } catch (error) {
       console.error("Chatbot API Error:", error);
-      setMessages((prevMessages) => [ 
+      setMessages((prevMessages) => [
         { role: "assistant", content: "Sorry, I couldn't process that request." },
         ...prevMessages
       ]);
@@ -92,35 +92,40 @@ const ChatbotScreen = () => {
   return (
     //prevents keyboard from covering the input field on ios
     <SafeAreaWrapper>
-      <KeyboardAvoidingView behavior="padding" style={{flex : 1}}>
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <View style={styles.container}>
-      {/* Chat Display */}
-      <FlatList
-        data={messages} //messages array to display a chat history
-        keyExtractor={(item, index) => index.toString()} //each message has a unique key
-        renderItem={({ item }) => ( //if the message item has role of user, then use user styling (blue chat), otherwise its a bot response
-          <View style={item.role === "user" ? styles.userMessage : styles.botMessage}> 
-            <Text style={styles.messageText}>{item.content}</Text>
-          </View>
-        )}
-        inverted 
-      />
+          {/* Chat Display */}
+          <FlatList
+            data={messages} //messages array to display a chat history
+            keyExtractor={(item, index) => index.toString()} //each message has a unique key
+            renderItem={({ item }) => ( //if the message item has role of user, then use user styling (blue chat), otherwise its a bot response
+              <View style={[styles.messageContainer, item.role === "user" ? styles.userMessageContainer : styles.botMessageContainer]}>
+                {item.role === "assistant" && (
+                  <Image source={require("../../assets/images/chatbot.png")} style={styles.botAvatar} />
+                )}
+                <View style={item.role === "user" ? styles.userMessage : styles.botMessage}>
+                  <Text style={styles.messageText}>{item.content}</Text>
+                </View>
+              </View>
+            )}
+            inverted
+          />
 
-      {/* Input Field & Send Button */}
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Ask about travel..."
-          value={input}
-          onChangeText={setInput}
-          onSubmitEditing={sendMessage} //submits when enter is pressed
-        />
-        <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
-          <Text style={styles.sendButtonText}>Send</Text>
-        </TouchableOpacity>
-      </View>
-      </View>
-    </KeyboardAvoidingView>
+          {/* Input Field & Send Button */}
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Ask about travel..."
+              value={input}
+              onChangeText={setInput}
+              onSubmitEditing={sendMessage} //submits when enter is pressed
+            />
+            <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+              <Text style={styles.sendButtonText}>Send</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaWrapper>
   );
 };
