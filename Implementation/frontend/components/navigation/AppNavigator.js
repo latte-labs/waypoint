@@ -11,6 +11,10 @@ import QuizScreen from '../screens/QuizScreen';
 import CustomBottomNavigation from './CustomBottomNavigation';
 import MoreMenu from './MoreMenu';
 import { navigationStyles } from '../../styles/NavigationStyles';
+import ItineraryDetailScreen from '../screens/itinerary/ItineraryDetailScreen';
+import ItineraryDayScreen from '../screens/itinerary/ItineraryDayScreen';
+import ItineraryFormScreen from '../screens/itinerary/ItineraryFormScreen';
+
 
 const Stack = createStackNavigator();
 
@@ -26,6 +30,9 @@ function AppNavigator() {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Map" component={InteractiveRecommendations} />
         <Stack.Screen name="Itinerary" component={ItineraryListScreen} />
+        <Stack.Screen name="ItineraryDetail" component={ItineraryDetailScreen} />
+        <Stack.Screen name="ItineraryDay" component={ItineraryDayScreen} />
+        <Stack.Screen name="ItineraryForm" component={ItineraryFormScreen} />
         <Stack.Screen name="Chatbot" component={ChatbotScreen} />
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
