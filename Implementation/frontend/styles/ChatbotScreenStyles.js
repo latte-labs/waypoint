@@ -106,7 +106,7 @@ export default StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 15,
     marginHorizontal: 20,
-    marginBottom: 120,
+    marginBottom: 20,
     marginTop: 15,
     borderWidth: 1,
     borderColor: "#ddd",
