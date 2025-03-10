@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
+    Image,
     Text,
     ScrollView,
     View,
@@ -89,7 +90,8 @@ function HomeScreen() {
                                 </TouchableOpacity>
                             </TouchableOpacity>
                         ) : (
-                            <View style={{ justifyContent: 'center', alignItems: 'center', height: '80%' }}>
+                            <View style={HomeScreenStyles.brandContainer}>
+                                <Image source={require("../../assets/images/logo.png")} style={HomeScreenStyles.logo}/>
                                 <Text style={HomeScreenStyles.waypointText}>WayPoint</Text>
                             </View>
                         )}

@@ -47,10 +47,24 @@ const HomeScreenStyles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 14,
     },
+    brandContainer: {
+        flexDirection: 'row',
+        justifyContent: 'flex-start', 
+        alignItems: 'center', 
+        height: '80%',
+        marginRight: 10,
+        paddingLeft: 0,
+    },
 
     waypointText: {
         fontSize: 22,
         fontWeight: 'bold',
+    },
+
+    logo: {
+        width: 50,
+        height: 50,
+        marginRight: 5,
     },
 
     weatherBox: {
@@ -91,6 +105,7 @@ const HomeScreenStyles = StyleSheet.create({
     searchContainer: {
         height: height * 0.05,
         justifyContent: 'center',
+        width: 350,
     },
 
     searchInput: {
