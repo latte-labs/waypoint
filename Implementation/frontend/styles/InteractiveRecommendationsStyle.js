@@ -15,17 +15,20 @@ const InteractiveRecommendationsStyle = StyleSheet.create({
   filterScrollContainer: { 
     flexDirection: 'row', 
     alignItems: 'center', 
-    height: 50,  // Reduced height
-    paddingHorizontal: 10, 
-    paddingVertical: 5,  // Ensures no extra space
-    marginVertical: 0,   // Eliminates unnecessary spacing
+    minWidth: "100%", 
+    paddingHorizontal: 5, 
+    paddingVertical: 2,  
+    marginVertical: 0, 
+    zIndex: 10,  
+    minHeight: 40, 
+    flexShrink: 1,  
 },
   filterButton: { padding: 8, marginVertical: 5, marginHorizontal: 5, backgroundColor: '#ddd', borderRadius: 12 },
   selectedFilter: { backgroundColor: '#FF6F00' },
   filterText: { fontSize: 14, color: '#333' },
 
   /* Recommendations List Styles */
-  listContainer: { width: '100%', paddingHorizontal: 10, height: height*0.36},
+  listContainer: { width: '100%', paddingHorizontal: 10, height: height*0.29},
   card: { flexDirection: 'row', backgroundColor: '#f9f9f9', padding: 12, marginVertical: 6, borderRadius: 8, alignItems: 'center' },
   image: { width: 80, height: 80, borderRadius: 8, marginRight: 12 },
   cardContent: { flex: 1 },

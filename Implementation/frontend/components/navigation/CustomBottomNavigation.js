@@ -22,18 +22,18 @@ const CustomBottomNavigation = () => {
                 }
             }
 
-            // ✅ Ensure Home is set when navigating into "Main"
+            // Ensure Home is set when navigating into "Main"
             if (currentRoute === "Main") {
                 currentRoute = "Home";
             }
 
-            setActiveRouteName(currentRoute); // ✅ Update only if valid
-            console.log("✅ Active Route:", currentRoute); // ✅ Debugging Log
-        }, [navigation, route]) // ✅ Runs only when navigation or route changes
+            setActiveRouteName(currentRoute); // Update only if valid
+            console.log("Active Route:", currentRoute); // Debugging Log
+        }, [navigation, route]) // Runs only when navigation or route changes
     );
 
     // Screens where bottom nav should be hidden
-    const hiddenScreens = ['QuizScreen', "Map"];
+    const hiddenScreens = ['QuizScreen', ];
     if (hiddenScreens.includes(activeRouteName)) return null; // Hides the nav
 
     const menuItems = [
@@ -53,8 +53,6 @@ const CustomBottomNavigation = () => {
                         key={item.name}
                         style={[navigationStyles.navItem, isActive && navigationStyles.navItemActive]} // Apply active styles
                         onPress={() => {
-                            //setActiveRouteName(item.name);
-
                             navigation.navigate("Main", { screen: item.name })
                             setTimeout(() => {
                                 setActiveRouteName(item.name); // ✅ Update active state **after** navigation

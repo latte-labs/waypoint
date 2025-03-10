@@ -70,4 +70,18 @@ export const navigationStyles = StyleSheet.create({
     menuText: {
         fontSize: 22,
     },
+    
+    // MoreMenu Items
+    moreContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    moreMenuItem: {
+        padding: 15,
+    },
+    moreMenuText: {
+        fontSize: 22,
+    }
+
 });

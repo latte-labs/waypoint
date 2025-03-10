@@ -7,21 +7,21 @@ const MoreMenu = () => {
     const navigation = useNavigation();
 
     return (
-        <View style={navigationStyles.container}>
+        <View style={navigationStyles.moreContainer}>
 
             {/** Profile Screen */}
-            <TouchableOpacity onPress={() => navigation.navigate("Profile")} style={navigationStyles.menuItem}>
-                <Text style={navigationStyles.menuText}>👤 Profile</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("Profile")} style={navigationStyles.moreMenuItem}>
+                <Text style={navigationStyles.moreMenuText}>👤 Profile</Text>
             </TouchableOpacity>
 
             {/** Settings Screen */}
-            <TouchableOpacity onPress={() => navigation.navigate("Settings")} style={navigationStyles.menuItem}>
-                <Text style={navigationStyles.menuText}>⚙️ Settings</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("Settings")} style={navigationStyles.moreMenuItem}>
+                <Text style={navigationStyles.moreMenuText}>⚙️ Settings</Text>
             </TouchableOpacity>
 
             {/** Chatbot Screen */}
-            <TouchableOpacity onPress={() => navigation.navigate("Chatbot")} style={navigationStyles.menuItem}>
-                <Text style={navigationStyles.menuText}>🤖 Chatbot</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("Chatbot")} style={navigationStyles.moreMenuItem}>
+                <Text style={navigationStyles.moreMenuText}>🤖 Chatbot</Text>
             </TouchableOpacity>
         </View>
     )
