@@ -64,8 +64,8 @@ const ItineraryListScreen = () => {
 
     // ✅ Handle Adding New Itinerary (For Now, Just Alert)
     const handleAddItinerary = () => {
-        Alert.alert("Create Itinerary", "Feature coming soon!");
-    };
+        navigation.navigate('ItineraryForm', { userId });
+    };   
 
     // ✅ Render Itinerary List Item
     const renderItem = ({ item }) => (
