@@ -24,10 +24,12 @@ def get_system_prompt(travel_style):
         "adventure": "Recommend thrilling activities such as hiking, kayaking, zip-lining, and outdoor exploration.",
         "cultural": "Suggest historical sites, museums, art galleries, and local cultural experiences.",
     }
+
+    additional_prompt = "Please limit to 3 suggestions unless specified in my request."
     
     style_message = style_prompts.get(travel_style.lower(), "Provide general travel recommendations.")
     
-    return f"{base_prompt} {style_message}"
+    return f"{base_prompt} {style_message} {additional_prompt}"
 
 @chatbot_router.post("/")
 async def chatbot_interaction(request: ChatbotRequest):
