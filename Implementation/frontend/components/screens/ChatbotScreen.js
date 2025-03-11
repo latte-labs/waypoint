@@ -57,13 +57,13 @@ const ChatbotScreen = () => {
     return () => clearInterval(interval);
   }, [isTyping]);
 
-  // ✅ Delayed Initial Message
+  // Delayed Initial Message
   useEffect(() => {
     const timer = setTimeout(() => {
       setMessages([
         { role: "assistant", content: "Hi! My name is WayPointer, your personal travel assistant! Ask me for recommendations and I'll provide suggestions based on your travel style." }
       ]);
-    }, 1000); // 2-second delay
+    }, 1000);
 
     return () => clearTimeout(timer); // Cleanup timeout if component unmounts
   }, []);

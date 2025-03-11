@@ -12,6 +12,7 @@ import {
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { database } from '../../firebase';
+import Geolocation from 'react-native-geolocation-service';
 import SafeAreaWrapper from './SafeAreaWrapper';
 import HomeScreenStyles from '../../styles/HomeScreenStyle';
 
@@ -73,12 +74,16 @@ function HomeScreen() {
         navigation.navigate('ItineraryList'); // temporarily used for itinerary to allow back swiping
     };
 
+    const handleWeatherClick = () => {
+        navigation.navigate('Location')
+    }
+
     return (
         <SafeAreaWrapper>
             <View style={{ flex: 1, backgroundColor: 'white', padding: 15, marginBottom: 70 }}>
 
                 {/* ✅ 1. HEADER SECTION (30% HEIGHT) */}
-                <View 
+                <View
                     style={HomeScreenStyles.headerContainer}>
                     {/* Left: Take Quiz or WayPoint */}
                     <View style={{ width: '50%', height: '100%', justifyContent: 'center' }}>
@@ -91,17 +96,22 @@ function HomeScreen() {
                             </TouchableOpacity>
                         ) : (
                             <View style={HomeScreenStyles.brandContainer}>
-                                <Image source={require("../../assets/images/logo.png")} style={HomeScreenStyles.logo}/>
+                                <Image source={require("../../assets/images/logo.png")} style={HomeScreenStyles.logo} />
                                 <Text style={HomeScreenStyles.waypointText}>WayPoint</Text>
                             </View>
                         )}
                     </View>
 
                     {/* Middle: 20% - Weather Placeholder */}
-                    <View style={HomeScreenStyles.weatherBox}>
-                        <Text style={HomeScreenStyles.weatherText}>☀️ 21°C</Text>
-                        <Text style={HomeScreenStyles.weatherLocation}>Vancouver</Text>
-                    </View>
+                    
+                        <View style={HomeScreenStyles.weatherBox}>
+                        <TouchableOpacity onPress={handleWeatherClick}>
+                            <Text style={HomeScreenStyles.weatherText}>☀️ 21°C</Text>
+                            <Text style={HomeScreenStyles.weatherLocation}>Vancouver</Text>
+                            </TouchableOpacity>
+                        </View>
+                    
+
 
                     {/* Right: 20% - Profile Clickable Circle */}
                     <TouchableOpacity style={HomeScreenStyles.profileButton} onPress={handleProfileClick}>
@@ -125,15 +135,15 @@ function HomeScreen() {
                 </View>
 
                 {/* ✅ 4. TRIPS LIST */}
-                <ScrollView 
-                    horizontal 
+                <ScrollView
+                    horizontal
                     showsHorizontalScrollIndicator={true}
                     contentContainerStyle={{ flexDirection: 'row', alignItems: 'center' }}
                     style={HomeScreenStyles.tripScrollView}
                 >
                     {trips.map((trip) => (
-                        <TouchableOpacity 
-                            key={trip.id} 
+                        <TouchableOpacity
+                            key={trip.id}
                             onPress={handleTripClick}
                             style={HomeScreenStyles.tripCard}
                         >
@@ -147,15 +157,15 @@ function HomeScreen() {
                 {/* ✅ 5. CURRENT FAVORITE DESTINATIONS (20% HEIGHT) */}
                 <Text style={HomeScreenStyles.favoriteTitle}>Current Favorite Destinations</Text>
 
-                <ScrollView 
-                    horizontal 
+                <ScrollView
+                    horizontal
                     showsHorizontalScrollIndicator={true}
                     contentContainerStyle={{ paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center' }}
                     style={HomeScreenStyles.favoriteScrollView}
                 >
                     {favorites.map((fav) => (
-                        <TouchableOpacity 
-                            key={fav.id} 
+                        <TouchableOpacity
+                            key={fav.id}
                             onPress={handleTripClick}
                             style={HomeScreenStyles.favoriteCard}
                         >
@@ -164,6 +174,10 @@ function HomeScreen() {
                         </TouchableOpacity>
                     ))}
                 </ScrollView>
+                <View>
+                    <Text>Longitude: </Text>
+                    <Text>Latitude: </Text>
+                </View>
             </View>
         </SafeAreaWrapper>
     );
