@@ -174,10 +174,6 @@ function HomeScreen() {
                         </TouchableOpacity>
                     ))}
                 </ScrollView>
-                <View>
-                    <Text>Longitude: </Text>
-                    <Text>Latitude: </Text>
-                </View>
             </View>
         </SafeAreaWrapper>
     );

@@ -1,12 +1,48 @@
 # Resolve react_native_pods.rb with node to allow for hoisting
-require Pod::Executable.execute_command('node', ['-p',
-  'require.resolve(
-    "react-native/scripts/react_native_pods.rb",
-    {paths: [process.argv[1]]},
-  )', __dir__]).strip
+#require Pod::Executable.execute_command('node', ['-p',
+#  'require.resolve(
+#    "react-native/scripts/react_native_pods.rb",
+#    {paths: [process.argv[1]]},
+#  )', __dir__]).strip
+
+def node_require(script)
+  # Resolve script with node to allow for hoisting
+  require Pod::Executable.execute_command('node', ['-p',
+    "require.resolve(
+      '#{script}',
+      {paths: [process.argv[1]]},
+    )", __dir__]).strip
+end
+
+node_require('react-native/scripts/react_native_pods.rb')
+node_require('react-native-permissions/scripts/setup.rb')
 
 platform :ios, '16.0'  # Ensure minimum iOS version for compatibility
 prepare_react_native_project!
+
+# ⬇️ uncomment the permissions you need
+setup_permissions([
+  # 'AppTrackingTransparency',
+  # 'Bluetooth',
+  # 'Calendars',
+  # 'CalendarsWriteOnly',
+  # 'Camera',
+  # 'Contacts',
+  # 'FaceID',
+   'LocationAccuracy',
+   'LocationAlways',
+   'LocationWhenInUse',
+  # 'MediaLibrary',
+  # 'Microphone',
+  # 'Motion',
+  # 'Notifications',
+  # 'PhotoLibrary',
+  # 'PhotoLibraryAddOnly',
+  # 'Reminders',
+  # 'Siri',
+  # 'SpeechRecognition',
+  # 'StoreKit',
+])
 
 # ✅ Load environment variables from .env
 require 'dotenv'
@@ -30,7 +66,7 @@ pod 'Google-Maps-iOS-Utils', :modular_headers => true  # Optional for clustering
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
   Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
-  use_frameworks! :linkage => linkage.to_sym
+  use_frameworks! :linkage => :dynamic
 end
 
 target 'frontend' do
@@ -40,6 +76,10 @@ target 'frontend' do
     :path => config[:reactNativePath],
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
+
+  # ✅ Ensure Permissions Pods are Installed
+  pod 'RNPermissions', :path => '../node_modules/react-native-permissions'
+
 
   post_install do |installer|
     react_native_post_install(
