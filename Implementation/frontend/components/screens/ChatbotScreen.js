@@ -8,7 +8,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const ChatbotScreen = () => {
   const [user, setUser] = useState(null);
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState("");
+  //const [messages, setMessages] = useState([{role: "assistant", content: "Hi! My name is WayPointer, your personal travel assistant! Ask me for recommendations and i'll provide suggestions based on your travel style"}]);
   const [input, setInput] = useState("");
   const [travelStyle, setTravelStyle] = useState(null);
   const [isTyping, setIsTyping] = useState(false); // Track when bot is typing
@@ -48,13 +49,24 @@ const ChatbotScreen = () => {
 
   useEffect(() => {
     if (!isTyping) return;
-  
+
     const interval = setInterval(() => {
       setTypingDots((prev) => (prev.length < 3 ? prev + "." : ""));
     }, 500); // Updates every 500ms
-  
+
     return () => clearInterval(interval);
   }, [isTyping]);
+
+  // ✅ Delayed Initial Message
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMessages([
+        { role: "assistant", content: "Hi! My name is WayPointer, your personal travel assistant! Ask me for recommendations and I'll provide suggestions based on your travel style." }
+      ]);
+    }, 1000); // 2-second delay
+
+    return () => clearTimeout(timer); // Cleanup timeout if component unmounts
+  }, []);
 
   // ✅ Fetch Travel Style Name from Backend
   const fetchTravelStyle = async (travelStyleId) => {
@@ -90,8 +102,8 @@ const ChatbotScreen = () => {
     // Show animated ellipses while waiting for response
     setIsTyping(true);
     setMessages((prevMessages) => [
-        { role: "assistant", content: "..." }, // Initial typing indicator
-        ...prevMessages
+      { role: "assistant", content: "..." }, // Initial typing indicator
+      ...prevMessages
     ]);
 
     try {
