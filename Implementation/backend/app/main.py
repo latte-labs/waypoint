@@ -12,8 +12,9 @@ from app.routes import (
     quiz_routes, 
     user_favorite_routes,  # ✅ Added User Favorites
     chatbot_routes,
-    travel_style_routes
-)
+    travel_style_routes,
+    weather_routes,
+)   
 
 app = FastAPI()
 
@@ -26,6 +27,7 @@ app.include_router(quiz_routes.quiz_router, prefix="/quiz_results", tags=["Quiz 
 app.include_router(user_favorite_routes.user_favorite_router, prefix="/user_favorites", tags=["User Favorites"])
 app.include_router(chatbot_routes.chatbot_router, prefix="/chatbot", tags=["Chatbot"])
 app.include_router(travel_style_routes.travel_style_router, prefix="/travel-styles", tags=["Travel Style"])
+app.include_router(weather_routes.weather_router, prefix="/weather", tags=["Weather Details"])
 
 # Dependency to get a database session
 def get_db():

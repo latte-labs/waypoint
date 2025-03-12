@@ -4,6 +4,8 @@ import SafeAreaWrapper from "../SafeAreaWrapper";
 import styles from "../../../styles/LocationPermissionsStyle";
 import { PERMISSIONS, RESULTS, check, request } from 'react-native-permissions'
 import Geolocation from 'react-native-geolocation-service';
+import API_BASE_URL from "../../../config";
+import { OPENWEATHERMAPS_API_KEY } from '@env';
 
 const requestLocationPermission = async () => {
     
@@ -52,8 +54,11 @@ const LocationPermissions = () => {
                 <Text style={styles.text}>By allowing geolocation, you are able to enjoy more features with WayPoint</Text>
             </View>
             <View>
-            <Text>Latitude: {location ? location.coords.latitude : null}</Text>
-            <Text>Longitude: {location ? location.coords.longitude : null}</Text>
+            {/* <Text>Latitude: {location ? location.coords.latitude : null}</Text>     // Check to see your coordinates
+            <Text>Longitude: {location ? location.coords.longitude : null}</Text> */}
+                <Text>
+
+                </Text>
             </View>
             <TouchableOpacity style={styles.allowButton} onPress={(getLocation)}>
                 <Text style={styles.buttonText}>Allow</Text>
