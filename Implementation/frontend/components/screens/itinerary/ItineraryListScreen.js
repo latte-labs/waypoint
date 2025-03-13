@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
-    View, Text, FlatList, TouchableOpacity, Alert, ActivityIndicator, StyleSheet 
+    View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet 
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import API_BASE_URL from '../../../config';
 import SafeAreaWrapper from '../SafeAreaWrapper';
-
 
 const ItineraryListScreen = () => {
     const navigation = useNavigation();
@@ -15,7 +14,7 @@ const ItineraryListScreen = () => {
     const [loading, setLoading] = useState(true);
     const [userId, setUserId] = useState(null);
 
-    // ✅ Load User ID & Fetch Itineraries from PostgreSQL
+    // ✅ Load User ID Once
     useEffect(() => {
         const fetchUserData = async () => {
             try {
@@ -55,14 +54,23 @@ const ItineraryListScreen = () => {
         }
     };
 
+    // ✅ Refresh Itineraries on Screen Focus
+    useFocusEffect(
+        useCallback(() => {
+            if (userId) {
+                console.log("🔄 Refetching itineraries...");
+                fetchItineraries(userId);
+            }
+        }, [userId])
+    );
+
     // ✅ Handle Itinerary Selection (Navigates to Detail Screen)
     const handleSelectItinerary = (itinerary) => {
         console.log(`🔄 Navigating to itinerary: ${itinerary.id}`);
-        // Alert.alert("Itinerary Selected", `UUID: ${itinerary.id}`);
         navigation.navigate('ItineraryDetail', { itineraryId: itinerary.id });
     };
 
-    // ✅ Handle Adding New Itinerary (For Now, Just Alert)
+    // ✅ Handle Adding New Itinerary (Navigates to Form)
     const handleAddItinerary = () => {
         navigation.navigate('ItineraryForm', { userId });
     };   
@@ -73,38 +81,36 @@ const ItineraryListScreen = () => {
             <Text style={styles.itineraryName}>Trip Name: {item.name}</Text>
             <Text style={styles.itineraryDestination}>Destination: {item.destination}</Text>
             <Text style={styles.itineraryDate}>
-            {new Date(item.start_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })} 
-            - 
-            {new Date(item.end_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}
-        </Text>
-
+                {new Date(item.start_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })} 
+                - 
+                {new Date(item.end_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}
+            </Text>
         </TouchableOpacity>
     );
 
     return (
         <SafeAreaWrapper>
             <View style={styles.container}>
-            <Text style={styles.title}>My Itineraries</Text>
+                <Text style={styles.title}>My Itineraries</Text>
 
-            {loading ? (
-                <ActivityIndicator size="large" color="#007bff" />
-            ) : itineraries.length > 0 ? (
-                <FlatList 
-                    data={itineraries}
-                    renderItem={renderItem}
-                    keyExtractor={(item) => item.id}
-                />
-            ) : (
-                <Text style={styles.noItineraries}>You have no itineraries yet.</Text>
-            )}
+                {loading ? (
+                    <ActivityIndicator size="large" color="#007bff" />
+                ) : itineraries.length > 0 ? (
+                    <FlatList 
+                        data={itineraries}
+                        renderItem={renderItem}
+                        keyExtractor={(item) => item.id}
+                    />
+                ) : (
+                    <Text style={styles.noItineraries}>You have no itineraries yet.</Text>
+                )}
 
-            {/* ✅ Add Itinerary Button (Currently Alerts) */}
-            <TouchableOpacity style={styles.addButton} onPress={handleAddItinerary}>
-                <Text style={styles.addButtonText}>+ Create New Itinerary</Text>
-            </TouchableOpacity>
-        </View>
+                {/* ✅ Add Itinerary Button */}
+                <TouchableOpacity style={styles.addButton} onPress={handleAddItinerary}>
+                    <Text style={styles.addButtonText}>+ Create New Itinerary</Text>
+                </TouchableOpacity>
+            </View>
         </SafeAreaWrapper>
-        
     );
 };
 
