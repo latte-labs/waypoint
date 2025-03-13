@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { 
-    View, Text, FlatList, TouchableOpacity, Alert, ActivityIndicator, Modal, TextInput 
+    View, Text, FlatList, TouchableOpacity, Alert, ActivityIndicator, Modal, TextInput, StyleSheet 
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import API_BASE_URL from '../../../config';
 import SafeAreaWrapper from '../SafeAreaWrapper';
+import DateTimePicker from '@react-native-community/datetimepicker';
+
 
 const ItineraryDayScreen = () => {
     const route = useRoute();
     const navigation = useNavigation();
     const { itineraryId, dayId } = route.params;
-
+    const [showTimePicker, setShowTimePicker] = useState(false);
+    const [selectedTime, setSelectedTime] = useState(new Date());
     const [activities, setActivities] = useState([]);
     const [loading, setLoading] = useState(true);
     const [modalVisible, setModalVisible] = useState(false);
@@ -58,6 +61,33 @@ const ItineraryDayScreen = () => {
 
         fetchActivities();
     }, [itineraryId, dayId]);
+    
+    // ✅ Function to Handle Time Selection
+    const handleTimeChange = (event, selected) => {
+        if (selected) {
+            setSelectedTime(selected);
+        }
+    };
+
+    // ✅ Function to Format Time in HH:MM AM/PM Format
+    const formatTime = (date) => {
+        const hours = date.getHours();
+        const minutes = date.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        return `${hours % 12 || 12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+    };
+
+    // ✅ Function to Close Time Picker Only When "Done" is Pressed
+    const handleDone = () => {
+        // ✅ Format the selected time before closing
+        const formattedTime = formatTime(selectedTime);
+        setNewActivity({ ...newActivity, time: formattedTime });
+        setShowTimePicker(false);
+    };
+
+
+    // ✅ Placeholder Time (Default: 00:00 AM)
+    const displayTime = newActivity.time ? newActivity.time : "00:00 AM";
 
     // ✅ Handle Add Activity Modal
     const handleOpenModal = () => setModalVisible(true);
@@ -203,12 +233,33 @@ const ItineraryDayScreen = () => {
                                 Add New Activity
                             </Text>
 
-                            <TextInput 
-                                placeholder="Time (e.g., 8AM, 10:30AM)"
-                                style={{ borderBottomWidth: 1, marginBottom: 10, padding: 5 }}
-                                value={newActivity.time}
-                                onChangeText={(text) => setNewActivity({ ...newActivity, time: text })}
-                            />
+                            {/* ✅ Clickable Placeholder for Time Selection */}
+                            <TouchableOpacity 
+                                onPress={() => setShowTimePicker(true)} 
+                                style={styles.timeBox}
+                            >
+                                <Text style={styles.timeText}>{displayTime}</Text>
+                            </TouchableOpacity>
+
+                            {/* ✅ Modal with Time Picker & "Done" Button */}
+                            <Modal visible={showTimePicker} transparent={true} animationType="slide">
+                                <View style={styles.modalContainer}>
+                                    <View style={styles.modalContent}>
+                                        <DateTimePicker
+                                            value={selectedTime}
+                                            mode="time"
+                                            display="spinner" // ✅ Allows scrolling hours, minutes, AM/PM
+                                            onChange={handleTimeChange} // ✅ No longer closes automatically
+                                        />
+
+                                        {/* ✅ DONE Button to Close Time Picker */}
+                                        <TouchableOpacity onPress={handleDone} style={styles.doneButton}>
+                                            <Text style={styles.doneText}>DONE</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            </Modal>
+
                             <TextInput 
                                 placeholder="Activity Name"
                                 style={{ borderBottomWidth: 1, marginBottom: 10, padding: 5 }}
@@ -249,5 +300,45 @@ const ItineraryDayScreen = () => {
         </SafeAreaWrapper>
     );
 };
+
+const styles = StyleSheet.create({
+    timeBox: {
+        borderBottomWidth: 1,
+        padding: 10,
+        backgroundColor: '#f0f0f0',
+        borderRadius: 5,
+        alignItems: 'center',
+    },
+    timeText: {
+        fontSize: 16,
+        color: '#333',
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        backgroundColor: '#fff',
+        padding: 20,
+        borderRadius: 10,
+        alignItems: 'center',
+        width: 300,
+    },
+    doneButton: {
+        marginTop: 10,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        backgroundColor: '#007bff',
+        borderRadius: 5,
+    },
+    doneText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+});
+
 
 export default ItineraryDayScreen;
