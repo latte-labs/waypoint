@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { 
-    View, Text, ActivityIndicator, Alert, StyleSheet, TouchableOpacity, ScrollView 
+    View, Text, ActivityIndicator, Alert, StyleSheet, TouchableOpacity, ScrollView, Modal, TextInput, Pressable
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -11,6 +11,8 @@ import SafeAreaWrapper from '../SafeAreaWrapper';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import DraggableFlatList from 'react-native-draggable-flatlist';
+import { Calendar } from 'react-native-calendars';
+
 
 const ItineraryDetailScreen = () => {
     const route = useRoute();
@@ -23,6 +25,12 @@ const ItineraryDetailScreen = () => {
     const [days, setDays] = useState([]); // Store ordered days
     const [dayHeights, setDayHeights] = useState({}); // Store heights dynamically
     
+    const [modalVisible, setModalVisible] = useState(false);
+    const [dayTitle, setDayTitle] = useState('');
+    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]); // Default to today
+    const [showDatePicker, setShowDatePicker] = useState(false);
+
+
     
 
     // ✅ Load user data from AsyncStorage
@@ -105,7 +113,7 @@ const ItineraryDetailScreen = () => {
     const renderRightActions = (dayId) => (
         <TouchableOpacity 
             style={[styles.deleteDayButton, { height: dayHeights[dayId] || 0 }]} 
-            onPress={() => Alert.alert("Delete Feature", "This feature is coming soon!")}
+            onPress={() => handleDeleteDay(dayId)}
         >
             <Text style={styles.deleteDayText}>Delete</Text>
         </TouchableOpacity>
@@ -135,7 +143,68 @@ const ItineraryDetailScreen = () => {
         );
     };
 
+    // ✅ Handle Delete Itinerary Day
+    const handleDeleteDay = async (dayId) => {
+        Alert.alert(
+            "Delete Day",
+            "Are you sure you want to delete this day? All activities will be removed.",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            await axios.delete(`${API_BASE_URL}/itineraries/${itineraryId}/days/${dayId}`);
+                            Alert.alert("Success", "Day deleted successfully!");
+
+                            // ✅ Refresh the itinerary days list
+                            fetchItineraryDetails();
+                        } catch (error) {
+                            console.error("❌ Error deleting day:", error.response?.data || error.message);
+                            Alert.alert("Error", "Failed to delete itinerary day.");
+                        }
+                    }
+                }
+            ]
+        );
+    };
     
+    // ✅ Handle Adding a New Day
+    const handleAddDay = async () => {
+        if (!dayTitle.trim()) {
+            Alert.alert("Missing Field", "Please enter a title for the day.");
+            return;
+        }
+        if (!selectedDate) {
+            Alert.alert("Missing Field", "Please select a date.");
+            return;
+        }
+
+        try {
+            const response = await axios.post(`${API_BASE_URL}/itineraries/${itineraryId}/days/`, {
+                date: new Date(selectedDate).toISOString(), // ✅ Convert to ISO 8601 format
+                title: dayTitle,
+                itinerary_id: itineraryId, // ✅ Include itinerary_id in the body
+            });
+
+            if (response.status === 200) {
+                const newDayId = response.data.id; // ✅ Extract new day ID
+                Alert.alert("Success", "Day added successfully!");
+
+                setModalVisible(false); // ✅ Close modal
+                fetchItineraryDetails(); // ✅ Refresh list
+                navigation.navigate('ItineraryDay', { itineraryId, dayId: newDayId }); // ✅ Navigate to new day
+            }
+        } catch (error) {
+            console.error("❌ Error adding day:", error.response?.data || error.message);
+            Alert.alert("Error", "Failed to add itinerary day.");
+        }
+    };
+
+
+
+
 
     // ✅ Render Each Day with Swipe-to-Delete & Drag Support
     const renderItem = ({ item, drag }) => (
@@ -181,10 +250,66 @@ const ItineraryDetailScreen = () => {
         <GestureHandlerRootView style={{ flex: 1 }}>
             <SafeAreaWrapper>
                 <View style={styles.container}>
+                    {/* ✅ Modal for Adding a New Day */}
+                    <Modal visible={modalVisible} transparent animationType="slide">
+                        <View style={styles.modalContainer}>
+                            <View style={styles.modalContent}>
+                                <Text style={styles.modalTitle}>Add a New Day</Text>
+
+                                {/* ✅ Input for Day Title */}
+                                <TextInput
+                                    placeholder="Enter day title"
+                                    style={styles.input}
+                                    value={dayTitle}
+                                    onChangeText={setDayTitle}
+                                />
+
+                                {/* ✅ Date Selection Button */}
+                                <TouchableOpacity style={styles.datePicker} onPress={() => setShowDatePicker(true)}>
+                                    <Text style={styles.dateText}>
+                                        {selectedDate ? new Date(selectedDate).toDateString() : "Select Date"}
+                                    </Text>
+                                </TouchableOpacity>
+
+                                {/* ✅ Calendar for Single Date Selection */}
+                                {showDatePicker && (
+                                    <View style={styles.calendarContainer}>
+                                        <Calendar
+                                            onDayPress={(day) => {
+                                                setSelectedDate(day.dateString); // ✅ Save as YYYY-MM-DD
+                                                setShowDatePicker(false); // ✅ Close after selection
+                                            }}
+                                            markedDates={{
+                                                [selectedDate]: { selected: true, selectedColor: '#007bff' },
+                                            }}
+                                            theme={{
+                                                selectedDayBackgroundColor: '#007bff',
+                                                todayTextColor: '#F82E08',
+                                                arrowColor: '#007bff',
+                                            }}
+                                        />
+                                    </View>
+                                )}
+
+                                {/* ✅ Confirm Button */}
+                                <Pressable style={styles.modalButton} onPress={handleAddDay}>
+                                    <Text style={styles.modalButtonText}>Add Day</Text>
+                                </Pressable>
+
+                                {/* ✅ Cancel Button */}
+                                <Pressable style={[styles.modalButton, { backgroundColor: 'gray' }]} onPress={() => setModalVisible(false)}>
+                                    <Text style={styles.modalButtonText}>Cancel</Text>
+                                </Pressable>
+                            </View>
+                        </View>
+                    </Modal>
+
+
                     {loading ? (
                         <ActivityIndicator size="large" color="#007bff" />
                     ) : itinerary ? (
                         <>
+                            
                             {/* ✅ FIXED HEADER (Itinerary Details) */}
                             <View style={styles.headerContainer}>
                                 <Text style={styles.title}>{itinerary.name}</Text>
@@ -206,7 +331,7 @@ const ItineraryDetailScreen = () => {
                                         <Text style={styles.noDaysText}>Nothing is planned yet.</Text>
                                         <TouchableOpacity 
                                             style={styles.addDayButton} 
-                                            onPress={() => Alert.alert("Add Day", "Feature coming soon!")}
+                                            onPress={() => setModalVisible(true)}
                                         >
                                             <Text style={styles.addDayButtonText}>+ Add Day</Text>
                                         </TouchableOpacity>
@@ -370,6 +495,61 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#888',
         marginTop: 20,
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)', // ✅ Semi-transparent background
+    },
+    modalContent: {
+        width: '80%',
+        backgroundColor: '#fff',
+        padding: 20,
+        borderRadius: 10,
+        alignItems: 'center',
+        elevation: 5, // ✅ Adds shadow for better UI
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    input: {
+        width: '100%',
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 5,
+        padding: 10,
+        marginBottom: 10,
+        textAlign: 'center',
+    },
+    datePicker: {
+        width: '100%',
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 5,
+        padding: 10,
+        marginBottom: 10,
+        alignItems: 'center',
+        backgroundColor: '#f9f9f9',
+    },
+    dateText: {
+        fontSize: 16,
+        color: '#333',
+    },
+    modalButton: {
+        width: '100%',
+        padding: 12,
+        backgroundColor: '#007bff',
+        borderRadius: 5,
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    modalButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
     
     
