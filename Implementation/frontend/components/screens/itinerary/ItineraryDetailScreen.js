@@ -110,6 +110,31 @@ const ItineraryDetailScreen = () => {
             <Text style={styles.deleteDayText}>Delete</Text>
         </TouchableOpacity>
     );
+    // ✅ Handle Delete Itinerary
+    const handleDelete = async () => {
+        Alert.alert(
+            "Delete Itinerary",
+            "Are you sure you want to delete this itinerary? This action cannot be undone.",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            await axios.delete(`${API_BASE_URL}/itineraries/${itineraryId}`);
+                            Alert.alert("Success", "Itinerary deleted successfully!");
+                            navigation.navigate('Itinerary'); // ✅ Navigate back
+                        } catch (error) {
+                            console.error("❌ Error deleting itinerary:", error.response?.data || error.message);
+                            Alert.alert("Error", "Failed to delete itinerary.");
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
     
 
     // ✅ Render Each Day with Swipe-to-Delete & Drag Support
@@ -213,7 +238,7 @@ const ItineraryDetailScreen = () => {
                                 <TouchableOpacity style={styles.editButton} onPress={() => Alert.alert("Edit Feature", "This feature is coming soon!")}>
                                     <Text style={styles.buttonText}>Edit Itinerary</Text>
                                 </TouchableOpacity>
-                                <TouchableOpacity style={styles.deleteButton} onPress={() => Alert.alert("Delete Feature", "This feature is coming soon!")}>
+                                <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
                                     <Text style={styles.buttonText}>Delete</Text>
                                 </TouchableOpacity>
                             </View>
