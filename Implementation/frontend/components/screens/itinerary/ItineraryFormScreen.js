@@ -84,8 +84,11 @@ const ItineraryFormScreen = () => {
             });
 
             if (response.status === 200) {
+                const newItineraryId = response.data.id; // ✅ Extract new itinerary ID
                 Alert.alert("Success", "Itinerary created successfully!");
-                navigation.goBack();
+
+                // ✅ Navigate to ItineraryDetailScreen
+                navigation.replace('ItineraryDetail', { itineraryId: newItineraryId });
             }
         } catch (error) {
             console.error("❌ Error creating itinerary:", error.response?.data || error.message);
@@ -94,6 +97,7 @@ const ItineraryFormScreen = () => {
             setLoading(false);
         }
     };
+
 
     return (
         <SafeAreaWrapper>
