@@ -261,3 +261,17 @@ def get_day_activities(itinerary_id: uuid.UUID, day_id: uuid.UUID, db: Session =
         "created_at": day.created_at,
         "activities": activity_list
     }
+
+@itinerary_router.delete("/{itinerary_id}", status_code=200)
+def delete_itinerary(itinerary_id: str, db: Session = Depends(get_db)):
+    itinerary = db.query(Itinerary).filter(Itinerary.id == itinerary_id).first()
+
+    if not itinerary:
+        raise HTTPException(status_code=404, detail="Itinerary not found")
+
+    # ✅ Delete Itinerary & Related Data
+    db.delete(itinerary)
+    db.commit()
+
+    return {"message": "Itinerary deleted successfully"}
+
