@@ -43,9 +43,6 @@ const ItineraryFormScreen = () => {
             const range = getMarkedDates(startDate, selectedDate);
             setMarkedDates(range);
             setCalendarVisible(false); // ✅ Close calendar after selection
-
-            // ✅ Show alert when both dates are selected
-            Alert.alert("Date Range Selected", `Start: ${startDate}\nEnd: ${selectedDate}`);
         }
     };
 
@@ -168,14 +165,6 @@ const ItineraryFormScreen = () => {
                         <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Create Itinerary</Text>
                     </Pressable>
                 )}
-
-                {/* ✅ Navigation Button to Test Date Picker */}
-                <Pressable
-                    style={{ padding: 15, backgroundColor: '#28a745', borderRadius: 8, alignItems: 'center' }}
-                    onPress={() => navigation.navigate('DatePickerTest')}
-                >
-                    <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Date Picker Test</Text>
-                </Pressable>
 
             </View>
         </SafeAreaWrapper>
