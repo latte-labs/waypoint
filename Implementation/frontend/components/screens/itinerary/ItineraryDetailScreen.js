@@ -360,7 +360,10 @@ const ItineraryDetailScreen = () => {
     
                             {/* ✅ FIXED BOTTOM BUTTONS */}
                             <View style={styles.buttonContainer}>
-                                <TouchableOpacity style={styles.editButton} onPress={() => Alert.alert("Edit Feature", "This feature is coming soon!")}>
+                                <TouchableOpacity 
+                                    style={styles.editButton}
+                                    onPress={() => navigation.navigate('ItineraryForm', { itineraryId: itinerary.id, userId: itinerary.created_by })}
+                                    >
                                     <Text style={styles.buttonText}>Edit Itinerary</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
