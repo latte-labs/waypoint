@@ -206,6 +206,7 @@ const ItineraryDetailScreen = () => {
 
 
 
+
     // ✅ Render Each Day with Swipe-to-Delete & Drag Support
     const renderItem = ({ item, drag }) => (
         <Swipeable
@@ -346,7 +347,7 @@ const ItineraryDetailScreen = () => {
                                         ListFooterComponent={
                                             <TouchableOpacity 
                                                 style={styles.addDayButton} 
-                                                onPress={() => Alert.alert("Add Day", "Feature coming soon!")}
+                                                onPress={() => setModalVisible(true)}
                                             >
                                                 <Text style={styles.addDayButtonText}>+ Add Day</Text>
                                             </TouchableOpacity>
