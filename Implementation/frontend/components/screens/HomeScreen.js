@@ -15,6 +15,9 @@ import { database } from '../../firebase';
 import Geolocation from 'react-native-geolocation-service';
 import SafeAreaWrapper from './SafeAreaWrapper';
 import HomeScreenStyles from '../../styles/HomeScreenStyle';
+import LocationPermissions from './permissions/LocationPermissions';
+import axios from 'axios';
+import API_BASE_URL from '../../config';
 
 const { width, height } = Dimensions.get('window');
 
@@ -33,6 +36,11 @@ function HomeScreen() {
     ]);
     const [showQuizPrompt, setShowQuizPrompt] = useState(false);
     const [userId, setUserId] = useState(null);
+
+    // WEATHER
+    const [weather, setWeather] = useState(null);
+    const [location, setLocation] = useState(null);
+    const [hasLocationPermission, setHasLocationPermission] = useState(false);
 
     useFocusEffect(
         React.useCallback(() => {
@@ -61,6 +69,41 @@ function HomeScreen() {
         }, [])
     );
 
+    // WEATHER
+    const fetchWeather = async (latitude, longitude) => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/weather`, {
+                params: {
+                    latitude,
+                    longitude
+                }
+            });
+
+            if (response.data.status === "success") {
+                setWeather(response.data.data);
+            } else {
+                console.log("Error fetching weather: ", response.data.detail);
+            }
+        }
+        catch (err) {
+            console.log("Error fetching weather data: ", err)
+        }
+    }
+
+    const handleLocationGranted = (coords) => {
+        console.log("Location received in HomeScreen:", coords);
+        setLocation(coords);
+        setHasLocationPermission(true);
+        fetchWeather(coords.latitude, coords.longitude);
+    };
+
+    // ✅ Fetch weather when HomeScreen mounts & location exists
+    useEffect(() => {
+        if (location) {
+            fetchWeather(location.latitude, location.longitude);
+        }
+    }, [location]); // ✅ Runs when `location` updates
+
     const handleQuizStart = () => {
         if (!userId) return;
         navigation.navigate('QuizScreen');
@@ -78,10 +121,15 @@ function HomeScreen() {
         navigation.navigate('Location')
     }
 
+    // Shows the LocationPermissions screen if not granted, once granted, proceed to homescreen.
+    if (!hasLocationPermission) {
+        return <LocationPermissions onLocationGranted={handleLocationGranted} />;
+    }
+
     return (
         <SafeAreaWrapper>
             <View style={{ flex: 1, backgroundColor: 'white', padding: 15, marginBottom: 70 }}>
-
+                
                 {/* ✅ 1. HEADER SECTION (30% HEIGHT) */}
                 <View
                     style={HomeScreenStyles.headerContainer}>
@@ -103,14 +151,25 @@ function HomeScreen() {
                     </View>
 
                     {/* Middle: 20% - Weather Placeholder */}
-                    
-                        <View style={HomeScreenStyles.weatherBox}>
-                        <TouchableOpacity onPress={handleWeatherClick}>
+
+                    <View style={HomeScreenStyles.weatherBox}>
+                        {/* <TouchableOpacity onPress={handleWeatherClick}>
                             <Text style={HomeScreenStyles.weatherText}>☀️ 21°C</Text>
                             <Text style={HomeScreenStyles.weatherLocation}>Vancouver</Text>
-                            </TouchableOpacity>
-                        </View>
-                    
+                            </TouchableOpacity> */}
+                        {weather ? (
+                            <>
+                                <Text>🌡 {weather.temperature}°C</Text>
+                                <Text>{weather.weather_main}</Text>
+                                <Image
+                                    source={{ uri: `https://openweathermap.org/img/wn/${weather.weather_icon}@2x.png` }}
+                                    style={{ width: 50, height: 50 }} />
+                            </>
+                        ) : (
+                            <Text style={HomeScreenStyles.weatherText}>Fetching weather...</Text>
+                        )}
+                    </View>
+
 
 
                     {/* Right: 20% - Profile Clickable Circle */}

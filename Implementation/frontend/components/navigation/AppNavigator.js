@@ -38,7 +38,7 @@ function AppNavigator() {
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="QuizScreen" component={QuizScreen} />
-        <Stack.Screen name="Location" component={LocationPermissions} />
+        {/* <Stack.Screen name="Location" component={LocationPermissions} /> */}
         <Stack.Screen name="More">
           {() => <MoreMenu />}
         </Stack.Screen>

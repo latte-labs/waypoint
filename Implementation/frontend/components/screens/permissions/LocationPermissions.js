@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, Image } from "react-native";
 import SafeAreaWrapper from "../SafeAreaWrapper";
 import styles from "../../../styles/LocationPermissionsStyle";
@@ -20,51 +20,59 @@ const requestLocationPermission = async () => {
     }
 }
 
-const LocationPermissions = () => {
-
+const LocationPermissions = ({ onLocationGranted }) => {
+    const [hasPermission, setHasPermission] = useState(false);
     const [location, setLocation] = useState(false);
-    const [weather, setWeather] = useState(null);
 
-    const getLocation = () => {
-        const result = requestLocationPermission();
-        result.then(res => {
-            console.log('res is: res');
-            if (res) {
+    // check permission on mount
+    useEffect(() => {
+        const verifyPermission = async () => {
+            const result = await check(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
+            if (result === RESULTS.GRANTED) {
+                setHasPermission(true);
+                // Optionally, fetch location immediately
                 Geolocation.getCurrentPosition(
                     position => {
-                        console.log(position);
-                        setLocation(position);
-                        fetchWeather(position.coords.latitude, position.coords.longitude);
+                        console.log("Auto-fetch location:", position);
+                        setLocation(position.coords);
+                        onLocationGranted(position.coords);
                     },
                     error => {
                         console.log(error.code, error.message);
-                        setLocation(false);
                     },
-                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
+                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
                 );
             }
-        });
+        };
+
+        verifyPermission();
+    }, []);
+
+    const getLocation = async () => {
+        const permissionGranted = await requestLocationPermission();
+
+        if (!permissionGranted) {
+            console.log("Location permissions not accepted");
+            return;
+        }
+
+        Geolocation.getCurrentPosition(
+            position => {
+                console.log(position);
+                setHasPermission(true);
+                setLocation(position.coords);
+                onLocationGranted(position.coords);
+            },
+            error => {
+                console.log(error.code, error.message);
+                setLocation(false);
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
+        );
     };
 
-    const fetchWeather = async (latitude, longitude) => {
-        try {
-            const response = await axios.get(`${API_BASE_URL}/weather`, {
-                params: {
-                    latitude, 
-                    longitude
-                }
-            });
-
-            if (response.data.status === "success") {
-                setWeather(response.data.data);
-            } else {
-                console.log ("Error fetching weather: ", response.data.detail);
-            }
-        }
-        catch (err) {
-            console.log("Error fetching weather data: ", err)
-        }
-    }
+    // If permission is already granted, do not show this screen again
+    if (hasPermission) return null;
 
     return (
         <SafeAreaWrapper>
@@ -75,24 +83,6 @@ const LocationPermissions = () => {
             <View style={styles.textContainer}>
                 <Text style={styles.text}>By allowing geolocation, you are able to enjoy more features with WayPoint</Text>
             </View>
-            <View>
-                {/* <Text>Latitude: {location ? location.coords.latitude : null}</Text>     // Check to see your coordinates
-            <Text>Longitude: {location ? location.coords.longitude : null}</Text> */}
-                <Text>
-
-                </Text>
-            </View>
-            {/* ✅ TEMPORARY DISPLAY FOR WEATHER INFORMATION */}
-            {weather && (
-                <View style={styles.weatherContainer}>
-                    <Text style={styles.weatherText}>🌡 Temperature: {weather.temperature}°C</Text>
-                    <Text style={styles.weatherText}>☁️ Condition: {weather.weather_main}</Text>
-                    <Image 
-                        source={{ uri: `https://openweathermap.org/img/wn/${weather.weather_icon}@2x.png` }} 
-                        style={{ width: 50, height: 50 }}
-                    />
-                </View>
-            )}
             <TouchableOpacity style={styles.allowButton} onPress={(getLocation)}>
                 <Text style={styles.buttonText}>Allow</Text>
             </TouchableOpacity>
@@ -100,4 +90,4 @@ const LocationPermissions = () => {
     );
 }
 
-export default LocationPermissions;
+export default LocationPermissions
