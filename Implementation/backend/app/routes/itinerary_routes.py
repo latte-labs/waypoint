@@ -8,7 +8,7 @@ from typing import List
 import uuid
 from sqlalchemy.sql import func
 from datetime import datetime
-
+from uuid import UUID
 
 itinerary_router = APIRouter()
 
@@ -293,3 +293,37 @@ def delete_itinerary_day(itinerary_id: str, day_id: str, db: Session = Depends(g
     db.commit()
 
     return {"message": "Itinerary day deleted successfully"}
+
+@itinerary_router.put("/{itinerary_id}", status_code=200)
+def update_itinerary(itinerary_id: str, updated_itinerary: itinerary_schema.ItinerarySchema, db: Session = Depends(get_db)):
+    """
+    ✅ Updates an existing itinerary with new details.
+    """
+    try:
+        itinerary_uuid = UUID(itinerary_id)  # ✅ Convert to UUID explicitly
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid itinerary ID format")
+
+    itinerary = db.query(Itinerary).filter(Itinerary.id == itinerary_uuid).first()
+
+    if not itinerary:
+        raise HTTPException(status_code=404, detail="Itinerary not found")
+
+    # ✅ Ensure `id` in the body matches `itinerary_id`
+    if updated_itinerary.id and str(updated_itinerary.id) != str(itinerary_id):
+        raise HTTPException(status_code=400, detail="ID in request body must match the URL parameter")
+
+    # ✅ Update itinerary details
+    itinerary.name = updated_itinerary.name
+    itinerary.destination = updated_itinerary.destination
+    itinerary.start_date = updated_itinerary.start_date
+    itinerary.end_date = updated_itinerary.end_date
+    itinerary.budget = updated_itinerary.budget
+    itinerary.updated_at = datetime.utcnow()
+
+    db.commit()
+    db.refresh(itinerary)
+
+    print(f"✅ Itinerary updated successfully: {itinerary}")
+    return {"message": "Itinerary updated successfully", "itinerary_id": itinerary.id}
+
