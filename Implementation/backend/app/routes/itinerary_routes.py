@@ -264,6 +264,9 @@ def get_day_activities(itinerary_id: uuid.UUID, day_id: uuid.UUID, db: Session =
 
 @itinerary_router.delete("/{itinerary_id}", status_code=200)
 def delete_itinerary(itinerary_id: str, db: Session = Depends(get_db)):
+    """
+    ✅ Deletes an itinerary and all associated data.
+    """
     itinerary = db.query(Itinerary).filter(Itinerary.id == itinerary_id).first()
 
     if not itinerary:
@@ -275,3 +278,18 @@ def delete_itinerary(itinerary_id: str, db: Session = Depends(get_db)):
 
     return {"message": "Itinerary deleted successfully"}
 
+@itinerary_router.delete("/{itinerary_id}/days/{day_id}", status_code=200)
+def delete_itinerary_day(itinerary_id: str, day_id: str, db: Session = Depends(get_db)):
+    """
+    ✅ Deletes an itinerary day and all associated activities.
+    """
+    day = db.query(ItineraryDay).filter(ItineraryDay.id == day_id, ItineraryDay.itinerary_id == itinerary_id).first()
+
+    if not day:
+        raise HTTPException(status_code=404, detail="Itinerary day not found")
+
+    # ✅ Delete Day & Related Activities
+    db.delete(day)
+    db.commit()
+
+    return {"message": "Itinerary day deleted successfully"}
