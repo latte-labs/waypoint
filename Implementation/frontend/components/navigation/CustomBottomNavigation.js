@@ -1,10 +1,12 @@
 import React from "react";
-import { View, Text, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, TouchableWithoutFeedback } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { navigationStyles } from "../../styles/NavigationStyles";
 import { useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import MoreMenu from "./MoreMenu";
+import { BlurView } from "@react-native-community/blur";
+import { StyleSheet } from "react-native";
 
 const CustomBottomNavigation = () => {
     const navigation = useNavigation();
@@ -97,15 +99,25 @@ const CustomBottomNavigation = () => {
                 animationType="fade"
                 onRequestClose={() => setMoreMenuVisible(false)}
             >
-                <TouchableOpacity
-                    style={navigationStyles.overlay}
-                    activeOpacity={1}
-                    onPressOut={() => setMoreMenuVisible(false)}
-                >
-                    <View style={navigationStyles.modalContent}>
+                <View style={{ flex: 1 }}>
+                    {/* Blurred background */}
+                    <BlurView
+                        style={StyleSheet.absoluteFill}
+                        pointerEvents="none"
+                        blurType="light"
+                        blurAmount={5}
+                    />
+
+                    {/* A full-screen touchable to dismiss the modal when tapping outside */}
+                    <TouchableWithoutFeedback onPress={() => setMoreMenuVisible(false)}>
+                        <View style={{ flex: 1 }} />
+                    </TouchableWithoutFeedback>
+
+                    {/* Modal content on the right side */}
+                    <View style={navigationStyles.modalContainer}>
                         <MoreMenu closeMenu={() => setMoreMenuVisible(false)} />
                     </View>
-                </TouchableOpacity>
+                </View>
             </Modal>
         </>
     );

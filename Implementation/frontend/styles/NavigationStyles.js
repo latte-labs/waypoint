@@ -70,31 +70,39 @@ export const navigationStyles = StyleSheet.create({
     menuText: {
         fontSize: 22,
     },
-    
-    // MoreMenu Items
+    // Modal Items
+    modalContainer: {
+        position: 'absolute',
+        top: 120,
+        bottom: 120,
+        right: 0,
+        width: "60%",
+        backgroundColor: "white",
+        borderTopLeftRadius: 20,
+        borderBottomLeftRadius: 20,
+        padding: 20,
+        justifyContent: "center",
+        borderWidth: 0.1,
+        borderColor: "grey",
+        shadowColor: "grey",
+        shadowOffset: {width: 0, height: 4},
+        shadowOpacity: 0.5,
+        shadowRadius: 2,
+      },
+
+    // MoreMenu Styles
     moreContainer: {
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        //borderWidth: 1,
     },
     moreMenuItem: {
         padding: 15,
+        //borderWidth: 1,
     },
     moreMenuText: {
         fontSize: 22,
     },
 
-    // Modal Items
-    overlay: {
-        flex: 1,
-        backgroundColor: "rgba(0,0,0,0.5)",
-        justifyContent: "center",
-        alignItems: "center",
-    },
 
-    modalContent: {
-        width: "80%",
-        backgroundColor: "white",
-        borderRadius: 8,
-        padding: 20,
-      },
 });
