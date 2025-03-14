@@ -70,19 +70,37 @@ const HomeScreenStyles = StyleSheet.create({
     weatherBox: {
         width: '25%',
         height: '80%',
-        backgroundColor: '#D3D3D3',
+        backgroundColor: 'white',
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: 12,
         padding: 5,
+        borderWidth: 0.25,
+        borderColor: "grey",
+        shadowColor: "grey",
+        shadowOffset: {width: 0, height: 3},
+        shadowOpacity: 0.5,
+        shadowRadius: 2,
+        marginBottom: 10,
     },
 
-    weatherText: {
+    weatherHorizontal: {
+        flexDirection: 'row'
+    },
+
+    weatherHorizontalText: {
+        fontSize: 10,
+        alignSelf: 'center',
         fontSize: 16,
     },
 
-    weatherLocation: {
-        fontSize: 9,
+    weatherText: {
+        fontSize: 10,
+    },
+
+    weather_icon: {
+        width: 30,
+        height: 30,
     },
 
     profileButton: {

@@ -80,7 +80,11 @@ function HomeScreen() {
             });
 
             if (response.data.status === "success") {
-                setWeather(response.data.data);
+                const roundedTemperature = Math.round(response.data.data.temperature);
+                setWeather({
+                    ...response.data.data,
+                    temperature: roundedTemperature, 
+                });
             } else {
                 console.log("Error fetching weather: ", response.data.detail);
             }
@@ -129,7 +133,7 @@ function HomeScreen() {
     return (
         <SafeAreaWrapper>
             <View style={{ flex: 1, backgroundColor: 'white', padding: 15, marginBottom: 70 }}>
-                
+
                 {/* ✅ 1. HEADER SECTION (30% HEIGHT) */}
                 <View
                     style={HomeScreenStyles.headerContainer}>
@@ -153,17 +157,16 @@ function HomeScreen() {
                     {/* Middle: 20% - Weather Placeholder */}
 
                     <View style={HomeScreenStyles.weatherBox}>
-                        {/* <TouchableOpacity onPress={handleWeatherClick}>
-                            <Text style={HomeScreenStyles.weatherText}>☀️ 21°C</Text>
-                            <Text style={HomeScreenStyles.weatherLocation}>Vancouver</Text>
-                            </TouchableOpacity> */}
                         {weather ? (
                             <>
-                                <Text>🌡 {weather.temperature}°C</Text>
-                                <Text>{weather.weather_main}</Text>
-                                <Image
-                                    source={{ uri: `https://openweathermap.org/img/wn/${weather.weather_icon}@2x.png` }}
-                                    style={{ width: 50, height: 50 }} />
+                                <View style={HomeScreenStyles.weatherHorizontal}>
+                                    <Text style={HomeScreenStyles.weatherHorizontalText}>{weather.temperature}°C</Text>
+                                    <Image
+                                        source={{ uri: `https://openweathermap.org/img/wn/${weather.weather_icon}@2x.png` }}
+                                        style={HomeScreenStyles.weather_icon} />
+                                </View>
+                                <Text style={HomeScreenStyles.weatherText}>{weather.weather_main}</Text>
+
                             </>
                         ) : (
                             <Text style={HomeScreenStyles.weatherText}>Fetching weather...</Text>
