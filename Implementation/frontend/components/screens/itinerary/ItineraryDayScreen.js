@@ -7,6 +7,9 @@ import axios from 'axios';
 import API_BASE_URL from '../../../config';
 import SafeAreaWrapper from '../SafeAreaWrapper';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
 
 
 const ItineraryDayScreen = () => {
@@ -68,6 +71,23 @@ const ItineraryDayScreen = () => {
             setSelectedTime(selected);
         }
     };
+    // ✅ Function to Show Placeholder Alert Instead of Deleting
+    const handleDeleteActivity = () => {
+        Alert.alert("Feature Coming Soon", "Deleting Activity Feature Coming Soon.");
+    };
+
+    // ✅ Function to Render Swipeable Actions
+    const renderRightActions = () => (
+        <TouchableOpacity 
+            style={styles.deleteActivityButton} 
+            onPress={handleDeleteActivity} // ✅ Show Alert Instead of Deleting
+        >
+            <Text style={styles.deleteActivityText}>Delete</Text>
+        </TouchableOpacity>
+    );
+
+    
+
 
     // ✅ Function to Format Time in HH:MM AM/PM Format
     const formatTime = (date) => {
@@ -157,24 +177,13 @@ const ItineraryDayScreen = () => {
 
     // ✅ Render Activity Item
     const renderItem = ({ item }) => (
-        <TouchableOpacity 
-            style={{
-                backgroundColor: '#f8f9fa',
-                padding: 15,
-                borderRadius: 8,
-                marginBottom: 15,
-                width: '100%',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
-                elevation: 2,
-            }}
-        >
-            <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#222' }}>{item.name}</Text>
-            <Text style={{ fontSize: 14, color: '#007bff', marginTop: 5 }}>🕒 {item.time}</Text>
-            <Text style={{ fontSize: 14, color: '#555', marginTop: 5 }}>📍 {item.location}</Text>
-        </TouchableOpacity>
+        <Swipeable renderRightActions={renderRightActions}>
+            <TouchableOpacity style={styles.activityCard}>
+                <Text style={styles.activityTime}>🕒 {item.time}</Text>
+                <Text style={styles.activityName}>{item.name}</Text>
+                <Text style={styles.activityLocation}>📍 {item.location}</Text>
+            </TouchableOpacity>
+        </Swipeable>
     );
 
     return (
@@ -338,6 +347,35 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
+    deleteActivityButton: {
+        backgroundColor: 'red',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 80,
+        borderRadius: 8,
+        marginLeft: 10, 
+    },
+    deleteActivityText: { 
+        color: '#fff', 
+        fontSize: 14, 
+        fontWeight: 'bold',
+        textAlign: 'center'
+    },
+    activityCard: {
+        backgroundColor: '#f8f9fa',
+        padding: 15,
+        borderRadius: 8,
+        marginBottom: 15,
+        width: '100%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    activityTime: { fontSize: 14, fontWeight: 'bold', color: '#007bff' },
+    activityName: { fontSize: 16, fontWeight: '600', color: '#222' },
+    activityLocation: { fontSize: 14, color: '#555' },
 });
 
 
