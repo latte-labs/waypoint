@@ -73,7 +73,6 @@ export const navigationStyles = StyleSheet.create({
     
     // MoreMenu Items
     moreContainer: {
-        flex: 1,
         alignItems: 'center',
         justifyContent: 'center'
     },
@@ -82,6 +81,20 @@ export const navigationStyles = StyleSheet.create({
     },
     moreMenuText: {
         fontSize: 22,
-    }
+    },
 
+    // Modal Items
+    overlay: {
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.5)",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+
+    modalContent: {
+        width: "80%",
+        backgroundColor: "white",
+        borderRadius: 8,
+        padding: 20,
+      },
 });

@@ -1,14 +1,16 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Modal } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { navigationStyles } from "../../styles/NavigationStyles";
 import { useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
+import MoreMenu from "./MoreMenu";
 
 const CustomBottomNavigation = () => {
     const navigation = useNavigation();
     const route = useRoute();
     const [activeRouteName, setActiveRouteName] = useState("Home");
+    const [isMoreMenuVisible, setMoreMenuVisible] = useState(false);
 
     useFocusEffect(
         React.useCallback(() => {
@@ -33,7 +35,7 @@ const CustomBottomNavigation = () => {
     );
 
     // Screens where bottom nav should be hidden
-    const hiddenScreens = ['QuizScreen', ];
+    const hiddenScreens = ['QuizScreen',];
     if (hiddenScreens.includes(activeRouteName)) return null; // Hides the nav
 
     const menuItems = [
@@ -44,32 +46,68 @@ const CustomBottomNavigation = () => {
     ];
 
     return (
-        <View style={navigationStyles.navContainer}>
-            {menuItems.map((item) => {
-                const isActive = activeRouteName === item.name; // Check if the current screen is active
+        <>
+            <View style={navigationStyles.navContainer}>
+                {menuItems.map((item) => {
+                    const isActive = activeRouteName === item.name; // Check if the current screen is active
+                    if (item.name === "More") {
+                        return (
+                            <TouchableOpacity
+                                key="More"
+                                style={navigationStyles.navItem}
+                                onPress={() => setMoreMenuVisible(true)}
+                            >
+                                <View style={navigationStyles.navContent}>
+                                    <Text style={navigationStyles.navIcon}>{item.icon}</Text>
+                                    {activeRouteName === item.name && (
+                                        <Text style={navigationStyles.navText}>{item.name}</Text>
+                                    )}
+                                </View>
+                            </TouchableOpacity>
+                        );
+                    } else {
 
-                return (
-                    <TouchableOpacity
-                        key={item.name}
-                        style={[navigationStyles.navItem, isActive && navigationStyles.navItemActive]} // Apply active styles
-                        onPress={() => {
-                            navigation.navigate("Main", { screen: item.name })
-                            setTimeout(() => {
-                                setActiveRouteName(item.name); // ✅ Update active state **after** navigation
-                            }, 100);
-                        }
-                        }
+                        return (
+                            <TouchableOpacity
+                                key={item.name}
+                                style={[navigationStyles.navItem, isActive && navigationStyles.navItemActive]} // Apply active styles
+                                onPress={() => {
+                                    navigation.navigate("Main", { screen: item.name })
+                                    setTimeout(() => {
+                                        setActiveRouteName(item.name); // ✅ Update active state **after** navigation
+                                    }, 100);
+                                }
+                                }
 
 
-                    >
-                        <View style={[navigationStyles.navContent, isActive && navigationStyles.navContentActive]}>
-                            <Text style={navigationStyles.navIcon}>{item.icon}</Text>
-                            {isActive && <Text style={navigationStyles.navText}>{item.name}</Text>}
-                        </View>
-                    </TouchableOpacity>
-                );
-            })}
-        </View>
+                            >
+                                <View style={[navigationStyles.navContent, isActive && navigationStyles.navContentActive]}>
+                                    <Text style={navigationStyles.navIcon}>{item.icon}</Text>
+                                    {isActive && <Text style={navigationStyles.navText}>{item.name}</Text>}
+                                </View>
+                            </TouchableOpacity>
+                        );
+                    }
+                })}
+            </View>
+
+            <Modal
+                visible={isMoreMenuVisible}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setMoreMenuVisible(false)}
+            >
+                <TouchableOpacity
+                    style={navigationStyles.overlay}
+                    activeOpacity={1}
+                    onPressOut={() => setMoreMenuVisible(false)}
+                >
+                    <View style={navigationStyles.modalContent}>
+                        <MoreMenu closeMenu={() => setMoreMenuVisible(false)} />
+                    </View>
+                </TouchableOpacity>
+            </Modal>
+        </>
     );
 };
 

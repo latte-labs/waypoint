@@ -14,7 +14,6 @@ import { navigationStyles } from '../../styles/NavigationStyles';
 import ItineraryDetailScreen from '../screens/itinerary/ItineraryDetailScreen';
 import ItineraryDayScreen from '../screens/itinerary/ItineraryDayScreen';
 import ItineraryFormScreen from '../screens/itinerary/ItineraryFormScreen';
-import LocationPermissions from '../screens/permissions/LocationPermissions';
 
 
 const Stack = createStackNavigator();
@@ -39,9 +38,9 @@ function AppNavigator() {
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="QuizScreen" component={QuizScreen} />
         {/* <Stack.Screen name="Location" component={LocationPermissions} /> */}
-        <Stack.Screen name="More">
+        {/* <Stack.Screen name="More">
           {() => <MoreMenu />}
-        </Stack.Screen>
+        </Stack.Screen> */}
       </Stack.Navigator>
 
       {/* Persistent Bottom Navigation */}
