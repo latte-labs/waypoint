@@ -8,7 +8,7 @@ const MoreMenu = ({closeMenu}) => {
 
     const handleNavigate = (screen) => {
         closeMenu(); //closing menu before navigating
-        navigation.navigate(screen);
+        navigation.navigate("Main", { screen: screen });
     }
 
     return (
