@@ -13,6 +13,7 @@ import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import DraggableFlatList from 'react-native-draggable-flatlist';
 import { Calendar } from 'react-native-calendars';
 import Icon from 'react-native-vector-icons/FontAwesome'; // ✅ Import FontAwesome icons
+import { database } from '../../../firebase'; // ✅ Ensure correct import
 
 
 const ItineraryDetailScreen = () => {
@@ -74,15 +75,17 @@ const ItineraryDetailScreen = () => {
         try {
             console.log("🔄 Fetching itinerary details...");
             const response = await axios.get(`${API_BASE_URL}/itineraries/${itineraryId}`);
-
+    
             if (response.status === 200) {
                 const sortedDays = response.data.days.map(day => ({
                     ...day,
                     activities: sortActivitiesByTime(day.activities),
                 }));
-
+    
                 setItinerary(response.data);
-
+                setDays(sortedDays); // ✅ Update `days`
+                console.log("✅ Days updated:", sortedDays);
+    
                 // ✅ Fetch Owner Details
                 const ownerResponse = await axios.get(`${API_BASE_URL}/users/${response.data.created_by}`);
                 if (ownerResponse.status === 200) {
@@ -91,7 +94,7 @@ const ItineraryDetailScreen = () => {
                         email: ownerResponse.data.email
                     });
                 }
-
+    
                 // ✅ Check if logged-in user is a collaborator
                 if (user?.id) {
                     console.log(`🔄 Checking if user ${user.id} is a collaborator...`);
@@ -108,8 +111,7 @@ const ItineraryDetailScreen = () => {
             console.log("✅ Finished loading itinerary details");
         }
     };
-            
-    // ✅ Use `useFocusEffect` to Refresh Data When Screen Comes Back into Focus
+        // ✅ Use `useFocusEffect` to Refresh Data When Screen Comes Back into Focus
     useFocusEffect(
         useCallback(() => {
             fetchItineraryDetails();
@@ -389,8 +391,8 @@ const ItineraryDetailScreen = () => {
 
                             {/* ✅ FIXED BOTTOM BUTTONS */}
                             <View style={styles.buttonContainer}>
-                                {/* ✅ Invite Collaborators Button (Only show if NOT a collaborator) */}
-                                {!isCollaborator && (
+                                {/* ✅ Show Invite Button Only If User is the Owner */}
+                                {user?.id === itinerary?.created_by && (
                                     <TouchableOpacity 
                                         style={styles.inviteButton} 
                                         onPress={() => navigation.navigate('InviteCollaborators', { itinerary })}
@@ -398,6 +400,7 @@ const ItineraryDetailScreen = () => {
                                         <Text style={styles.buttonText}>Invite</Text>
                                     </TouchableOpacity>
                                 )}
+
 
                                 {/* ✅ Edit Itinerary Button */}
                                 <TouchableOpacity 
