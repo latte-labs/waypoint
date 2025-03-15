@@ -40,7 +40,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
 
 # ✅ Get user details along with travel style
 @user_router.get("/{user_id}")
-def get_user(user_id: int, db: Session = Depends(get_db)):
+def get_user(user_id: UUID, db: Session = Depends(get_db)):
     """
     ✅ Fetch travel_style_id directly from User table instead of quiz_results.
     """
