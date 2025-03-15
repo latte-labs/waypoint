@@ -46,25 +46,38 @@ const InviteCollaboratorsScreen = () => {
     // ✅ Search for User by Email
     const searchUserByEmail = async () => {
         if (!email.trim()) return;
-
+    
         setLoading(true);
         try {
+            const storedUser = await AsyncStorage.getItem('user');
+            const userData = storedUser ? JSON.parse(storedUser) : null;
+    
             const snapshot = await database().ref('/users').once('value');
             const usersData = snapshot.val();
-
+    
             if (!usersData) {
                 setFoundUser(null);
                 Alert.alert("User Not Found", "No user found with this email.");
                 return;
             }
-
+    
             // ✅ Ensure email exists before comparing
             const matchedUser = Object.entries(usersData).find(([userId, user]) => 
                 user.email && user.email.toLowerCase() === email.toLowerCase()
             );
-
+    
             if (matchedUser) {
-                setFoundUser({ userId: matchedUser[0], ...matchedUser[1] });
+                const searchedUser = { userId: matchedUser[0], ...matchedUser[1] };
+    
+                // ✅ Prevent inviting self
+                if (searchedUser.email.toLowerCase() === userData?.email.toLowerCase()) {
+                    Alert.alert("Invalid Invite", "You cannot invite yourself.");
+                    setFoundUser(null);
+                    setEmail('');
+                    return;
+                }
+    
+                setFoundUser(searchedUser);
             } else {
                 setFoundUser(null);
                 Alert.alert("User Not Found", "No user found with this email.");
@@ -75,7 +88,7 @@ const InviteCollaboratorsScreen = () => {
         }
         setLoading(false);
     };
-
+    
     // ✅ Invite Selected User
     const handleInvite = async () => {
         if (!foundUser) return;
