@@ -9,7 +9,6 @@ import ProfileScreen from '../screens/ProfileScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import QuizScreen from '../screens/QuizScreen';
 import CustomBottomNavigation from './CustomBottomNavigation';
-import EventsScreen from '../screens/EventsScreen';
 import { navigationStyles } from '../../styles/NavigationStyles';
 import ItineraryDetailScreen from '../screens/itinerary/ItineraryDetailScreen';
 import ItineraryDayScreen from '../screens/itinerary/ItineraryDayScreen';
@@ -40,7 +39,6 @@ function AppNavigator() {
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="QuizScreen" component={QuizScreen} />
-        <Stack.Screen name='Events' component={EventsScreen} />
       </Stack.Navigator>
 
       {/* Persistent Bottom Navigation */}
