@@ -90,6 +90,9 @@ const handleLogin = async () => {
           // ✅ Store user details in AsyncStorage
           await storeUserSession(user);
 
+          // ✅ Log login event to Firebase
+          await logLoginToFirebase(user.id);
+
           // ✅ Navigate to HomeScreen with user details
           navigation.replace('Main', { user });  
       }
@@ -99,6 +102,7 @@ const handleLogin = async () => {
       setLoading(false);
   }
 };
+
 
 
   return (
