@@ -118,12 +118,8 @@ function HomeScreen() {
     };
 
     const handleProfileClick = () => {
-        navigation.navigate('Profile'); // temporarily used for itinerary to allow back swiping
+        navigation.navigate('Events'); // temporarily used for itinerary to allow back swiping
     };
-
-    const handleWeatherClick = () => {
-        navigation.navigate('Location')
-    }
 
     // Shows the LocationPermissions screen if not granted, once granted, proceed to homescreen.
     if (!hasLocationPermission) {
