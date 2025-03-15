@@ -1,33 +1,113 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
     View, Text, TextInput, TouchableOpacity, FlatList, Alert 
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import SafeAreaWrapper from '../SafeAreaWrapper';
+import { database } from '../../../firebase';
+
 
 
 const InviteCollaboratorsScreen = () => {
-    const navigation = useNavigation();
     const route = useRoute();
-    const { itineraryId } = route.params; // Get itinerary ID
+    const { itineraryId } = route.params;
+    const navigation = useNavigation();
+    
+    const [email, setEmail] = useState('');
+    const [foundUser, setFoundUser] = useState(null);
+    const [collaborators, setCollaborators] = useState([]);
+    const [loading, setLoading] = useState(false);
 
-    const [searchText, setSearchText] = useState('');
-    const [users, setUsers] = useState([
-        { id: '1', name: 'Alice Johnson' },
-        { id: '2', name: 'Bob Smith' },
-        { id: '3', name: 'Charlie Brown' },
-    ]); // Dummy users
-    const [pendingInvites, setPendingInvites] = useState([]); // Stores invited users
 
-    // ✅ Handle User Invite
-    const handleInvite = (user) => {
-        if (pendingInvites.some((invited) => invited.id === user.id)) {
-            Alert.alert("Already Invited", `${user.name} has already been invited.`);
-            return;
+ 
+    // ✅ Fetch Collaborators from Firebase
+    useEffect(() => {
+        const fetchCollaborators = async () => {
+            const itineraryRef = database().ref(`/live_itineraries/${itineraryId}/collaborators`);
+            const snapshot = await itineraryRef.once('value');
+            const collabData = snapshot.val() || [];
+
+            const usersRef = database().ref('/users');
+            const usersSnapshot = await usersRef.once('value');
+            const usersData = usersSnapshot.val() || {};
+
+            // Map collaborator IDs to names and emails
+            const formattedCollaborators = collabData.map(userId => ({
+                id: userId,
+                name: usersData[userId]?.name || 'Unknown User',
+                email: usersData[userId]?.email || 'No email',
+                approved: usersData[userId]?.approved || false
+            }));
+
+            setCollaborators(formattedCollaborators);
+        };
+
+        fetchCollaborators();
+    }, [itineraryId]);
+
+    // ✅ Search for User by Email
+    const searchUserByEmail = async () => {
+        if (!email.trim()) return;
+
+        setLoading(true);
+        try {
+            const snapshot = await database().ref('/users').once('value');
+            const usersData = snapshot.val();
+
+            if (!usersData) {
+                setFoundUser(null);
+                Alert.alert("User Not Found", "No user found with this email.");
+                return;
+            }
+
+            // ✅ Ensure email exists before comparing
+            const matchedUser = Object.entries(usersData).find(([userId, user]) => 
+                user.email && user.email.toLowerCase() === email.toLowerCase()
+            );
+
+            if (matchedUser) {
+                setFoundUser({ userId: matchedUser[0], ...matchedUser[1] });
+            } else {
+                setFoundUser(null);
+                Alert.alert("User Not Found", "No user found with this email.");
+            }
+        } catch (error) {
+            console.error("❌ Error searching user by email:", error);
+            Alert.alert("Error", "Could not search for users.");
         }
+        setLoading(false);
+    };
 
-        setPendingInvites([...pendingInvites, user]);
-        Alert.alert("Invite Sent", `${user.name} has been invited.`);
+    // ✅ Invite Selected User
+    const handleInvite = async () => {
+        if (!foundUser) return;
+
+        const itineraryRef = database().ref(`/live_itineraries/${itineraryId}/collaborators`);
+
+        try {
+            const snapshot = await itineraryRef.once('value');
+            const currentCollaborators = snapshot.val() || [];
+
+            if (currentCollaborators.includes(foundUser.userId)) {
+                Alert.alert("Already Invited", `${foundUser.name} is already a collaborator.`);
+                return;
+            }
+
+            // Add user ID to collaborators (marked as pending)
+            await itineraryRef.set([...currentCollaborators, foundUser.userId]);
+
+            Alert.alert("Invite Sent", `${foundUser.name} has been invited.`);
+            setCollaborators([...collaborators, { 
+                id: foundUser.userId, 
+                name: foundUser.name, 
+                email: foundUser.email, 
+                approved: false 
+            }]);
+            setFoundUser(null);
+            setEmail('');
+        } catch (error) {
+            console.error("❌ Error inviting user:", error);
+        }
     };
 
     return (
@@ -38,11 +118,12 @@ const InviteCollaboratorsScreen = () => {
                     Invite Collaborators
                 </Text>
 
-                {/* ✅ Search Input */}
+                {/* ✅ Email Input */}
                 <TextInput
-                    placeholder="Search users..."
-                    value={searchText}
-                    onChangeText={setSearchText}
+                    placeholder="Enter email address..."
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
                     style={{
                         borderWidth: 1,
                         borderColor: '#ddd',
@@ -52,11 +133,45 @@ const InviteCollaboratorsScreen = () => {
                     }}
                 />
 
-                {/* ✅ User List */}
+                {/* ✅ Search Button */}
+                <TouchableOpacity 
+                    onPress={searchUserByEmail}
+                    style={{
+                        backgroundColor: '#007bff',
+                        padding: 12,
+                        borderRadius: 8,
+                        alignItems: 'center',
+                        marginBottom: 15,
+                    }}
+                >
+                    <Text style={{ color: '#fff', fontWeight: 'bold' }}>Search</Text>
+                </TouchableOpacity>
+
+                {/* ✅ Show User if Found */}
+                {foundUser && (
+                    <TouchableOpacity 
+                        onPress={handleInvite}
+                        style={{
+                            backgroundColor: '#28a745',
+                            padding: 15,
+                            borderRadius: 8,
+                            alignItems: 'center',
+                            marginBottom: 15,
+                        }}
+                    >
+                        <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
+                            Invite {foundUser.name}
+                        </Text>
+                    </TouchableOpacity>
+                )}
+
+                {/* ✅ Collaborators List */}
+                <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>
+                    Collaborators
+                </Text>
+                
                 <FlatList
-                    data={users.filter(user => 
-                        user.name.toLowerCase().includes(searchText.toLowerCase())
-                    )}
+                    data={collaborators}
                     keyExtractor={(item) => item.id}
                     renderItem={({ item }) => (
                         <View style={{
@@ -67,32 +182,12 @@ const InviteCollaboratorsScreen = () => {
                             borderBottomWidth: 1, 
                             borderBottomColor: '#eee'
                         }}>
-                            <Text style={{ fontSize: 16 }}>{item.name}</Text>
-                            <TouchableOpacity 
-                                onPress={() => handleInvite(item)}
-                                style={{
-                                    backgroundColor: '#007bff',
-                                    padding: 10,
-                                    borderRadius: 8,
-                                }}
-                            >
-                                <Text style={{ color: '#fff', fontWeight: 'bold' }}>Invite</Text>
-                            </TouchableOpacity>
+                            <Text style={{ fontSize: 16 }}>
+                                {item.name} ({item.email}) {item.approved ? '' : ' - Pending Approval'}
+                            </Text>
                         </View>
                     )}
                 />
-
-                {/* ✅ Pending Invites Section */}
-                {pendingInvites.length > 0 && (
-                    <View style={{ marginTop: 20 }}>
-                        <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>Pending Invites</Text>
-                        {pendingInvites.map((user) => (
-                            <Text key={user.id} style={{ fontSize: 16, marginBottom: 5 }}>
-                                {user.name} (Invited)
-                            </Text>
-                        ))}
-                    </View>
-                )}
 
                 {/* ✅ Done Button */}
                 <TouchableOpacity 
@@ -100,7 +195,7 @@ const InviteCollaboratorsScreen = () => {
                     style={{
                         marginTop: 20,
                         padding: 15,
-                        backgroundColor: '#28a745',
+                        backgroundColor: '#6c757d',
                         borderRadius: 8,
                         alignItems: 'center',
                     }}
@@ -108,6 +203,7 @@ const InviteCollaboratorsScreen = () => {
                     <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Done</Text>
                 </TouchableOpacity>
             </View>
+
         </SafeAreaWrapper>
     );
 };
