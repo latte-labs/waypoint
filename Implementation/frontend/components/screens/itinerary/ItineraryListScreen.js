@@ -40,7 +40,7 @@ const ItineraryListScreen = () => {
 
                 console.log("📥 Fetching owned itineraries from PostgreSQL...");
                 fetchOwnedItineraries(userData.id);
-                fetchSharedItineraries(userData.id);
+                // fetchSharedItineraries(userData.id);
                 fetchPendingInvites(userData.id);
             } catch (error) {
                 console.error("❌ Error loading user data:", error);
@@ -66,19 +66,19 @@ const ItineraryListScreen = () => {
     };
 
     // ✅ Fetch Shared Itineraries from Firebase Realtime Database
-    const fetchSharedItineraries = (userId) => {
-        database()
-            .ref('/live_itineraries')
-            .on('value', (snapshot) => {
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    const filteredSharedItineraries = Object.values(data).filter(itinerary => 
-                        itinerary.collaborators && itinerary.collaborators.includes(userId)
-                    );
-                    setSharedItineraries(filteredSharedItineraries);
-                }
-            });
-    };
+    // const fetchSharedItineraries = (userId) => {
+    //     database()
+    //         .ref('/live_itineraries')
+    //         .on('value', (snapshot) => {
+    //             if (snapshot.exists()) {
+    //                 const data = snapshot.val();
+    //                 const filteredSharedItineraries = Object.values(data).filter(itinerary => 
+    //                     itinerary.collaborators && itinerary.collaborators.includes(userId)
+    //                 );
+    //                 setSharedItineraries(filteredSharedItineraries);
+    //             }
+    //         });
+    // };
 
     // ✅ Fetch Pending Invitations from Firebase
     const fetchPendingInvites = (userId) => {
@@ -98,7 +98,7 @@ const ItineraryListScreen = () => {
             if (userId) {
                 console.log("🔄 Refetching itineraries and invitations...");
                 fetchOwnedItineraries(userId);
-                fetchSharedItineraries(userId);
+                // fetchSharedItineraries(userId);
                 fetchPendingInvites(userId);
             }
         }, [userId])
@@ -121,12 +121,12 @@ const ItineraryListScreen = () => {
 
             {/* ✅ Buttons for Accept/Decline */}
             <View style={styles.inviteButtonsContainer}>
-                <TouchableOpacity 
-                    style={styles.acceptButton} 
-                    onPress={() => Alert.alert("Coming Soon", "Accept feature will be implemented soon.")}
-                >
-                    <Text style={styles.buttonText}>Accept</Text>
-                </TouchableOpacity>
+            <TouchableOpacity 
+                style={styles.acceptButton} 
+                onPress={() => handleAcceptInvite(item)} // ✅ Pass invite data to the function
+            >
+                <Text style={styles.buttonText}>Accept</Text>
+            </TouchableOpacity>
 
                 <TouchableOpacity 
                     style={styles.declineButton} 
@@ -188,6 +188,58 @@ const ItineraryListScreen = () => {
         ),
         shared: SharedItineraries,
     });
+    const handleAcceptInvite = async (invite) => {
+        try {
+            console.log(`🔄 Accepting invite for itinerary: ${invite.itineraryId}`);
+    
+            // ✅ Step 1: Fetch the correct invite key from Firebase
+            const inviteRef = database().ref(`/invitations/invitee/${userId}`);
+            const snapshot = await inviteRef.once('value');
+    
+            if (!snapshot.exists()) {
+                console.error("❌ No pending invites found in Firebase.");
+                Alert.alert("Error", "Invite no longer exists.");
+                return;
+            }
+    
+            const invitesData = snapshot.val();
+            const inviteKey = Object.keys(invitesData).find(
+                key => invitesData[key].itineraryId === invite.itineraryId
+            );
+    
+            if (!inviteKey) {
+                console.error("❌ Could not find matching invite key.");
+                Alert.alert("Error", "Invite data mismatch.");
+                return;
+            }
+    
+            // ✅ Step 2: Remove the pending invite from Firebase
+            await database().ref(`/invitations/invitee/${userId}/${inviteKey}`).remove();
+            console.log("✅ Removed invite from /invitations/invitee/");
+    
+            // ✅ Step 3: Remove the invite from pendingInvites in live_itineraries
+            await database().ref(`/live_itineraries/${invite.itineraryId}/pendingInvites/${userId}`).remove();
+            console.log("✅ Removed invite from /live_itineraries/pendingInvites/");
+    
+            // ✅ Step 4: Add user as a collaborator in Firebase
+            await database().ref(`/live_itineraries/${invite.itineraryId}/collaborators/${userId}`).set(true);
+            console.log("✅ Added user as collaborator in /live_itineraries/collaborators/");
+    
+            // ✅ Step 5: Refresh invites and shared itineraries
+            fetchPendingInvites(userId);
+            // fetchSharedItineraries(userId);
+    
+            Alert.alert("Success", "You have joined the itinerary!");
+        } catch (error) {
+            console.error("❌ Error accepting invite:", error);
+            Alert.alert("Error", "Failed to accept the invite.");
+        }
+    };
+        
+    const handleDeclineInvite = async (invite) => {
+        Alert.alert("Feature Coming Soon", "Decline invite functionality will be implemented in a future update.");
+    };
+    
 
     return (
         <SafeAreaWrapper>
