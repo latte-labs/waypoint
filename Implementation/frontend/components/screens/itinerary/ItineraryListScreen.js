@@ -40,7 +40,7 @@ const ItineraryListScreen = () => {
 
                 console.log("📥 Fetching owned itineraries from PostgreSQL...");
                 fetchOwnedItineraries(userData.id);
-                // fetchSharedItineraries(userData.id);
+                fetchSharedItineraries(userData.id);
                 fetchPendingInvites(userData.id);
             } catch (error) {
                 console.error("❌ Error loading user data:", error);
@@ -66,20 +66,43 @@ const ItineraryListScreen = () => {
     };
 
     // ✅ Fetch Shared Itineraries from Firebase Realtime Database
-    // const fetchSharedItineraries = (userId) => {
-    //     database()
-    //         .ref('/live_itineraries')
-    //         .on('value', (snapshot) => {
-    //             if (snapshot.exists()) {
-    //                 const data = snapshot.val();
-    //                 const filteredSharedItineraries = Object.values(data).filter(itinerary => 
-    //                     itinerary.collaborators && itinerary.collaborators.includes(userId)
-    //                 );
-    //                 setSharedItineraries(filteredSharedItineraries);
-    //             }
-    //         });
-    // };
-
+    const fetchSharedItineraries = async (userId) => {
+        try {
+            const snapshot = await database().ref('/live_itineraries').once('value');
+    
+            if (!snapshot.exists()) {
+                setSharedItineraries([]);
+                return;
+            }
+    
+            const data = snapshot.val();
+            const itineraryIds = Object.keys(data).filter(itineraryId =>
+                data[itineraryId].collaborators && data[itineraryId].collaborators[userId]
+            );
+    
+            if (itineraryIds.length === 0) {
+                setSharedItineraries([]);
+                return;
+            }
+    
+            // ✅ Fetch each itinerary from FastAPI
+            const itineraryPromises = itineraryIds.map(async (itineraryId) => {
+                try {
+                    const response = await axios.get(`${API_BASE_URL}/itineraries/${itineraryId}`);
+                    return response.status === 200 ? response.data : null;
+                } catch (error) {
+                    console.error(`❌ Error fetching itinerary ${itineraryId}:`, error.response?.data || error.message);
+                    return null;
+                }
+            });
+    
+            const fullItineraries = (await Promise.all(itineraryPromises)).filter(Boolean);
+            setSharedItineraries(fullItineraries);
+        } catch (error) {
+            console.error("❌ Error fetching shared itineraries:", error.response?.data || error.message);
+        }
+    };
+            
     // ✅ Fetch Pending Invitations from Firebase
     const fetchPendingInvites = (userId) => {
         database()
@@ -144,17 +167,28 @@ const ItineraryListScreen = () => {
             style={styles.itineraryCard} 
             onPress={() => handleSelectItinerary(item)}
         >
-            <Text style={styles.itineraryName}>{item.name}</Text>
-            <Text style={styles.itineraryDestination}>{item.destination}</Text>
-            <Text style={styles.itineraryDate}>
-                {new Date(item.start_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })} 
-                - 
-                {new Date(item.end_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}
-            </Text>
+            {item.name ? (
+                // ✅ Full itinerary details available (Personal Itineraries)
+                <>
+                    <Text style={styles.itineraryName}>{item.name}</Text>
+                    <Text style={styles.itineraryDestination}>{item.destination}</Text>
+                    <Text style={styles.itineraryDate}>
+                        {new Date(item.start_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })} 
+                        - 
+                        {new Date(item.end_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}
+                    </Text>
+                </>
+            ) : (
+                // ✅ Shared itinerary (Only has `itinerary_id` for now)
+                <>
+                    <Text style={styles.itineraryName}>Shared Itinerary</Text>
+                    <Text style={styles.itineraryDestination}>Itinerary ID: {item.itineraryId}</Text>
+                    <Text style={styles.itineraryDate}>Fetching details soon...</Text>
+                </>
+            )}
         </TouchableOpacity>
     );
-
-    // ✅ Define the Shared Itineraries Tab
+        // ✅ Define the Shared Itineraries Tab
     const SharedItineraries = () => (
         <View>
             {/* ✅ Pending Invitations List */}
