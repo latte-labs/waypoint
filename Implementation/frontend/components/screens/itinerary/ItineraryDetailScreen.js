@@ -30,6 +30,8 @@ const ItineraryDetailScreen = () => {
     const [dayTitle, setDayTitle] = useState('');
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]); // Default to today
     const [showDatePicker, setShowDatePicker] = useState(false);
+    const [isCollaborator, setIsCollaborator] = useState(false); // ✅ New state to check collaboration
+    const [owner, setOwner] = useState({ name: "", email: "" });
 
 
     
@@ -70,22 +72,43 @@ const ItineraryDetailScreen = () => {
     // ✅ Fetch Itinerary Details Function
     const fetchItineraryDetails = async () => {
         try {
+            console.log("🔄 Fetching itinerary details...");
             const response = await axios.get(`${API_BASE_URL}/itineraries/${itineraryId}`);
+
             if (response.status === 200) {
                 const sortedDays = response.data.days.map(day => ({
                     ...day,
-                    activities: sortActivitiesByTime(day.activities), // ✅ Sort activities
+                    activities: sortActivitiesByTime(day.activities),
                 }));
+
                 setItinerary(response.data);
-                setDays(sortedDays);
+
+                // ✅ Fetch Owner Details
+                const ownerResponse = await axios.get(`${API_BASE_URL}/users/${response.data.created_by}`);
+                if (ownerResponse.status === 200) {
+                    setOwner({
+                        name: ownerResponse.data.name,
+                        email: ownerResponse.data.email
+                    });
+                }
+
+                // ✅ Check if logged-in user is a collaborator
+                if (user?.id) {
+                    console.log(`🔄 Checking if user ${user.id} is a collaborator...`);
+                    const snapshot = await database().ref(`/live_itineraries/${itineraryId}/collaborators/${user.id}`).once('value');
+                    setIsCollaborator(snapshot.exists());
+                    console.log(`✅ User is collaborator: ${snapshot.exists()}`);
+                }
             }
         } catch (error) {
+            console.error("❌ Error in fetchItineraryDetails:", error.response?.data || error.message);
             Alert.alert("Error", "Failed to load itinerary details.");
         } finally {
             setLoading(false);
+            console.log("✅ Finished loading itinerary details");
         }
     };
-
+            
     // ✅ Use `useFocusEffect` to Refresh Data When Screen Comes Back into Focus
     useFocusEffect(
         useCallback(() => {
@@ -320,7 +343,9 @@ const ItineraryDetailScreen = () => {
                                     {new Date(itinerary.start_date).toLocaleDateString()} - {new Date(itinerary.end_date).toLocaleDateString()}
                                 </Text>
                                 {user ? (
-                                    <Text style={styles.detail}>Created by: {user.name} ({user.email})</Text>
+                                    <Text style={styles.detail}>
+                                        Created by: {user?.id === itinerary.created_by ? "You" : `${owner.name} (${owner.email})`}
+                                    </Text>
                                 ) : (
                                     <Text style={styles.errorText}>⚠ Unable to load user details.</Text>
                                 )}
@@ -364,13 +389,15 @@ const ItineraryDetailScreen = () => {
 
                             {/* ✅ FIXED BOTTOM BUTTONS */}
                             <View style={styles.buttonContainer}>
-                                {/* ✅ Invite Collaborators Button */}
-                                <TouchableOpacity 
-                                    style={styles.inviteButton} 
-                                    onPress={() => navigation.navigate('InviteCollaborators', { itinerary })}
-                                >
-                                    <Text style={styles.buttonText}>Invite</Text>
-                                </TouchableOpacity>
+                                {/* ✅ Invite Collaborators Button (Only show if NOT a collaborator) */}
+                                {!isCollaborator && (
+                                    <TouchableOpacity 
+                                        style={styles.inviteButton} 
+                                        onPress={() => navigation.navigate('InviteCollaborators', { itinerary })}
+                                    >
+                                        <Text style={styles.buttonText}>Invite</Text>
+                                    </TouchableOpacity>
+                                )}
 
                                 {/* ✅ Edit Itinerary Button */}
                                 <TouchableOpacity 
