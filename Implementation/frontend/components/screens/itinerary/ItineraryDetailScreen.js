@@ -367,7 +367,7 @@ const ItineraryDetailScreen = () => {
                                 {/* ✅ Invite Collaborators Button */}
                                 <TouchableOpacity 
                                     style={styles.inviteButton} 
-                                    onPress={() => navigation.navigate('InviteCollaborators', { itineraryId })}
+                                    onPress={() => navigation.navigate('InviteCollaborators', { itinerary })}
                                 >
                                     <Text style={styles.buttonText}>Invite</Text>
                                 </TouchableOpacity>

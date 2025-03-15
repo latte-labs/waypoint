@@ -5,44 +5,42 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import SafeAreaWrapper from '../SafeAreaWrapper';
 import { database } from '../../../firebase';
-
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const InviteCollaboratorsScreen = () => {
     const route = useRoute();
-    const { itineraryId } = route.params;
+    const { itinerary } = route.params; // ✅ Get full itinerary object
+    const itineraryId = itinerary.id;
+    const itineraryName = itinerary.name || "Unnamed Trip";
     const navigation = useNavigation();
     
     const [email, setEmail] = useState('');
     const [foundUser, setFoundUser] = useState(null);
-    const [collaborators, setCollaborators] = useState([]);
+    const [invitedUsers, setInvitedUsers] = useState([]);
     const [loading, setLoading] = useState(false);
 
-
- 
-    // ✅ Fetch Collaborators from Firebase
+    // ✅ Fetch Invited Users (Pending & Approved) from Firebase
     useEffect(() => {
-        const fetchCollaborators = async () => {
-            const itineraryRef = database().ref(`/live_itineraries/${itineraryId}/collaborators`);
-            const snapshot = await itineraryRef.once('value');
-            const collabData = snapshot.val() || [];
+        const fetchPendingInvites = async () => {
+            try {
+                const inviteRef = database().ref('/invitations');
+                const snapshot = await inviteRef.once('value');
 
-            const usersRef = database().ref('/users');
-            const usersSnapshot = await usersRef.once('value');
-            const usersData = usersSnapshot.val() || {};
+                if (snapshot.exists()) {
+                    const invitesData = Object.values(snapshot.val());
 
-            // Map collaborator IDs to names and emails
-            const formattedCollaborators = collabData.map(userId => ({
-                id: userId,
-                name: usersData[userId]?.name || 'Unknown User',
-                email: usersData[userId]?.email || 'No email',
-                approved: usersData[userId]?.approved || false
-            }));
+                    // ✅ Filter invites for this specific itinerary
+                    const filteredInvites = invitesData.filter(invite => invite.itineraryId === itineraryId);
 
-            setCollaborators(formattedCollaborators);
+                    console.log("📥 Fetched Pending Invites:", filteredInvites);
+                    setInvitedUsers(filteredInvites);
+                }
+            } catch (error) {
+                console.error("❌ Error fetching pending invites:", error);
+            }
         };
-
-        fetchCollaborators();
+                
+        fetchPendingInvites();
     }, [itineraryId]);
 
     // ✅ Search for User by Email
@@ -81,28 +79,48 @@ const InviteCollaboratorsScreen = () => {
     // ✅ Invite Selected User
     const handleInvite = async () => {
         if (!foundUser) return;
-
-        const itineraryRef = database().ref(`/live_itineraries/${itineraryId}/collaborators`);
-
+        
+        const storedUser = await AsyncStorage.getItem('user');
+        const userData = storedUser ? JSON.parse(storedUser) : null;
+        
+        if (!userData) {
+            Alert.alert("Error", "Could not get user data.");
+            return;
+        }
+    
+        const inviteRef = database().ref(`/invitations/invitee/${foundUser.userId}`);
+        const itineraryRef = database().ref(`/live_itineraries/${itineraryId}/pendingInvites/${foundUser.userId}`);
+    
         try {
-            const snapshot = await itineraryRef.once('value');
-            const currentCollaborators = snapshot.val() || [];
+            // ✅ Store invite under the invitee's user ID
+            const newInviteRef = inviteRef.push();
+            await newInviteRef.set({
+                itineraryId: itineraryId,
+                inviteeId: foundUser.userId,
+                inviteeName: foundUser.name,
+                inviteeEmail: foundUser.email,
+                inviterName: userData.name,  
+                inviterEmail: userData.email, 
+                tripName: itineraryName,
+                status: "pending",
+            });
+    
+            // ✅ Store pending invite under itinerary for the inviter to track
+            await itineraryRef.set("pending");
 
-            if (currentCollaborators.includes(foundUser.userId)) {
-                Alert.alert("Already Invited", `${foundUser.name} is already a collaborator.`);
-                return;
-            }
-
-            // Add user ID to collaborators (marked as pending)
-            await itineraryRef.set([...currentCollaborators, foundUser.userId]);
+            // ✅ Update UI with new invited user
+            setInvitedUsers([...invitedUsers, {
+                itineraryId: itineraryId,
+                inviteeId: foundUser.userId,
+                inviteeName: foundUser.name,
+                inviteeEmail: foundUser.email,
+                inviterName: userData.name,  
+                inviterEmail: userData.email, 
+                tripName: itineraryName,
+                status: "pending",
+            }]);
 
             Alert.alert("Invite Sent", `${foundUser.name} has been invited.`);
-            setCollaborators([...collaborators, { 
-                id: foundUser.userId, 
-                name: foundUser.name, 
-                email: foundUser.email, 
-                approved: false 
-            }]);
             setFoundUser(null);
             setEmail('');
         } catch (error) {
@@ -165,14 +183,14 @@ const InviteCollaboratorsScreen = () => {
                     </TouchableOpacity>
                 )}
 
-                {/* ✅ Collaborators List */}
+                {/* ✅ Invited Users List (Pending & Approved) */}
                 <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>
-                    Collaborators
+                    People Invited to this Trip
                 </Text>
-                
+
                 <FlatList
-                    data={collaborators}
-                    keyExtractor={(item) => item.id}
+                    data={invitedUsers}
+                    keyExtractor={(item) => item.inviteeId}
                     renderItem={({ item }) => (
                         <View style={{
                             flexDirection: 'row', 
@@ -183,7 +201,7 @@ const InviteCollaboratorsScreen = () => {
                             borderBottomColor: '#eee'
                         }}>
                             <Text style={{ fontSize: 16 }}>
-                                {item.name} ({item.email}) {item.approved ? '' : ' - Pending Approval'}
+                                {item.inviteeName} ({item.inviteeEmail}) {item.status === "pending" ? '- Pending Approval' : ''}
                             </Text>
                         </View>
                     )}
@@ -203,7 +221,6 @@ const InviteCollaboratorsScreen = () => {
                     <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Done</Text>
                 </TouchableOpacity>
             </View>
-
         </SafeAreaWrapper>
     );
 };

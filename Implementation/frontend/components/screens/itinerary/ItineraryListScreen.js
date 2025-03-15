@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
-    View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet, Dimensions 
+    View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet, Dimensions, Alert 
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import API_BASE_URL from '../../../config';
-import database from '@react-native-firebase/database';  // ✅ Using React Native Firebase
+import { database } from '../../../firebase';
 import SafeAreaWrapper from '../SafeAreaWrapper';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 
@@ -14,6 +14,7 @@ const ItineraryListScreen = () => {
     const navigation = useNavigation();
     const [ownedItineraries, setOwnedItineraries] = useState([]);
     const [sharedItineraries, setSharedItineraries] = useState([]);
+    const [pendingInvites, setPendingInvites] = useState([]);
     const [loading, setLoading] = useState(true);
     const [userId, setUserId] = useState(null);
 
@@ -40,6 +41,7 @@ const ItineraryListScreen = () => {
                 console.log("📥 Fetching owned itineraries from PostgreSQL...");
                 fetchOwnedItineraries(userData.id);
                 fetchSharedItineraries(userData.id);
+                fetchPendingInvites(userData.id);
             } catch (error) {
                 console.error("❌ Error loading user data:", error);
                 setLoading(false);
@@ -63,8 +65,6 @@ const ItineraryListScreen = () => {
         }
     };
 
-    
-
     // ✅ Fetch Shared Itineraries from Firebase Realtime Database
     const fetchSharedItineraries = (userId) => {
         database()
@@ -80,12 +80,26 @@ const ItineraryListScreen = () => {
             });
     };
 
+    // ✅ Fetch Pending Invitations from Firebase
+    const fetchPendingInvites = (userId) => {
+        database()
+            .ref('/invitations/invitee')
+            .child(userId)
+            .on('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    const invitesData = Object.values(snapshot.val());
+                    setPendingInvites(invitesData);
+                }
+            });
+    };
+
     useFocusEffect(
         useCallback(() => {
             if (userId) {
-                console.log("🔄 Refetching itineraries...");
+                console.log("🔄 Refetching itineraries and invitations...");
                 fetchOwnedItineraries(userId);
                 fetchSharedItineraries(userId);
+                fetchPendingInvites(userId);
             }
         }, [userId])
     );
@@ -98,8 +112,38 @@ const ItineraryListScreen = () => {
         navigation.navigate('ItineraryForm', { userId });
     };
 
+    // ✅ Render Pending Invites List with Accept/Decline Buttons
+    const renderInviteItem = ({ item }) => (
+        <View style={styles.inviteCard}>
+            <Text style={styles.inviteText}>
+                {item.inviterName} ({item.inviterEmail}) invited you to plan {item.tripName}
+            </Text>
+
+            {/* ✅ Buttons for Accept/Decline */}
+            <View style={styles.inviteButtonsContainer}>
+                <TouchableOpacity 
+                    style={styles.acceptButton} 
+                    onPress={() => Alert.alert("Coming Soon", "Accept feature will be implemented soon.")}
+                >
+                    <Text style={styles.buttonText}>Accept</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                    style={styles.declineButton} 
+                    onPress={() => Alert.alert("Coming Soon", "Decline feature will be implemented soon.")}
+                >
+                    <Text style={styles.buttonText}>Decline</Text>
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
+
+    // ✅ Render Shared Itinerary List
     const renderItineraryItem = ({ item }) => (
-        <TouchableOpacity style={styles.itineraryCard} onPress={() => handleSelectItinerary(item)}>
+        <TouchableOpacity 
+            style={styles.itineraryCard} 
+            onPress={() => handleSelectItinerary(item)}
+        >
             <Text style={styles.itineraryName}>{item.name}</Text>
             <Text style={styles.itineraryDestination}>{item.destination}</Text>
             <Text style={styles.itineraryDate}>
@@ -110,39 +154,40 @@ const ItineraryListScreen = () => {
         </TouchableOpacity>
     );
 
-    // ✅ Define the two swipeable sections
-    const MyItineraries = () => (
-        <FlatList 
-            data={ownedItineraries}
-            renderItem={renderItineraryItem}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listContainer}
-        />
-    );
+    // ✅ Define the Shared Itineraries Tab
+    const SharedItineraries = () => (
+        <View>
+            {/* ✅ Pending Invitations List */}
+            {pendingInvites.length > 0 && (
+                <FlatList 
+                    data={pendingInvites}
+                    renderItem={renderInviteItem}
+                    keyExtractor={(item, index) => `invite-${index}`}
+                    contentContainerStyle={styles.listContainer}
+                />
+            )}
 
-    const SharedItineraries = () => {
-        if (sharedItineraries.length === 0) {
-            return (
-                <View style={styles.emptyContainer}>
-                    <Text style={styles.noItineraries}>No Shared Itinerary Yet.</Text>
-                </View>
-            );
-        }
-    
-        return (
+            {/* ✅ Shared Itineraries List */}
             <FlatList 
                 data={sharedItineraries}
                 renderItem={renderItineraryItem}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item, index) => item.id ? item.id.toString() : `shared-${index}`}
                 contentContainerStyle={styles.listContainer}
             />
-        );
-    };
+        </View>
+    );
+
     const renderScene = SceneMap({
-        personal: MyItineraries,  // ✅ Updated key
-        shared: SharedItineraries,  // ✅ Updated key
+        personal: () => (
+            <FlatList 
+                data={ownedItineraries}
+                renderItem={renderItineraryItem}
+                keyExtractor={(item, index) => item.id ? item.id.toString() : `owned-${index}`}
+                contentContainerStyle={styles.listContainer}
+            />
+        ),
+        shared: SharedItineraries,
     });
-    
 
     return (
         <SafeAreaWrapper>
@@ -182,6 +227,7 @@ const ItineraryListScreen = () => {
         </SafeAreaWrapper>
     );
 };
+
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#fff' },
@@ -244,6 +290,45 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginBottom: 10,  // ✅ Adds spacing above the tabs
     },
+    inviteCard: {
+        backgroundColor: '#f8f9fa',
+        padding: 12,
+        borderRadius: 8,
+        marginHorizontal: 15,
+        marginVertical: 8,
+        borderLeftWidth: 5,
+        borderLeftColor: '#007bff',
+    },
+    inviteText: {
+        fontSize: 16,
+        color: '#333',
+    },
+    inviteButtonsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 10,
+    },
+    acceptButton: {
+        flex: 1,
+        padding: 10,
+        backgroundColor: '#28a745',  // Green for Accept
+        borderRadius: 5,
+        alignItems: 'center',
+        marginRight: 5,
+    },
+    declineButton: {
+        flex: 1,
+        padding: 10,
+        backgroundColor: '#dc3545',  // Red for Decline
+        borderRadius: 5,
+        alignItems: 'center',
+    },
+    buttonText: {
+        color: '#fff',
+        fontWeight: 'bold',
+    },
+    
+
 });
 
 export default ItineraryListScreen;
