@@ -118,7 +118,7 @@ function HomeScreen() {
     };
 
     const handleProfileClick = () => {
-        navigation.navigate('ItineraryList'); // temporarily used for itinerary to allow back swiping
+        navigation.navigate('Profile'); // temporarily used for itinerary to allow back swiping
     };
 
     const handleWeatherClick = () => {

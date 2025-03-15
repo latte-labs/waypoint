@@ -41,11 +41,13 @@
     "react-native-geolocation-service": "^5.3.1",
     "react-native-gesture-handler": "^2.23.1",
     "react-native-maps": "^1.20.1",
+    "react-native-pager-view": "^6.7.0",
     "react-native-permissions": "^5.2.6",
     "react-native-progress": "^5.0.1",
     "react-native-reanimated": "^3.16.7",
     "react-native-safe-area-context": "^5.2.0",
     "react-native-screens": "^4.6.0",
+    "react-native-tab-view": "^4.0.5",
     "react-native-ui-datepicker": "^3.0.7",
     "react-native-vector-icons": "^10.2.0",
     "rimraf": "^6.0.1"

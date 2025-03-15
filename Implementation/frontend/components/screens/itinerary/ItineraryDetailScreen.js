@@ -12,6 +12,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import DraggableFlatList from 'react-native-draggable-flatlist';
 import { Calendar } from 'react-native-calendars';
+import Icon from 'react-native-vector-icons/FontAwesome'; // ✅ Import FontAwesome icons
 
 
 const ItineraryDetailScreen = () => {
@@ -324,6 +325,11 @@ const ItineraryDetailScreen = () => {
                                     <Text style={styles.errorText}>⚠ Unable to load user details.</Text>
                                 )}
                             </View>
+                            {/* ✅ Collaborators Section */}
+                            <View style={styles.sharedContainer}>
+                                <Text style={styles.sharedTitle}>Collaborators</Text>
+                                <Text style={styles.sharedPlaceholder}>(Fetching collaborators...)</Text>
+                            </View> 
     
                             {/* ✅ FLEXIBLE SCROLLABLE LIST */}
                             <View style={styles.listContainer}>
@@ -356,19 +362,29 @@ const ItineraryDetailScreen = () => {
                                 )}
                             </View>
 
-
-
-    
                             {/* ✅ FIXED BOTTOM BUTTONS */}
                             <View style={styles.buttonContainer}>
+                                {/* ✅ Invite Collaborators Button */}
+                                <TouchableOpacity 
+                                    style={styles.inviteButton} 
+                                    onPress={() => navigation.navigate('InviteCollaborators', { itineraryId })}
+                                >
+                                    <Text style={styles.buttonText}>Invite</Text>
+                                </TouchableOpacity>
+
+                                {/* ✅ Edit Itinerary Button */}
                                 <TouchableOpacity 
                                     style={styles.editButton}
                                     onPress={() => navigation.navigate('ItineraryForm', { itineraryId: itinerary.id, userId: itinerary.created_by })}
-                                    >
-                                    <Text style={styles.buttonText}>Edit Itinerary</Text>
+                                >
+                                    <Text style={styles.buttonText}>Edit</Text>
                                 </TouchableOpacity>
+
+                                {/* ✅ Delete Itinerary Button */}
                                 <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-                                    <Text style={styles.buttonText}>Delete</Text>
+                                    <Text>
+                                        <Icon name="trash" size={20} color="white" />
+                                    </Text>
                                 </TouchableOpacity>
                             </View>
                         </>
@@ -471,13 +487,14 @@ const styles = StyleSheet.create({
         alignItems: 'center', 
         marginRight: 5 
     },
-    deleteButton: { 
-        flex: 0.2, 
-        padding: 15, 
-        backgroundColor: 'red', 
-        borderRadius: 8, 
-        alignItems: 'center', 
-        marginLeft: 5 
+    deleteButton: {
+        flex: 0.2,
+        padding: 15,
+        backgroundColor: 'red',
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center', // ✅ Centers the trash icon
+        marginLeft: 5
     },
     buttonText: { 
         color: '#fff', 
@@ -554,6 +571,14 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    inviteButton: {
+        flex: 0.6, // Same width proportion as other buttons
+        padding: 15,
+        backgroundColor: '#28a745', // ✅ Green color for invite action
+        borderRadius: 8,
+        alignItems: 'center',
+        marginRight: 5,
     },
     
     

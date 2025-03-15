@@ -14,6 +14,8 @@ import { navigationStyles } from '../../styles/NavigationStyles';
 import ItineraryDetailScreen from '../screens/itinerary/ItineraryDetailScreen';
 import ItineraryDayScreen from '../screens/itinerary/ItineraryDayScreen';
 import ItineraryFormScreen from '../screens/itinerary/ItineraryFormScreen';
+import InviteCollaboratorsScreen from '../screens/itinerary/InviteCollaboratorsScreen';
+
 
 
 const Stack = createStackNavigator();
@@ -33,6 +35,7 @@ function AppNavigator() {
         <Stack.Screen name="ItineraryDetail" component={ItineraryDetailScreen} />
         <Stack.Screen name="ItineraryDay" component={ItineraryDayScreen} />
         <Stack.Screen name="ItineraryForm" component={ItineraryFormScreen} />
+        <Stack.Screen name="InviteCollaborators" component={InviteCollaboratorsScreen} />
         <Stack.Screen name="Chatbot" component={ChatbotScreen} />
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
