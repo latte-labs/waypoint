@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Image, Platform } from "react-native";
 import axios from "axios";
 import styles from "../../styles/ChatbotScreenStyles";
@@ -8,12 +8,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const ChatbotScreen = () => {
   const [user, setUser] = useState(null);
-  const [messages, setMessages] = useState("");
+  const [messages, setMessages] = useState([]);
   //const [messages, setMessages] = useState([{role: "assistant", content: "Hi! My name is WayPointer, your personal travel assistant! Ask me for recommendations and i'll provide suggestions based on your travel style"}]);
   const [input, setInput] = useState("");
   const [travelStyle, setTravelStyle] = useState(null);
   const [isTyping, setIsTyping] = useState(false); // Track when bot is typing
   const [typingDots, setTypingDots] = useState("");
+  const inputRef = useRef(null);
 
   // ✅ Fetch User & Travel Style on Component Mount
   useEffect(() => {
@@ -96,15 +97,19 @@ const ChatbotScreen = () => {
     }
 
     const userMessage = { role: "user", content: input };
-    setMessages((prevMessages) => [userMessage, ...prevMessages]);
+    setMessages((prevMessages) => [
+      { role: "assistant", content: "..." }, // typing indicator
+      userMessage,
+      ...prevMessages
+    ]);
     setInput("");
+
+    if (inputRef.current) {
+      inputRef.current.clear();
+    }
 
     // Show animated ellipses while waiting for response
     setIsTyping(true);
-    setMessages((prevMessages) => [
-      { role: "assistant", content: "..." }, // Initial typing indicator
-      ...prevMessages
-    ]);
 
     try {
       const response = await axios.post(`${API_BASE_URL}/chatbot/`, { user_message: input, travel_style: travelStyle });
@@ -171,6 +176,7 @@ const ChatbotScreen = () => {
           {/* Input Field & Send Button */}
           <View style={styles.inputContainer}>
             <TextInput
+              ref={inputRef}
               style={styles.input}
               placeholder="Ask about travel..."
               value={input}
