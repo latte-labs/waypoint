@@ -17,16 +17,16 @@ def get_events(latitude: float, longitude: float, db: Session = Depends(get_db))
 
     events_url = f"https://api.predicthq.com/v1/events/"
     headers = {
-    "Authorization": "Bearer ${ACCESS_TOKEN}",
+    "Authorization": f"Bearer {ACCESS_TOKEN}",
     "Accept": "application/json"
 }
     params = {
-    "within": "1.48km@{latitude},{longitude}",
+    "within": f"1.48km@{latitude},{longitude}",
     "limit": 20,
     "state": "active"
 }
     try: 
-        response = requests.get(events_url)
+        response = requests.get(events_url, headers=headers, params=params)
         data = response.json()
 
         if response.status_code != 200:
