@@ -14,6 +14,7 @@ from app.routes import (
     chatbot_routes,
     travel_style_routes,
     weather_routes,
+    event_routes,
 )   
 
 app = FastAPI()
@@ -28,6 +29,7 @@ app.include_router(user_favorite_routes.user_favorite_router, prefix="/user_favo
 app.include_router(chatbot_routes.chatbot_router, prefix="/chatbot", tags=["Chatbot"])
 app.include_router(travel_style_routes.travel_style_router, prefix="/travel-styles", tags=["Travel Style"])
 app.include_router(weather_routes.weather_router, prefix="/weather", tags=["Weather Details"])
+app.include_router(event_routes.event_router, prefix='/events', tags=["Events List"])
 
 # Dependency to get a database session
 def get_db():
