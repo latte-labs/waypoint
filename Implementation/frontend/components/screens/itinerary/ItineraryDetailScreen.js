@@ -33,6 +33,7 @@ const ItineraryDetailScreen = () => {
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [isCollaborator, setIsCollaborator] = useState(false); // ✅ New state to check collaboration
     const [owner, setOwner] = useState({ name: "", email: "" });
+    const [editingDayId, setEditingDayId] = useState(null);
 
 
     // ✅ Load user data from AsyncStorage
@@ -160,6 +161,28 @@ const ItineraryDetailScreen = () => {
             <Text style={styles.deleteDayText}>Delete</Text>
         </TouchableOpacity>
     );
+
+    const renderLeftActions = (dayId) => (
+        <TouchableOpacity 
+          style={[styles.editDayButton, { height: dayHeights[dayId] || 0 }]} 
+          onPress={() => handleEditDay(dayId)}
+        >
+          <Text style={styles.editDayText}>Edit</Text>
+        </TouchableOpacity>
+    );
+    const handleEditDay = (dayId) => {
+        // Find the day to edit from your days array
+        const dayToEdit = days.find((day) => day.id === dayId);
+        if (dayToEdit) {
+          setEditingDayId(dayId); // Mark this day as being edited
+          setDayTitle(dayToEdit.title);
+          // Convert the date into "YYYY-MM-DD" format if it isn’t already
+          setSelectedDate(new Date(dayToEdit.date).toISOString().split('T')[0]);
+          setModalVisible(true);
+        }
+    };
+      
+      
     // ✅ Handle Delete Itinerary
     const handleDelete = async () => {
         Alert.alert(
@@ -280,15 +303,49 @@ const ItineraryDetailScreen = () => {
             ]
         );
     };
+
+    const handleUpdateDay = async () => {
+        if (!dayTitle.trim()) {
+          Alert.alert("Missing Field", "Please enter a title for the day.");
+          return;
+        }
+        if (!selectedDate) {
+          Alert.alert("Missing Field", "Please select a date.");
+          return;
+        }
+        try {
+          // Convert selectedDate into a local Date using a helper
+          const parseLocalDate = (dateString) => {
+            const [year, month, day] = dateString.split('-').map(Number);
+            return new Date(year, month - 1, day);
+          };
+          const localDate = parseLocalDate(selectedDate);
+          const response = await axios.put(`${API_BASE_URL}/itineraries/${itineraryId}/days/${editingDayId}`, {
+            date: localDate.toISOString(),
+            title: dayTitle,
+            itinerary_id: itineraryId,
+          });
+          if (response.status === 200) {
+            Alert.alert("Success", "Day updated successfully!");
+            setModalVisible(false);
+            setEditingDayId(null); // Clear the editing state
+            fetchItineraryDetails();
+          }
+        } catch (error) {
+          console.error("❌ Error updating day:", error.response?.data || error.message);
+          Alert.alert("Error", "Failed to update itinerary day.");
+        }
+    };
+      
     
     // ✅ Render Each Day with Swipe-to-Delete & Drag Support
     const renderItem = ({ item, drag }) => (
         <Swipeable
             key={item.id}
+            renderLeftActions={() => renderLeftActions(item.id)}
             renderRightActions={() => renderRightActions(item.id)}
         >
             <TouchableOpacity 
-                // onPress={() => Alert.alert("Day Selected", `Day ID: ${item.id}`)} // ✅ Show Day ID
                 onPress={() => navigation.navigate('ItineraryDay', { itineraryId, dayId: item.id })} // ✅ Navigate to ItineraryDayScreen
                 onLongPress={drag} 
                 style={styles.dayCard}
@@ -367,8 +424,13 @@ const ItineraryDetailScreen = () => {
                                 )}
 
                                 {/* ✅ Confirm Button */}
-                                <Pressable style={styles.modalButton} onPress={handleAddDay}>
-                                    <Text style={styles.modalButtonText}>Add Day</Text>
+                                <Pressable
+                                    style={styles.modalButton}
+                                    onPress={editingDayId ? handleUpdateDay : handleAddDay}
+                                    >
+                                    <Text style={styles.modalButtonText}>
+                                        {editingDayId ? "Update Day" : "Add Day"}
+                                    </Text>
                                 </Pressable>
 
                                 {/* ✅ Cancel Button */}
@@ -675,6 +737,20 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginLeft: 5
     },
+    editDayButton: {
+        backgroundColor: 'green', // Customize as needed for the edit action
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 80,
+        borderRadius: 8,
+        marginRight: 10, // Adjust spacing as needed
+    },
+    editDayText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
+      
 });
 
 export default ItineraryDetailScreen;
