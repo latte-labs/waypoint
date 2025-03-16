@@ -163,35 +163,58 @@ const ItineraryListScreen = () => {
             </View>
         </View>
     );
+    const getTimeAgo = (dateString) => {
+        const now = new Date();
+        // Append 'Z' if not already present to force UTC interpretation
+        const normalizedDateString = dateString.endsWith('Z') ? dateString : dateString + 'Z';
+        const updated = new Date(normalizedDateString);
+        const diffSeconds = Math.floor((now - updated) / 1000);
+        
+        if (diffSeconds < 60) return 'Just now';
+        
+        const diffMinutes = Math.floor(diffSeconds / 60);
+        if (diffMinutes < 60) return `${diffMinutes} mins ago`;
+        
+        const diffHours = Math.floor(diffMinutes / 60);
+        if (diffHours < 24) return `${diffHours} hours ago`;
+        
+        const diffDays = Math.floor(diffHours / 24);
+        return `${diffDays} days ago`;
+      };
+            
 
     // ✅ Render Shared Itinerary List
     const renderItineraryItem = ({ item }) => (
         <TouchableOpacity 
-            style={styles.itineraryCard} 
-            onPress={() => handleSelectItinerary(item)}
+          style={styles.itineraryCard} 
+          onPress={() => handleSelectItinerary(item)}
         >
-            {item.name ? (
-                // ✅ Full itinerary details available (Personal Itineraries)
-                <>
-                    <Text style={styles.itineraryName}>{item.name}</Text>
-                    <Text style={styles.itineraryDestination}>{item.destination}</Text>
-                    <Text style={styles.itineraryDate}>
-                        {new Date(item.start_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })} 
-                        - 
-                        {new Date(item.end_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}
-                    </Text>
-                </>
-            ) : (
-                // ✅ Shared itinerary (Only has `itinerary_id` for now)
-                <>
-                    <Text style={styles.itineraryName}>Shared Itinerary</Text>
-                    <Text style={styles.itineraryDestination}>Itinerary ID: {item.itineraryId}</Text>
-                    <Text style={styles.itineraryDate}>Fetching details soon...</Text>
-                </>
-            )}
+          {item.name ? (
+            <>
+              <Text style={styles.itineraryName}>{item.name}</Text>
+              <Text style={styles.itineraryDestination}>{item.destination}</Text>
+              <Text style={styles.itineraryDate}>
+                {new Date(item.start_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })} 
+                - 
+                {new Date(item.end_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}
+              </Text>
+              {item.updated_at && (
+                <Text style={styles.lastUpdated}>
+                Last Updated: {getTimeAgo(item.updated_at || item.created_at)}
+                </Text>
+              )}
+            </>
+          ) : (
+            <>
+              <Text style={styles.itineraryName}>Shared Itinerary</Text>
+              <Text style={styles.itineraryDestination}>Itinerary ID: {item.itineraryId}</Text>
+              <Text style={styles.itineraryDate}>Fetching details soon...</Text>
+            </>
+          )}
         </TouchableOpacity>
     );
-        // ✅ Define the Shared Itineraries Tab
+
+    // ✅ Define the Shared Itineraries Tab
     const SharedItineraries = () => (
         <View>
             {/* ✅ Pending Invitations List */}
@@ -456,8 +479,11 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: 'bold',
     },
-    
-
+    lastUpdated: {
+        fontSize: 12,
+        color: '#555',
+        marginTop: 5,
+    },
 });
 
 export default ItineraryListScreen;
