@@ -65,6 +65,12 @@ class ItineraryResponse(ItineraryBase):
     class Config:
         from_attributes = True
 
+class ItineraryDayUpdate(BaseModel):
+    title: str
+    date: datetime  # or datetime if you require a timestamp
+
+    class Config:
+        from_attributes = True
 
 # -------------------- Itinerary Member Schema --------------------
 
