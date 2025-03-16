@@ -96,12 +96,16 @@ const ItineraryDetailScreen = () => {
                 }
     
                 // ✅ Check if logged-in user is a collaborator
-                if (user?.id) {
-                    console.log(`🔄 Checking if user ${user.id} is a collaborator...`);
-                    const snapshot = await database().ref(`/live_itineraries/${itineraryId}/collaborators/${user.id}`).once('value');
-                    setIsCollaborator(snapshot.exists());
-                    console.log(`✅ User is collaborator: ${snapshot.exists()}`);
-                }
+                // if (user?.id) {
+                //     console.log(`🔄 Checking if user ${user.id} is a collaborator...`);
+                //     const snapshot = await database().ref(`/live_itineraries/${itineraryId}/collaborators/${user.id}`).once('value');
+                //     if (snapshot.exists()) {
+                //         setIsCollaborator(true);
+                //     } else {
+                //         setIsCollaborator(false);
+                //     }
+                //     console.log(`✅ User is collaborator: ${snapshot.exists()}`);
+                // }
             }
         } catch (error) {
             console.error("❌ Error in fetchItineraryDetails:", error.response?.data || error.message);
@@ -111,12 +115,26 @@ const ItineraryDetailScreen = () => {
             console.log("✅ Finished loading itinerary details");
         }
     };
-        // ✅ Use `useFocusEffect` to Refresh Data When Screen Comes Back into Focus
+        
+    // ✅ Use `useFocusEffect` to Refresh Data When Screen Comes Back into Focus
     useFocusEffect(
         useCallback(() => {
             fetchItineraryDetails();
         }, [itineraryId])
     );
+
+    // ✅ New Effect: Check Collaborator Status When User and Itinerary Are Loaded
+    useEffect(() => {
+        if (user?.id && itinerary) {
+            const ref = database().ref(`/live_itineraries/${itineraryId}/collaborators/${user.id}`);
+            ref.once('value')
+            .then(snapshot => {
+                setIsCollaborator(snapshot.exists());
+            })
+            .catch(error => console.error("Error checking collaborator:", error));
+        }
+        }, [user, itinerary, itineraryId]);
+      
 
     // ✅ Handle Drag & Drop Reordering
     const handleDragEnd = async ({ data }) => {
@@ -228,11 +246,35 @@ const ItineraryDetailScreen = () => {
         }
     };
 
-
-
-
-
-
+    const handleRemoveMyself = async () => {
+        Alert.alert(
+            "Leave Itinerary",
+            "Are you sure you want to remove yourself from this itinerary? You will lose access.",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Remove",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            // ✅ Remove collaborator from Firebase
+                            await database().ref(`/live_itineraries/${itineraryId}/collaborators/${user.id}`).remove();
+                            console.log(`✅ User ${user.id} removed from itinerary ${itineraryId}`);
+    
+                            Alert.alert("Success", "You have been removed from this itinerary.");
+                            
+                            // ✅ Navigate back to ItineraryListScreen
+                            navigation.navigate('Itinerary');
+                        } catch (error) {
+                            console.error("❌ Error removing user:", error);
+                            Alert.alert("Error", "Failed to remove yourself from the itinerary.");
+                        }
+                    }
+                }
+            ]
+        );
+    };
+    
     // ✅ Render Each Day with Swipe-to-Delete & Drag Support
     const renderItem = ({ item, drag }) => (
         <Swipeable
@@ -410,12 +452,20 @@ const ItineraryDetailScreen = () => {
                                     <Text style={styles.buttonText}>Edit</Text>
                                 </TouchableOpacity>
 
-                                {/* ✅ Delete Itinerary Button */}
-                                <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-                                    <Text>
-                                        <Icon name="trash" size={20} color="white" />
-                                    </Text>
-                                </TouchableOpacity>
+                                {/* ✅ Ensure "Remove" is shown correctly for collaborators */}
+                                {isCollaborator && user?.id !== itinerary?.created_by ? (
+                                    <TouchableOpacity style={styles.removeButton} onPress={handleRemoveMyself}>
+                                        <Text style={styles.buttonText}>Remove</Text>
+                                    </TouchableOpacity>
+                                ) : (
+                                    user?.id === itinerary?.created_by && (
+                                        <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
+                                            <Text style={styles.buttonText}>
+                                                <Icon name="trash" size={20} color="white" /> 
+                                            </Text>
+                                        </TouchableOpacity>
+                                    )
+                                )}
                             </View>
                         </>
                     ) : (
@@ -610,8 +660,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginRight: 5,
     },
-    
-    
+    removeButton: {
+        flex: 0.8, // Same width as other buttons
+        padding: 15,
+        backgroundColor: 'gray', // ✅ Gray color for "Remove" button
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginLeft: 5
+    },
 });
 
 export default ItineraryDetailScreen;
