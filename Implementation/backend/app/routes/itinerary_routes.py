@@ -327,3 +327,31 @@ def update_itinerary(itinerary_id: str, updated_itinerary: itinerary_schema.Itin
     print(f"✅ Itinerary updated successfully: {itinerary}")
     return {"message": "Itinerary updated successfully", "itinerary_id": itinerary.id}
 
+@itinerary_router.put("/{itinerary_id}/days/{day_id}", response_model=itinerary_schema.ItineraryDayResponse)
+def update_itinerary_day(
+    itinerary_id: uuid.UUID,
+    day_id: uuid.UUID,
+    updated_day: itinerary_schema.ItineraryDayUpdate,
+    db: Session = Depends(get_db)
+):
+    # Validate the itinerary exists
+    itinerary = db.query(Itinerary).filter(Itinerary.id == itinerary_id).first()
+    if not itinerary:
+        raise HTTPException(status_code=404, detail="Itinerary not found")
+    
+    # Validate the day exists in the itinerary
+    day = db.query(ItineraryDay).filter(
+        ItineraryDay.id == day_id, 
+        ItineraryDay.itinerary_id == itinerary_id
+    ).first()
+    if not day:
+        raise HTTPException(status_code=404, detail="Itinerary day not found")
+    
+    # Update the day fields from the request payload
+    day.title = updated_day.title
+    day.date = updated_day.date  # Ensure that the date is in the proper format (ISO 8601 is preferred)
+    # You can add more fields here if needed (e.g. order_index)
+    
+    db.commit()
+    db.refresh(day)
+    return day
