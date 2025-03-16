@@ -35,8 +35,6 @@ const ItineraryDetailScreen = () => {
     const [owner, setOwner] = useState({ name: "", email: "" });
 
 
-    
-
     // ✅ Load user data from AsyncStorage
     useEffect(() => {
         const fetchUserData = async () => {
@@ -213,39 +211,47 @@ const ItineraryDetailScreen = () => {
             ]
         );
     };
+    const parseLocalDate = (dateString) => {
+        const [year, month, day] = dateString.split('-').map(Number);
+        // The month is 0-indexed in the Date constructor
+        return new Date(year, month - 1, day);
+    };
+      
     
     // ✅ Handle Adding a New Day
     const handleAddDay = async () => {
         if (!dayTitle.trim()) {
-            Alert.alert("Missing Field", "Please enter a title for the day.");
-            return;
+          Alert.alert("Missing Field", "Please enter a title for the day.");
+          return;
         }
         if (!selectedDate) {
-            Alert.alert("Missing Field", "Please select a date.");
-            return;
+          Alert.alert("Missing Field", "Please select a date.");
+          return;
         }
-
+      
         try {
-            const response = await axios.post(`${API_BASE_URL}/itineraries/${itineraryId}/days/`, {
-                date: new Date(selectedDate).toISOString(), // ✅ Convert to ISO 8601 format
-                title: dayTitle,
-                itinerary_id: itineraryId, // ✅ Include itinerary_id in the body
-            });
-
-            if (response.status === 200) {
-                const newDayId = response.data.id; // ✅ Extract new day ID
-                Alert.alert("Success", "Day added successfully!");
-
-                setModalVisible(false); // ✅ Close modal
-                fetchItineraryDetails(); // ✅ Refresh list
-                navigation.navigate('ItineraryDay', { itineraryId, dayId: newDayId }); // ✅ Navigate to new day
-            }
+          // Convert the selected date to a local Date object
+          const localDate = parseLocalDate(selectedDate);
+          const response = await axios.post(`${API_BASE_URL}/itineraries/${itineraryId}/days/`, {
+            date: localDate.toISOString(), // Converts the local date to ISO string
+            title: dayTitle,
+            itinerary_id: itineraryId,
+          });
+      
+          if (response.status === 200) {
+            const newDayId = response.data.id;
+            Alert.alert("Success", "Day added successfully!");
+      
+            setModalVisible(false);
+            fetchItineraryDetails();
+            navigation.navigate('ItineraryDay', { itineraryId, dayId: newDayId });
+          }
         } catch (error) {
-            console.error("❌ Error adding day:", error.response?.data || error.message);
-            Alert.alert("Error", "Failed to add itinerary day.");
+          console.error("❌ Error adding day:", error.response?.data || error.message);
+          Alert.alert("Error", "Failed to add itinerary day.");
         }
-    };
-
+      };
+          
     const handleRemoveMyself = async () => {
         Alert.alert(
             "Leave Itinerary",
@@ -336,7 +342,7 @@ const ItineraryDetailScreen = () => {
                                 {/* ✅ Date Selection Button */}
                                 <TouchableOpacity style={styles.datePicker} onPress={() => setShowDatePicker(true)}>
                                     <Text style={styles.dateText}>
-                                        {selectedDate ? new Date(selectedDate).toDateString() : "Select Date"}
+                                        {selectedDate ? parseLocalDate(selectedDate).toDateString() : "Select Date"}
                                     </Text>
                                 </TouchableOpacity>
 
