@@ -28,6 +28,8 @@ const ItineraryDayScreen = () => {
         notes: '',
         estimated_cost: '',
     });
+    const [cardHeight, setCardHeight] = useState(0);
+
     const sortActivitiesByTime = (activities) => {
         return activities.sort((a, b) => {
             const parseTime = (time) => {
@@ -79,13 +81,13 @@ const ItineraryDayScreen = () => {
     // ✅ Function to Render Swipeable Actions
     const renderRightActions = () => (
         <TouchableOpacity 
-            style={styles.deleteActivityButton} 
-            onPress={handleDeleteActivity} // ✅ Show Alert Instead of Deleting
+          style={[styles.deleteActivityButton, { height: cardHeight }]} 
+          onPress={handleDeleteActivity}
         >
-            <Text style={styles.deleteActivityText}>Delete</Text>
+          <Text style={styles.deleteActivityText}>Delete</Text>
         </TouchableOpacity>
     );
-
+      
     
 
 
@@ -178,14 +180,20 @@ const ItineraryDayScreen = () => {
     // ✅ Render Activity Item
     const renderItem = ({ item }) => (
         <Swipeable renderRightActions={renderRightActions}>
-            <TouchableOpacity style={styles.activityCard}>
-                <Text style={styles.activityTime}>🕒 {item.time}</Text>
-                <Text style={styles.activityName}>{item.name}</Text>
-                <Text style={styles.activityLocation}>📍 {item.location}</Text>
-            </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.activityCard}
+            onLayout={(event) => {
+              const { height } = event.nativeEvent.layout;
+              setCardHeight(height);
+            }}
+          >
+            <Text style={styles.activityTime}>🕒 {item.time}</Text>
+            <Text style={styles.activityName}>{item.name}</Text>
+            <Text style={styles.activityLocation}>📍 {item.location}</Text>
+          </TouchableOpacity>
         </Swipeable>
-    );
-
+      );
+      
     return (
         <SafeAreaWrapper>
             <View style={{ flex: 1, padding: 20, backgroundColor: '#fff' }}>
