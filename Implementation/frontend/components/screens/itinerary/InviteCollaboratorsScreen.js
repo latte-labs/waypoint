@@ -177,6 +177,36 @@ const InviteCollaboratorsScreen = () => {
             console.error("❌ Error inviting user:", error);
         }
     };
+    const handleRemoveCollaborator = (collaboratorId) => {
+        Alert.alert(
+            "Remove Collaborator",
+            "Are you sure you want to remove this collaborator?",
+            [
+                { text: "Cancel", style: "cancel" },
+                { 
+                    text: "Remove", 
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            await database()
+                                .ref(`/live_itineraries/${itineraryId}/collaborators/${collaboratorId}`)
+                                .remove();
+    
+                            setCollaborators(prevCollaborators => 
+                                prevCollaborators.filter(collab => collab.userId !== collaboratorId)
+                            );
+    
+                            Alert.alert("Success", "Collaborator removed successfully.");
+                        } catch (error) {
+                            console.error("❌ Error removing collaborator:", error);
+                            Alert.alert("Error", "Failed to remove collaborator.");
+                        }
+                    }
+                }
+            ]
+        );
+    };
+    
 
     return (
         <SafeAreaWrapper>
@@ -272,8 +302,8 @@ const InviteCollaboratorsScreen = () => {
                     renderItem={({ item }) => (
                         <View style={{
                             flexDirection: 'row',
-                            alignItems: 'center', // ✅ Keep everything aligned in the center
-                            justifyContent: 'space-between', // ✅ Ensures text stays on left, button on right
+                            alignItems: 'center', 
+                            justifyContent: 'space-between',
                             padding: 12,
                             borderBottomWidth: 1,
                             borderBottomColor: '#eee'
@@ -285,13 +315,13 @@ const InviteCollaboratorsScreen = () => {
                             </View>
 
                             <TouchableOpacity 
-                                onPress={() => Alert.alert("Remove Collaborator", "Feature coming soon.")}
+                                onPress={() => handleRemoveCollaborator(item.userId)}
                                 style={{
                                     backgroundColor: 'red',
                                     paddingVertical: 6,
                                     paddingHorizontal: 12,
                                     borderRadius: 6,
-                                    alignSelf: 'center' // ✅ Ensures button is properly aligned
+                                    alignSelf: 'center'
                                 }}
                             >
                                 <Text style={{ color: '#fff', fontSize: 14 }}>Remove</Text>
