@@ -97,6 +97,7 @@ class ItinerarySchema(BaseModel):
     end_date: datetime
     created_by: UUID
     budget: Optional[float] = None
+    updated_at: Optional[datetime] = None  # <-- Now optional
 
     class Config:
         from_attributes = True
