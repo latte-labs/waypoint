@@ -18,31 +18,68 @@ const InviteCollaboratorsScreen = () => {
     const [foundUser, setFoundUser] = useState(null);
     const [invitedUsers, setInvitedUsers] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [collaborators, setCollaborators] = useState([]);
 
-    // ✅ Fetch Invited Users (Pending & Approved) from Firebase
+
+    // ✅ Fetch Pending Invites & Collaborators in Real Time
     useEffect(() => {
-        const fetchPendingInvites = async () => {
-            try {
-                const inviteRef = database().ref('/invitations');
-                const snapshot = await inviteRef.once('value');
-
-                if (snapshot.exists()) {
-                    const invitesData = Object.values(snapshot.val());
-
-                    // ✅ Filter invites for this specific itinerary
-                    const filteredInvites = invitesData.filter(invite => invite.itineraryId === itineraryId);
-
-                    console.log("📥 Fetched Pending Invites:", filteredInvites);
-                    setInvitedUsers(filteredInvites);
-                }
-            } catch (error) {
-                console.error("❌ Error fetching pending invites:", error);
+        const inviteRef = database().ref('/invitations/invitee');
+        const collaboratorRef = database().ref(`/live_itineraries/${itineraryId}/collaborators`);
+    
+        // ✅ Real-time updates for pending invites
+        const handleInviteChange = (snapshot) => {
+            if (snapshot.exists()) {
+                const invitesData = snapshot.val();
+                let pendingInvites = [];
+    
+                // ✅ Loop through all invitees
+                Object.values(invitesData).forEach(inviteeData => {
+                    Object.values(inviteeData).forEach(invite => {
+                        if (invite.itineraryId === itineraryId && invite.status === "pending") {
+                            pendingInvites.push(invite);
+                        }
+                    });
+                });
+    
+                setInvitedUsers(pendingInvites);
+            } else {
+                setInvitedUsers([]); // ✅ Clear list if no invites exist
             }
         };
-                
-        fetchPendingInvites();
-    }, [itineraryId]);
+        
+        // ✅ Real-time updates for collaborators
+        const handleCollaboratorChange = async (snapshot) => {
+            if (snapshot.exists()) {
+                const collabData = snapshot.val();
+                const userIds = Object.keys(collabData);
 
+                // ✅ Fetch User Details (Name & Email)
+                const userSnapshot = await database().ref('/users').once('value');
+                const usersData = userSnapshot.val();
+
+                const collaboratorsList = userIds.map(userId => ({
+                    userId,
+                    name: usersData[userId]?.name || "Unknown",
+                    email: usersData[userId]?.email || "No Email",
+                }));
+
+                setCollaborators(collaboratorsList);
+            } else {
+                setCollaborators([]); // ✅ Clear list if no collaborators exist
+            }
+        };
+
+        // ✅ Attach Firebase listeners
+        inviteRef.on('value', handleInviteChange);
+        collaboratorRef.on('value', handleCollaboratorChange);
+
+        // ✅ Clean up listeners when component unmounts
+        return () => {
+            inviteRef.off('value', handleInviteChange);
+            collaboratorRef.off('value', handleCollaboratorChange);
+        };
+    }, [itineraryId]);
+            
     // ✅ Search for User by Email
     const searchUserByEmail = async () => {
         if (!email.trim()) return;
@@ -196,26 +233,69 @@ const InviteCollaboratorsScreen = () => {
                     </TouchableOpacity>
                 )}
 
-                {/* ✅ Invited Users List (Pending & Approved) */}
+                {/* ✅ Pending Invites List */}
                 <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>
-                    People Invited to this Trip
+                    Pending Invites
+                </Text>
+
+                {invitedUsers.length === 0 ? (
+                    <Text style={{ fontSize: 16, color: '#777', textAlign: 'center' }}>No pending invites</Text>
+                ) : (
+                    <FlatList
+                        data={invitedUsers}
+                        keyExtractor={(item) => item.inviteeId}
+                        renderItem={({ item }) => (
+                            <View style={{
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: 12,
+                                borderBottomWidth: 1,
+                                borderBottomColor: '#eee'
+                            }}>
+                                <Text style={{ fontSize: 16 }}>
+                                    {item.inviteeName} ({item.inviteeEmail})
+                                </Text>
+                            </View>
+                        )}
+                    />
+                )}
+
+                {/* ✅ Collaborators List */}
+                <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10, marginTop: 20 }}>
+                    Collaborators
                 </Text>
 
                 <FlatList
-                    data={invitedUsers}
-                    keyExtractor={(item) => item.inviteeId}
+                    data={collaborators}
+                    keyExtractor={(item) => item.userId}
                     renderItem={({ item }) => (
                         <View style={{
-                            flexDirection: 'row', 
-                            justifyContent: 'space-between', 
-                            alignItems: 'center', 
-                            padding: 12, 
-                            borderBottomWidth: 1, 
+                            flexDirection: 'row',
+                            alignItems: 'center', // ✅ Keep everything aligned in the center
+                            justifyContent: 'space-between', // ✅ Ensures text stays on left, button on right
+                            padding: 12,
+                            borderBottomWidth: 1,
                             borderBottomColor: '#eee'
                         }}>
-                            <Text style={{ fontSize: 16 }}>
-                                {item.inviteeName} ({item.inviteeEmail}) {item.status === "pending" ? '- Pending Approval' : ''}
-                            </Text>
+                            <View style={{ flex: 1 }}> 
+                                <Text style={{ fontSize: 16 }}>
+                                    {item.name} ({item.email})
+                                </Text>
+                            </View>
+
+                            <TouchableOpacity 
+                                onPress={() => Alert.alert("Remove Collaborator", "Feature coming soon.")}
+                                style={{
+                                    backgroundColor: 'red',
+                                    paddingVertical: 6,
+                                    paddingHorizontal: 12,
+                                    borderRadius: 6,
+                                    alignSelf: 'center' // ✅ Ensures button is properly aligned
+                                }}
+                            >
+                                <Text style={{ color: '#fff', fontSize: 14 }}>Remove</Text>
+                            </TouchableOpacity>
                         </View>
                     )}
                 />
