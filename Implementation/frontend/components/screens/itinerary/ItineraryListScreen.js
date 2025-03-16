@@ -98,11 +98,12 @@ const ItineraryListScreen = () => {
     
             const fullItineraries = (await Promise.all(itineraryPromises)).filter(Boolean);
             setSharedItineraries(fullItineraries);
+            console.log("✅ Updated shared itineraries:", fullItineraries);
         } catch (error) {
             console.error("❌ Error fetching shared itineraries:", error.response?.data || error.message);
         }
     };
-            
+                
     // ✅ Fetch Pending Invitations from Firebase
     const fetchPendingInvites = (userId) => {
         database()
@@ -112,19 +113,21 @@ const ItineraryListScreen = () => {
                 if (snapshot.exists()) {
                     const invitesData = Object.values(snapshot.val());
                     setPendingInvites(invitesData);
+                } else {
+                    setPendingInvites([]);  // Clear the state if no invites exist
                 }
             });
     };
-
+    
     useFocusEffect(
         useCallback(() => {
             if (userId) {
                 console.log("🔄 Refetching itineraries and invitations...");
                 fetchOwnedItineraries(userId);
-                // fetchSharedItineraries(userId);
+                fetchSharedItineraries(userId);
                 fetchPendingInvites(userId);
             }
-        }, [userId])
+        }, [userId])  // ✅ Depend on `sharedItineraries` to trigger updates
     );
 
     const handleSelectItinerary = (itinerary) => {
@@ -151,12 +154,12 @@ const ItineraryListScreen = () => {
                 <Text style={styles.buttonText}>Accept</Text>
             </TouchableOpacity>
 
-                <TouchableOpacity 
-                    style={styles.declineButton} 
-                    onPress={() => Alert.alert("Coming Soon", "Decline feature will be implemented soon.")}
-                >
-                    <Text style={styles.buttonText}>Decline</Text>
-                </TouchableOpacity>
+            <TouchableOpacity 
+                style={styles.declineButton} 
+                onPress={() => handleDeclineInvite(item)}
+            >
+                <Text style={styles.buttonText}>Decline</Text>
+            </TouchableOpacity>
             </View>
         </View>
     );
@@ -261,7 +264,7 @@ const ItineraryListScreen = () => {
     
             // ✅ Step 5: Refresh invites and shared itineraries
             fetchPendingInvites(userId);
-            // fetchSharedItineraries(userId);
+            fetchSharedItineraries(userId);
     
             Alert.alert("Success", "You have joined the itinerary!");
         } catch (error) {
@@ -271,9 +274,49 @@ const ItineraryListScreen = () => {
     };
         
     const handleDeclineInvite = async (invite) => {
-        Alert.alert("Feature Coming Soon", "Decline invite functionality will be implemented in a future update.");
-    };
+        try {
+            console.log(`🔄 Declining invite for itinerary: ${invite.itineraryId}`);
     
+            // ✅ Step 1: Fetch the correct invite key from Firebase
+            const inviteRef = database().ref(`/invitations/invitee/${userId}`);
+            const snapshot = await inviteRef.once('value');
+    
+            if (!snapshot.exists()) {
+                console.error("❌ No pending invites found in Firebase.");
+                Alert.alert("Error", "Invite no longer exists.");
+                return;
+            }
+    
+            const invitesData = snapshot.val();
+            const inviteKey = Object.keys(invitesData).find(
+                key => invitesData[key].itineraryId === invite.itineraryId
+            );
+    
+            if (!inviteKey) {
+                console.error("❌ Could not find matching invite key.");
+                Alert.alert("Error", "Invite data mismatch.");
+                return;
+            }
+    
+            // ✅ Step 2: Remove the invite from Firebase (/invitations/invitee/)
+            await database().ref(`/invitations/invitee/${userId}/${inviteKey}`).remove();
+            console.log("✅ Removed invite from /invitations/invitee/");
+    
+            // ✅ Step 3: Remove the invite from pendingInvites in live_itineraries
+            await database().ref(`/live_itineraries/${invite.itineraryId}/pendingInvites/${userId}`).remove();
+            console.log("✅ Removed invite from /live_itineraries/pendingInvites/");
+    
+            // ✅ Step 4: Refresh the UI
+            fetchPendingInvites(userId);
+            await fetchSharedItineraries(userId);  // 🔄 Ensure shared itineraries update
+
+            Alert.alert("Invite Declined", "You have declined the invitation.");
+        } catch (error) {
+            console.error("❌ Error declining invite:", error);
+            Alert.alert("Error", "Failed to decline the invite.");
+        }
+    };
+            
 
     return (
         <SafeAreaWrapper>
