@@ -29,7 +29,9 @@ const ItineraryDayScreen = () => {
         estimated_cost: '',
     });
     const [cardHeight, setCardHeight] = useState(0);
-
+    const [isEditing, setIsEditing] = useState(false);
+    const [editingActivity, setEditingActivity] = useState(null);
+    
     const sortActivitiesByTime = (activities) => {
         return activities.sort((a, b) => {
             const parseTime = (time) => {
@@ -74,20 +76,44 @@ const ItineraryDayScreen = () => {
         }
     };
     // ✅ Function to Show Placeholder Alert Instead of Deleting
-    const handleDeleteActivity = () => {
-        Alert.alert("Feature Coming Soon", "Deleting Activity Feature Coming Soon.");
+    const handleDeleteActivity = async (activityId) => {
+        Alert.alert(
+          "Confirm Delete",
+          "Are you sure you want to delete this activity?",
+          [
+            { text: "Cancel", style: "cancel" },
+            { 
+              text: "Delete", 
+              style: "destructive",
+              onPress: async () => {
+                try {
+                  const response = await axios.delete(
+                    `${API_BASE_URL}/itineraries/${itineraryId}/days/${dayId}/activities/${activityId}`
+                  );
+                  if (response.status === 200) {
+                    // Remove the deleted activity from state
+                    setActivities((prev) => prev.filter((act) => act.id !== activityId));
+                  }
+                } catch (error) {
+                  console.error("❌ Error deleting activity:", error.response?.data || error.message);
+                  Alert.alert("Error", "Failed to delete activity.");
+                }
+              }
+            }
+          ]
+        );
     };
-
+      
     // ✅ Function to Render Swipeable Actions
-    const renderRightActions = () => (
+    const renderRightActions = (activity) => (
         <TouchableOpacity 
           style={[styles.deleteActivityButton, { height: cardHeight }]} 
-          onPress={handleDeleteActivity}
+          onPress={() => handleDeleteActivity(activity.id)}
         >
           <Text style={styles.deleteActivityText}>Delete</Text>
         </TouchableOpacity>
     );
-      
+            
     
 
 
@@ -123,63 +149,103 @@ const ItineraryDayScreen = () => {
     
     const handleSaveActivity = async () => {
         if (!newActivity.name || !newActivity.time) {
-            Alert.alert("Missing Fields", "Please enter both time and activity name.");
-            return;
+          Alert.alert("Missing Fields", "Please enter both time and activity name.");
+          return;
         }
-    
-        // ✅ Ensure time format is correct before saving
+      
         if (!validateTimeFormat(newActivity.time)) {
-            Alert.alert("Invalid Time Format", "Please enter time in the format HH:MM AM/PM (e.g., 8:30 AM).");
-            return;
+          Alert.alert("Invalid Time Format", "Please enter time in the format HH:MM AM/PM (e.g., 8:30 AM).");
+          return;
         }
-    
-        const activityData = {
-            itinerary_day_id: dayId, 
-            time: newActivity.time,
-            name: newActivity.name,
-            location: newActivity.location || "",
-            notes: newActivity.notes || "",
-            estimated_cost: newActivity.estimated_cost !== "" ? parseFloat(newActivity.estimated_cost) : 0.0,
+      
+        // Convert estimated_cost to a number
+        const cost = newActivity.estimated_cost !== "" ? parseFloat(newActivity.estimated_cost) : 0.0;
+        const activityPayload = {
+          itinerary_day_id: dayId,
+          time: newActivity.time,
+          name: newActivity.name,
+          location: newActivity.location || "",
+          notes: newActivity.notes || "",
+          estimated_cost: cost,
         };
-    
-        console.log("📤 Sending activity data:", JSON.stringify(activityData, null, 2));
-    
-        try {
-            const response = await axios.post(
-                `${API_BASE_URL}/itineraries/${itineraryId}/days/${dayId}/activities/`,
-                activityData,
-                {
-                    headers: { "Content-Type": "application/json" },
-                }
+      
+        console.log("📤 Sending activity data:", JSON.stringify(activityPayload, null, 2));
+      
+        if (isEditing && editingActivity) {
+          // Update existing activity
+          try {
+            const response = await axios.put(
+              `${API_BASE_URL}/itineraries/${itineraryId}/days/${dayId}/activities/${editingActivity.id}`,
+              activityPayload,
+              { headers: { "Content-Type": "application/json" } }
             );
-    
             if (response.status === 200) {
-                // ✅ Sort activities before updating the state
-                const updatedActivities = sortActivitiesByTime([...activities, response.data]);
-    
-                setActivities(updatedActivities); // ✅ Ensure activities are sorted instantly
-                setModalVisible(false);
-                setNewActivity({ time: '', name: '', location: '', notes: '', estimated_cost: '' });
+              setActivities((prev) =>
+                prev.map((act) => (act.id === editingActivity.id ? response.data : act))
+              );
+              Alert.alert("Success", "Activity updated successfully.");
             }
-        } catch (error) {
-            console.error("❌ Error adding activity:", error);
-    
-            if (error.response) {
-                console.log("🔥 Full Response Error:", JSON.stringify(error.response.data, null, 2));
-                Alert.alert("Error", `Failed to add activity: ${JSON.stringify(error.response.data, null, 2)}`);
-            } else {
-                Alert.alert("Error", "Failed to add activity. Unknown issue.");
+          } catch (error) {
+            console.error("❌ Error updating activity:", error.response?.data || error.message);
+            Alert.alert("Error", "Failed to update activity.");
+          } finally {
+            setIsEditing(false);
+            setEditingActivity(null);
+            setModalVisible(false);
+            setNewActivity({ time: '', name: '', location: '', notes: '', estimated_cost: '' });
+          }
+        } else {
+          // Create new activity
+          try {
+            const response = await axios.post(
+              `${API_BASE_URL}/itineraries/${itineraryId}/days/${dayId}/activities/`,
+              activityPayload,
+              { headers: { "Content-Type": "application/json" } }
+            );
+            if (response.status === 200) {
+              const updatedActivities = sortActivitiesByTime([...activities, response.data]);
+              setActivities(updatedActivities);
+              setModalVisible(false);
+              setNewActivity({ time: '', name: '', location: '', notes: '', estimated_cost: '' });
             }
+          } catch (error) {
+            console.error("❌ Error adding activity:", error.response?.data || error.message);
+            Alert.alert("Error", "Failed to add activity.");
+          }
         }
     };
-    
-    
-    
+                
+    const handleEditActivity = (activity) => {
+        setEditingActivity(activity);
+        // Pre-fill the newActivity state with the activity's details
+        setNewActivity({
+          time: activity.time,
+          name: activity.name,
+          location: activity.location,
+          notes: activity.notes || '',
+          estimated_cost: activity.estimated_cost ? activity.estimated_cost.toString() : '',
+        });
+        setIsEditing(true);
+        setModalVisible(true);
+    };
+                
+    const renderLeftActions = (activity) => (
+        <TouchableOpacity 
+          style={[styles.editActivityButton, { height: cardHeight }]} 
+          onPress={() => handleEditActivity(activity)}
+        >
+          <Text style={styles.editActivityText}>Edit</Text>
+        </TouchableOpacity>
+    );
+                  
     
 
     // ✅ Render Activity Item
     const renderItem = ({ item }) => (
-        <Swipeable renderRightActions={renderRightActions}>
+        <Swipeable 
+          renderLeftActions={() => renderLeftActions(item)}
+          renderRightActions={() => renderRightActions(item)}
+        >
           <TouchableOpacity 
             style={styles.activityCard}
             onLayout={(event) => {
@@ -192,8 +258,8 @@ const ItineraryDayScreen = () => {
             <Text style={styles.activityLocation}>📍 {item.location}</Text>
           </TouchableOpacity>
         </Swipeable>
-      );
-      
+    );
+                        
     return (
         <SafeAreaWrapper>
             <View style={{ flex: 1, padding: 20, backgroundColor: '#fff' }}>
@@ -384,6 +450,21 @@ const styles = StyleSheet.create({
     activityTime: { fontSize: 14, fontWeight: 'bold', color: '#007bff' },
     activityName: { fontSize: 16, fontWeight: '600', color: '#222' },
     activityLocation: { fontSize: 14, color: '#555' },
+    editActivityButton: {
+        backgroundColor: 'green', // or a color of your choice
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 80,
+        borderRadius: 8,
+        marginRight: 10,
+    },
+    editActivityText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: 'bold',
+        textAlign: 'center'
+    },
+      
 });
 
 

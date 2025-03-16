@@ -108,3 +108,22 @@ class ReorderDayItem(BaseModel):
 
 class ReorderDaysRequest(BaseModel):
     days: List[ReorderDayItem]
+
+class ActivityUpdateSchema(BaseModel):
+    time: Optional[str]
+    name: Optional[str]
+    location: Optional[str]
+    notes: Optional[str]
+    estimated_cost: Optional[float]
+
+class ActivityResponseSchema(BaseModel):
+    id: str
+    time: str
+    name: str
+    location: str
+    notes: Optional[str]
+    estimated_cost: Optional[float]
+    itinerary_day_id: str
+
+    class Config:
+        from_attributes = True

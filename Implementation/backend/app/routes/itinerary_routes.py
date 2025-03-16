@@ -356,3 +356,54 @@ def update_itinerary_day(
     db.commit()
     db.refresh(day)
     return day
+
+@itinerary_router.delete(
+    "/{itinerary_id}/days/{day_id}/activities/{activity_id}",
+    status_code=200,
+    response_model=dict
+)
+def delete_activity(
+    itinerary_id: str,
+    day_id: str,
+    activity_id: str,
+    db: Session = Depends(get_db)
+):
+    activity = db.query(Activity).filter(
+        Activity.id == activity_id,
+        Activity.itinerary_day_id == day_id
+    ).first()
+
+    if not activity:
+        raise HTTPException(status_code=404, detail="Activity not found")
+
+    db.delete(activity)
+    db.commit()
+    return {"detail": "Activity deleted successfully."}
+
+
+@itinerary_router.put(
+    "/{itinerary_id}/days/{day_id}/activities/{activity_id}",
+    response_model=itinerary_schema.ActivityResponseSchema
+)
+def update_activity(
+    itinerary_id: str,
+    day_id: str,
+    activity_id: str,
+    activity_update: itinerary_schema.ActivityUpdateSchema,
+    db: Session = Depends(get_db)
+):
+    activity = db.query(Activity).filter(
+        Activity.id == activity_id,
+        Activity.itinerary_day_id == day_id
+    ).first()
+
+    if not activity:
+        raise HTTPException(status_code=404, detail="Activity not found")
+
+    update_data = activity_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(activity, key, value)
+
+    db.commit()
+    db.refresh(activity)
+    return activity
