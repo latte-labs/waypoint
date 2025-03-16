@@ -336,7 +336,7 @@ const ItineraryDetailScreen = () => {
           Alert.alert("Error", "Failed to update itinerary day.");
         }
     };
-      
+    
     
     // ✅ Render Each Day with Swipe-to-Delete & Drag Support
     const renderItem = ({ item, drag }) => (
@@ -356,7 +356,11 @@ const ItineraryDetailScreen = () => {
             >
                 <Text style={styles.dayTitle}>{item.title}</Text>
                 <Text style={styles.dayDate}>
-                    {new Date(item.date).toLocaleDateString()}
+                    {new Date(item.date).toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                    })}
                 </Text>
     
                 {/* Render activities */}
