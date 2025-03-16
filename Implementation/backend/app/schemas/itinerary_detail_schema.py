@@ -35,6 +35,7 @@ class ItineraryDetailResponseSchema(BaseModel):
     end_date: datetime
     created_by: UUID
     updated_at: datetime  # new field added
+    last_updated_by: UUID    # NEW FIELD
     budget: Optional[float] = None
     days: List[ItineraryDaySchema]  # ✅ Correctly nested days & activities
 

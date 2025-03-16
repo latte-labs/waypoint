@@ -21,6 +21,8 @@ class Itinerary(Base):
     extra_data = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_updated_by = Column(UUID(as_uuid=True), nullable=False)
+
 
     # ✅ Relationships
     members = relationship("ItineraryMember", back_populates="itinerary", cascade="all, delete")

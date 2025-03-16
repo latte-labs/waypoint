@@ -48,7 +48,8 @@ def get_itinerary(itinerary_id: str, db: Session = Depends(get_db)):
         start_date=itinerary.start_date,
         end_date=itinerary.end_date,
         created_by=itinerary.created_by,
-        updated_at=itinerary.updated_at,  # new field
+        updated_at=itinerary.updated_at,
+        last_updated_by=itinerary.last_updated_by,  # NEW: pass this field
         budget=itinerary.budget,
         days=[
             {
