@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 from app.db.db import get_db  # ✅ Import database session from db.py
 from app.models.itinerary_models import Itinerary, ItineraryDay, Activity, ItineraryMember
@@ -26,6 +26,7 @@ def create_itinerary(itinerary: itinerary_schema.ItineraryCreate, db: Session = 
         travel_style=itinerary.travel_style,
         budget=itinerary.budget,
         extra_data=itinerary.extra_data,
+        last_updated_by=itinerary.created_by  # Set last_updated_by to created_by initially
     )
     db.add(new_itinerary)
     db.commit()
@@ -76,57 +77,68 @@ def get_itinerary(itinerary_id: str, db: Session = Depends(get_db)):
 # -------------------- Itinerary Day Routes --------------------
 
 @itinerary_router.post("/{itinerary_id}/days/", response_model=itinerary_schema.ItineraryDayResponse)
-def add_day_to_itinerary(itinerary_id: uuid.UUID, day: itinerary_schema.ItineraryDayCreate, db: Session = Depends(get_db)):
+def add_day_to_itinerary(
+    itinerary_id: uuid.UUID,
+    day: itinerary_schema.ItineraryDayCreate,
+    db: Session = Depends(get_db),
+    x_user_id: str = Header(..., alias="X-User-Id")
+):
     itinerary = db.query(Itinerary).filter(Itinerary.id == itinerary_id).first()
     if not itinerary:
         raise HTTPException(status_code=404, detail="Itinerary not found")
 
-    # ✅ Find the highest order_index in this itinerary
     max_order = db.query(func.max(ItineraryDay.order_index)).filter(ItineraryDay.itinerary_id == itinerary_id).scalar()
-    new_order_index = (max_order + 1) if max_order is not None else 0  # ✅ Set next order_index
+    new_order_index = (max_order + 1) if max_order is not None else 0
 
     new_day = ItineraryDay(
         id=uuid.uuid4(),
         itinerary_id=itinerary_id,
         date=day.date,
         title=day.title,
-        order_index=new_order_index  # ✅ Assign next order index
+        order_index=new_order_index
     )
 
     db.add(new_day)
     db.commit()
     db.refresh(new_day)
+
+    # Update itinerary metadata
+    itinerary.updated_at = datetime.utcnow()
+    itinerary.last_updated_by = x_user_id
+    db.commit()
+
     return new_day
 
 
 # -------------------- Activity Routes --------------------
 
 @itinerary_router.post("/{itinerary_id}/days/{day_id}/activities/", response_model=itinerary_schema.ActivityResponse)
-def add_activity(itinerary_id: uuid.UUID, day_id: uuid.UUID, activity: itinerary_schema.ActivityCreate, db: Session = Depends(get_db)):
-    """
-    Add a new activity to a specific itinerary day.
-    """
-    # ✅ Validate the itinerary day exists
-    day = db.query(ItineraryDay).filter(ItineraryDay.id == day_id, ItineraryDay.itinerary_id == itinerary_id).first()
+def add_activity(
+    itinerary_id: uuid.UUID,
+    day_id: uuid.UUID,
+    activity: itinerary_schema.ActivityCreate,
+    db: Session = Depends(get_db),
+    x_user_id: str = Header(..., alias="X-User-Id")
+):
+    day = db.query(ItineraryDay).filter(
+        ItineraryDay.id == day_id, ItineraryDay.itinerary_id == itinerary_id
+    ).first()
     if not day:
         raise HTTPException(status_code=404, detail="Itinerary day not found")
 
-    # ✅ Ensure time is properly formatted before saving
     def format_time(time_str):
-        """Convert input time into HH:MM AM/PM format."""
         try:
-            return datetime.strptime(time_str, "%I%p").strftime("%I:%M %p")  # "8AM" -> "08:00 AM"
+            return datetime.strptime(time_str, "%I%p").strftime("%I:%M %p")
         except ValueError:
             try:
-                return datetime.strptime(time_str, "%I:%M%p").strftime("%I:%M %p")  # "8:30AM" -> "08:30 AM"
+                return datetime.strptime(time_str, "%I:%M%p").strftime("%I:%M %p")
             except ValueError:
-                return time_str  # Keep it unchanged if format is unknown
+                return time_str
 
-    # ✅ Create the new activity
     new_activity = Activity(
         id=uuid.uuid4(),
         itinerary_day_id=day_id,
-        time=format_time(activity.time),  # ✅ Ensure time is stored correctly
+        time=format_time(activity.time),
         name=activity.name,
         location=activity.location,
         notes=activity.notes if activity.notes else "",
@@ -139,7 +151,14 @@ def add_activity(itinerary_id: uuid.UUID, day_id: uuid.UUID, activity: itinerary
     db.commit()
     db.refresh(new_activity)
 
-    return new_activity  # ✅ Returns properly formatted response
+    # Update itinerary metadata:
+    itinerary = db.query(Itinerary).filter(Itinerary.id == itinerary_id).first()
+    if itinerary:
+        itinerary.updated_at = datetime.utcnow()
+        itinerary.last_updated_by = x_user_id
+        db.commit()
+
+    return new_activity
 
 
 # -------------------- Itinerary Member Routes (For Collaboration) --------------------
@@ -281,47 +300,62 @@ def delete_itinerary(itinerary_id: str, db: Session = Depends(get_db)):
     return {"message": "Itinerary deleted successfully"}
 
 @itinerary_router.delete("/{itinerary_id}/days/{day_id}", status_code=200)
-def delete_itinerary_day(itinerary_id: str, day_id: str, db: Session = Depends(get_db)):
-    """
-    ✅ Deletes an itinerary day and all associated activities.
-    """
-    day = db.query(ItineraryDay).filter(ItineraryDay.id == day_id, ItineraryDay.itinerary_id == itinerary_id).first()
-
+def delete_itinerary_day(
+    itinerary_id: str,
+    day_id: str,
+    db: Session = Depends(get_db),
+    x_user_id: str = Header(..., alias="X-User-Id")
+):
+    day = db.query(ItineraryDay).filter(
+        ItineraryDay.id == day_id, 
+        ItineraryDay.itinerary_id == itinerary_id
+    ).first()
     if not day:
         raise HTTPException(status_code=404, detail="Itinerary day not found")
 
-    # ✅ Delete Day & Related Activities
     db.delete(day)
     db.commit()
+
+    # Update itinerary metadata:
+    itinerary = db.query(Itinerary).filter(Itinerary.id == itinerary_id).first()
+    if itinerary:
+        itinerary.updated_at = datetime.utcnow()
+        itinerary.last_updated_by = x_user_id
+        db.commit()
 
     return {"message": "Itinerary day deleted successfully"}
 
 @itinerary_router.put("/{itinerary_id}", status_code=200)
-def update_itinerary(itinerary_id: str, updated_itinerary: itinerary_schema.ItinerarySchema, db: Session = Depends(get_db)):
+def update_itinerary(
+    itinerary_id: str,
+    updated_itinerary: itinerary_schema.ItinerarySchema,
+    db: Session = Depends(get_db),
+    x_user_id: str = Header(..., alias="X-User-Id")  # Read user ID from header
+):
     """
     ✅ Updates an existing itinerary with new details.
     """
     try:
-        itinerary_uuid = UUID(itinerary_id)  # ✅ Convert to UUID explicitly
+        itinerary_uuid = UUID(itinerary_id)  # Convert to UUID explicitly
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid itinerary ID format")
 
     itinerary = db.query(Itinerary).filter(Itinerary.id == itinerary_uuid).first()
-
     if not itinerary:
         raise HTTPException(status_code=404, detail="Itinerary not found")
 
-    # ✅ Ensure `id` in the body matches `itinerary_id`
+    # Ensure `id` in the body matches `itinerary_id`
     if updated_itinerary.id and str(updated_itinerary.id) != str(itinerary_id):
         raise HTTPException(status_code=400, detail="ID in request body must match the URL parameter")
 
-    # ✅ Update itinerary details
+    # Update itinerary details
     itinerary.name = updated_itinerary.name
     itinerary.destination = updated_itinerary.destination
     itinerary.start_date = updated_itinerary.start_date
     itinerary.end_date = updated_itinerary.end_date
     itinerary.budget = updated_itinerary.budget
     itinerary.updated_at = datetime.utcnow()
+    itinerary.last_updated_by = x_user_id  # Set the last updated by field
 
     db.commit()
     db.refresh(itinerary)
@@ -334,14 +368,13 @@ def update_itinerary_day(
     itinerary_id: uuid.UUID,
     day_id: uuid.UUID,
     updated_day: itinerary_schema.ItineraryDayUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    x_user_id: str = Header(..., alias="X-User-Id")
 ):
-    # Validate the itinerary exists
     itinerary = db.query(Itinerary).filter(Itinerary.id == itinerary_id).first()
     if not itinerary:
         raise HTTPException(status_code=404, detail="Itinerary not found")
     
-    # Validate the day exists in the itinerary
     day = db.query(ItineraryDay).filter(
         ItineraryDay.id == day_id, 
         ItineraryDay.itinerary_id == itinerary_id
@@ -349,13 +382,16 @@ def update_itinerary_day(
     if not day:
         raise HTTPException(status_code=404, detail="Itinerary day not found")
     
-    # Update the day fields from the request payload
     day.title = updated_day.title
-    day.date = updated_day.date  # Ensure that the date is in the proper format (ISO 8601 is preferred)
-    # You can add more fields here if needed (e.g. order_index)
-    
+    day.date = updated_day.date
     db.commit()
     db.refresh(day)
+
+    # Update itinerary metadata:
+    itinerary.updated_at = datetime.utcnow()
+    itinerary.last_updated_by = x_user_id
+    db.commit()
+
     return day
 
 @itinerary_router.delete(
@@ -367,7 +403,8 @@ def delete_activity(
     itinerary_id: str,
     day_id: str,
     activity_id: str,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    x_user_id: str = Header(..., alias="X-User-Id")
 ):
     activity = db.query(Activity).filter(
         Activity.id == activity_id,
@@ -379,6 +416,14 @@ def delete_activity(
 
     db.delete(activity)
     db.commit()
+
+    # Update itinerary metadata:
+    itinerary = db.query(Itinerary).filter(Itinerary.id == itinerary_id).first()
+    if itinerary:
+        itinerary.updated_at = datetime.utcnow()
+        itinerary.last_updated_by = x_user_id
+        db.commit()
+
     return {"detail": "Activity deleted successfully."}
 
 
@@ -391,8 +436,12 @@ def update_activity(
     day_id: str,
     activity_id: str,
     activity_update: itinerary_schema.ActivityUpdateSchema,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    x_user_id: str = Header(..., alias="X-User-Id")
 ):
+    print(f"🔍 Incoming Update Request - Activity ID: {activity_id}, Payload: {activity_update}")
+    print(f"🔍 X-User-Id: {x_user_id}")
+
     activity = db.query(Activity).filter(
         Activity.id == activity_id,
         Activity.itinerary_day_id == day_id
@@ -407,4 +456,21 @@ def update_activity(
 
     db.commit()
     db.refresh(activity)
-    return activity
+
+    itinerary = db.query(Itinerary).filter(Itinerary.id == itinerary_id).first()
+    if itinerary:
+        itinerary.updated_at = datetime.utcnow()
+        itinerary.last_updated_by = x_user_id
+        db.commit()
+
+    return {
+    "id": str(activity.id),  # ✅ Convert UUID to string
+    "itinerary_day_id": str(activity.itinerary_day_id),  # ✅ Convert UUID to string
+    "name": activity.name,
+    "time": activity.time,
+    "location": activity.location,
+    "notes": activity.notes,
+    "estimated_cost": activity.estimated_cost,
+    "extra_data": activity.extra_data,
+    "created_at": activity.created_at,
+    }

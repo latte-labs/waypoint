@@ -9,6 +9,7 @@ import API_BASE_URL from '../../../config';
 import { database } from '../../../firebase';
 import SafeAreaWrapper from '../SafeAreaWrapper';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
+import UserNameDisplay from '../../UserNameDisplay';
 
 const ItineraryListScreen = () => {
     const navigation = useNavigation();
@@ -200,7 +201,7 @@ const ItineraryListScreen = () => {
               </Text>
               {item.updated_at && (
                 <Text style={styles.lastUpdated}>
-                Last Updated: {getTimeAgo(item.updated_at || item.created_at)}
+                    Last Updated: {getTimeAgo(item.updated_at || item.created_at)} by <UserNameDisplay userId={item.last_updated_by} />
                 </Text>
               )}
             </>

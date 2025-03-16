@@ -9,6 +9,7 @@ import SafeAreaWrapper from '../SafeAreaWrapper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 
@@ -30,7 +31,9 @@ const ItineraryDayScreen = () => {
     });
     const [cardHeight, setCardHeight] = useState(0);
     const [isEditing, setIsEditing] = useState(false);
-    const [editingActivity, setEditingActivity] = useState(null);
+    const [editingActivity, setEditingActivity] = useState(null);    
+    const [user, setUser] = useState(route.params?.user || null);
+
     
     const sortActivitiesByTime = (activities) => {
         return activities.sort((a, b) => {
@@ -50,25 +53,48 @@ const ItineraryDayScreen = () => {
             return parseTime(a.time) - parseTime(b.time);
         });
     };
+    useEffect(() => {
+        if (!user) {
+          const loadUser = async () => {
+            try {
+              const storedUser = await AsyncStorage.getItem('user');
+              if (storedUser) {
+                setUser(JSON.parse(storedUser));
+              }
+            } catch (error) {
+              console.error("❌ Error retrieving user:", error);
+            }
+          };
+          loadUser();
+        }
+      }, [user]);
+            
 
     // ✅ Fetch Activities from PostgreSQL
     useEffect(() => {
         const fetchActivities = async () => {
-            try {
-                const response = await axios.get(`${API_BASE_URL}/itineraries/${itineraryId}/days/${dayId}`);
-                if (response.status === 200) {
-                    setActivities(sortActivitiesByTime(response.data.activities)); // ✅ Sort activities
-                }
-            } catch (error) {
-                console.error("❌ Error fetching activities:", error);
-            } finally {
-                setLoading(false);
+          try {
+            // Only add header if user is defined
+            const config = user
+              ? { headers: { "X-User-Id": user.id } }
+              : {};
+            const response = await axios.get(
+              `${API_BASE_URL}/itineraries/${itineraryId}/days/${dayId}`,
+              config
+            );
+            if (response.status === 200) {
+              setActivities(sortActivitiesByTime(response.data.activities));
             }
+          } catch (error) {
+            console.error("❌ Error fetching activities:", error.response?.data || error.message);
+          } finally {
+            setLoading(false);
+          }
         };
-
+      
         fetchActivities();
-    }, [itineraryId, dayId]);
-    
+    }, [itineraryId, dayId, user]);
+          
     // ✅ Function to Handle Time Selection
     const handleTimeChange = (event, selected) => {
         if (selected) {
@@ -87,8 +113,14 @@ const ItineraryDayScreen = () => {
               style: "destructive",
               onPress: async () => {
                 try {
+                  const config = {
+                    headers: {
+                      "X-User-Id": user.id,  // Pass the user ID from AsyncStorage
+                    },
+                  };
                   const response = await axios.delete(
-                    `${API_BASE_URL}/itineraries/${itineraryId}/days/${dayId}/activities/${activityId}`
+                    `${API_BASE_URL}/itineraries/${itineraryId}/days/${dayId}/activities/${activityId}`,
+                    config
                   );
                   if (response.status === 200) {
                     // Remove the deleted activity from state
@@ -103,7 +135,7 @@ const ItineraryDayScreen = () => {
           ]
         );
     };
-      
+            
     // ✅ Function to Render Swipeable Actions
     const renderRightActions = (activity) => (
         <TouchableOpacity 
@@ -160,8 +192,8 @@ const ItineraryDayScreen = () => {
       
         // Convert estimated_cost to a number
         const cost = newActivity.estimated_cost !== "" ? parseFloat(newActivity.estimated_cost) : 0.0;
-        const activityPayload = {
-          itinerary_day_id: dayId,
+        
+        const basePayload = {
           time: newActivity.time,
           name: newActivity.name,
           location: newActivity.location || "",
@@ -169,16 +201,24 @@ const ItineraryDayScreen = () => {
           estimated_cost: cost,
         };
       
-        console.log("📤 Sending activity data:", JSON.stringify(activityPayload, null, 2));
+        console.log("📤 Sending activity data:", JSON.stringify(basePayload, null, 2));
+      
+        const config = {
+          headers: {
+            "Content-Type": "application/json",
+            "X-User-Id": user ? user.id : "",  // ✅ Ensure user ID is always sent
+          },
+        };
       
         if (isEditing && editingActivity) {
-          // Update existing activity
+          // ✅ UPDATE ACTIVITY REQUEST
           try {
             const response = await axios.put(
               `${API_BASE_URL}/itineraries/${itineraryId}/days/${dayId}/activities/${editingActivity.id}`,
-              activityPayload,
-              { headers: { "Content-Type": "application/json" } }
+              basePayload,
+              config
             );
+            console.log("✅ Update response:", response.data);
             if (response.status === 200) {
               setActivities((prev) =>
                 prev.map((act) => (act.id === editingActivity.id ? response.data : act))
@@ -195,13 +235,18 @@ const ItineraryDayScreen = () => {
             setNewActivity({ time: '', name: '', location: '', notes: '', estimated_cost: '' });
           }
         } else {
-          // Create new activity
+          // ✅ CREATE NEW ACTIVITY
           try {
+            const createPayload = {
+              ...basePayload,
+              itinerary_day_id: dayId,
+            };
             const response = await axios.post(
               `${API_BASE_URL}/itineraries/${itineraryId}/days/${dayId}/activities/`,
-              activityPayload,
-              { headers: { "Content-Type": "application/json" } }
+              createPayload,
+              config
             );
+            console.log("✅ Create response:", response.data);
             if (response.status === 200) {
               const updatedActivities = sortActivitiesByTime([...activities, response.data]);
               setActivities(updatedActivities);
@@ -214,10 +259,10 @@ const ItineraryDayScreen = () => {
           }
         }
     };
+                      
                 
     const handleEditActivity = (activity) => {
-        setEditingActivity(activity);
-        // Pre-fill the newActivity state with the activity's details
+        setEditingActivity(activity); // ✅ Ensure activity ID is set
         setNewActivity({
           time: activity.time,
           name: activity.name,
@@ -228,7 +273,7 @@ const ItineraryDayScreen = () => {
         setIsEditing(true);
         setModalVisible(true);
     };
-                
+                    
     const renderLeftActions = (activity) => (
         <TouchableOpacity 
           style={[styles.editActivityButton, { height: cardHeight }]} 

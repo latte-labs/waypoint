@@ -91,47 +91,56 @@ const ItineraryFormScreen = () => {
     // ✅ Handle Form Submission (Create or Edit)
     const handleSubmit = async () => {
         if (!name || !destination || !startDate || !endDate) {
-            Alert.alert("Missing Fields", "Please fill in all required fields.");
-            return;
+          Alert.alert("Missing Fields", "Please fill in all required fields.");
+          return;
         }
-    
+      
         setLoading(true);
         try {
-            const requestData = {
-                id: itineraryId, // ✅ Ensure `id` is included
-                name,
-                destination,
-                start_date: new Date(startDate).toISOString(), // ✅ Ensure correct format
-                end_date: new Date(endDate).toISOString(), // ✅ Ensure correct format
-                created_by: userId, // ✅ Ensure `created_by` is included
-                budget: budget ? parseFloat(budget) : 0, // ✅ Ensure budget is always present
-            };
-    
-            let response;
-            if (itineraryId) {
-                // ✅ Edit Existing Itinerary (PUT request)
-                response = await axios.put(`${API_BASE_URL}/itineraries/${itineraryId}`, requestData);
-            } else {
-                // ✅ Create New Itinerary (POST request)
-                response = await axios.post(`${API_BASE_URL}/itineraries/`, requestData);
-            }
-    
-            if (response.status === 200) {
-                const newItineraryId = response.data.itinerary_id || response.data.id;
-                Alert.alert("Success", itineraryId ? "Itinerary updated successfully!" : "Itinerary created successfully!");
-    
-                // ✅ Navigate to ItineraryDetailScreen
-                navigation.replace('ItineraryDetail', { itineraryId: newItineraryId });
-            }
+          const requestData = {
+            id: itineraryId, // Ensure `id` is included
+            name,
+            destination,
+            start_date: new Date(startDate).toISOString(), // Ensure correct format
+            end_date: new Date(endDate).toISOString(), // Ensure correct format
+            created_by: userId, // Ensure `created_by` is included
+            budget: budget ? parseFloat(budget) : 0, // Ensure budget is always present
+            last_updated_by: userId, // NEW: Include the userId here
+          };
+      
+          let response;
+          const config = {
+            headers: {
+              "Content-Type": "application/json",
+              "X-User-Id": userId, // Also sent in the header if needed by your update endpoint
+            },
+          };
+      
+          if (itineraryId) {
+            // Edit Existing Itinerary (PUT request)
+            response = await axios.put(`${API_BASE_URL}/itineraries/${itineraryId}`, requestData, config);
+          } else {
+            // Create New Itinerary (POST request)
+            response = await axios.post(`${API_BASE_URL}/itineraries/`, requestData, config);
+          }
+      
+          if (response.status === 200) {
+            const newItineraryId = response.data.itinerary_id || response.data.id;
+            Alert.alert(
+              "Success",
+              itineraryId ? "Itinerary updated successfully!" : "Itinerary created successfully!"
+            );
+      
+            // Navigate to ItineraryDetailScreen
+            navigation.replace("ItineraryDetail", { itineraryId: newItineraryId });
+          }
         } catch (error) {
-            console.error("❌ Error saving itinerary:", error.response?.data || error.message);
-            Alert.alert("Error", "Failed to save itinerary.");
+          console.error("❌ Error saving itinerary:", error.response?.data || error.message);
+          Alert.alert("Error", "Failed to save itinerary.");
         } finally {
-            setLoading(false);
+          setLoading(false);
         }
-    };
-    
-    
+    };                    
 
     return (
         <SafeAreaWrapper>

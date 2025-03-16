@@ -186,54 +186,66 @@ const ItineraryDetailScreen = () => {
     // ✅ Handle Delete Itinerary
     const handleDelete = async () => {
         Alert.alert(
-            "Delete Itinerary",
-            "Are you sure you want to delete this itinerary? This action cannot be undone.",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Delete",
-                    style: "destructive",
-                    onPress: async () => {
-                        try {
-                            await axios.delete(`${API_BASE_URL}/itineraries/${itineraryId}`);
-                            Alert.alert("Success", "Itinerary deleted successfully!");
-                            navigation.navigate('Itinerary'); // ✅ Navigate back
-                        } catch (error) {
-                            console.error("❌ Error deleting itinerary:", error.response?.data || error.message);
-                            Alert.alert("Error", "Failed to delete itinerary.");
-                        }
-                    }
+          "Delete Itinerary",
+          "Are you sure you want to delete this itinerary? This action cannot be undone.",
+          [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Delete",
+              style: "destructive",
+              onPress: async () => {
+                try {
+                  const config = {
+                    headers: {
+                      "X-User-Id": user.id, // Pass userId from AsyncStorage
+                    },
+                  };
+                  await axios.delete(`${API_BASE_URL}/itineraries/${itineraryId}`, config);
+                  Alert.alert("Success", "Itinerary deleted successfully!");
+                  navigation.navigate("Itinerary"); // Navigate back
+                } catch (error) {
+                  console.error(
+                    "❌ Error deleting itinerary:",
+                    error.response?.data || error.message
+                  );
+                  Alert.alert("Error", "Failed to delete itinerary.");
                 }
-            ]
+              },
+            },
+          ]
         );
     };
-
+      
     // ✅ Handle Delete Itinerary Day
     const handleDeleteDay = async (dayId) => {
         Alert.alert(
-            "Delete Day",
-            "Are you sure you want to delete this day? All activities will be removed.",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Delete",
-                    style: "destructive",
-                    onPress: async () => {
-                        try {
-                            await axios.delete(`${API_BASE_URL}/itineraries/${itineraryId}/days/${dayId}`);
-                            Alert.alert("Success", "Day deleted successfully!");
-
-                            // ✅ Refresh the itinerary days list
-                            fetchItineraryDetails();
-                        } catch (error) {
-                            console.error("❌ Error deleting day:", error.response?.data || error.message);
-                            Alert.alert("Error", "Failed to delete itinerary day.");
-                        }
-                    }
+          "Delete Day",
+          "Are you sure you want to delete this day? All activities will be removed.",
+          [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Delete",
+              style: "destructive",
+              onPress: async () => {
+                try {
+                  const config = {
+                    headers: {
+                      "X-User-Id": user.id,  // Pass the user ID from AsyncStorage
+                    },
+                  };
+                  await axios.delete(`${API_BASE_URL}/itineraries/${itineraryId}/days/${dayId}`, config);
+                  Alert.alert("Success", "Day deleted successfully!");
+                  fetchItineraryDetails();
+                } catch (error) {
+                  console.error("❌ Error deleting day:", error.response?.data || error.message);
+                  Alert.alert("Error", "Failed to delete itinerary day.");
                 }
-            ]
+              },
+            },
+          ]
         );
     };
+
     const parseLocalDate = (dateString) => {
         const [year, month, day] = dateString.split('-').map(Number);
         // The month is 0-indexed in the Date constructor
@@ -259,6 +271,11 @@ const ItineraryDetailScreen = () => {
             date: localDate.toISOString(), // Converts the local date to ISO string
             title: dayTitle,
             itinerary_id: itineraryId,
+          },{
+            headers: {
+                "X-User-Id": user.id, // from AsyncStorage
+                "Content-Type": "application/json",
+              },          
           });
       
           if (response.status === 200) {
@@ -267,7 +284,7 @@ const ItineraryDetailScreen = () => {
       
             setModalVisible(false);
             fetchItineraryDetails();
-            navigation.navigate('ItineraryDay', { itineraryId, dayId: newDayId });
+            navigation.navigate('ItineraryDay', { itineraryId, dayId: newDayId, user });
           }
         } catch (error) {
           console.error("❌ Error adding day:", error.response?.data || error.message);
@@ -320,11 +337,26 @@ const ItineraryDetailScreen = () => {
             return new Date(year, month - 1, day);
           };
           const localDate = parseLocalDate(selectedDate);
-          const response = await axios.put(`${API_BASE_URL}/itineraries/${itineraryId}/days/${editingDayId}`, {
+          
+          const requestData = {
             date: localDate.toISOString(),
             title: dayTitle,
             itinerary_id: itineraryId,
-          });
+          };
+      
+          const config = {
+            headers: {
+              "Content-Type": "application/json",
+              "X-User-Id": user.id, // Pass the user ID from AsyncStorage
+            },
+          };
+      
+          const response = await axios.put(
+            `${API_BASE_URL}/itineraries/${itineraryId}/days/${editingDayId}`,
+            requestData,
+            config
+          );
+          
           if (response.status === 200) {
             Alert.alert("Success", "Day updated successfully!");
             setModalVisible(false);
@@ -336,7 +368,7 @@ const ItineraryDetailScreen = () => {
           Alert.alert("Error", "Failed to update itinerary day.");
         }
     };
-    
+          
     
     // ✅ Render Each Day with Swipe-to-Delete & Drag Support
     const renderItem = ({ item, drag }) => (
