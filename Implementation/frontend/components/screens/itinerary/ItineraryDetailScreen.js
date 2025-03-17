@@ -363,11 +363,27 @@ const ItineraryDetailScreen = () => {
         <ActivityIndicator size="large" color="#007bff" />
       ) : (
         <>
-          <View style={styles.overviewCard}>
+          <View style={styles.overviewHeader}>
             <Text style={styles.overviewTitle}>{itinerary?.name}</Text>
+            <TouchableOpacity 
+              style={styles.uploadIconContainer}
+              onPress={() => Alert.alert("Picture Upload", "Picture Upload feature coming soon")}
+            >
+              <Icon name="camera" size={20} color="#007bff" />
+            </TouchableOpacity>
             <Text style={styles.overviewSubtitle}>{itinerary?.destination}</Text>
             <Text style={styles.overviewDates}>
-              {new Date(itinerary.start_date).toLocaleDateString()} - {new Date(itinerary.end_date).toLocaleDateString()}
+            {new Date(itinerary.start_date).toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            })} - {new Date(itinerary.end_date).toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            })}
             </Text>
           </View>
           <View style={styles.overviewCollaborators}>
@@ -389,7 +405,7 @@ const ItineraryDetailScreen = () => {
       )}
     </View>
   );
-    
+        
   // Days route using DraggableFlatList and the memoized DayCard component
   const DaysRoute = () => (
     <View style={{ flex: 1, padding: 10 }}>
@@ -786,15 +802,18 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#fff',
   },
-  overviewCard: {
-    backgroundColor: '#f1f9ff',
-    borderRadius: 10,
-    padding: 20,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+  overviewHeader: {
+    position: 'relative',
     marginBottom: 20,
+    backgroundColor: 'yellow',
+    borderRadius: 12,
+    padding: 12
+  },
+  uploadIconContainer: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    padding: 10,
   },
   overviewTitle: {
     fontSize: 24,
