@@ -57,9 +57,6 @@ pod 'FirebaseAppCheckInterop', :modular_headers => true
 pod 'FirebaseCore', :modular_headers => true
 pod 'leveldb-library', :modular_headers => true
 pod 'FirebaseDatabase', :modular_headers => true
-pod 'FirebaseStorage', :modular_headers => true
-pod 'FirebaseCoreExtension', :modular_headers => true
-pod 'FirebaseAuthInterop', :modular_headers => true
 
 
 # ✅ Google Maps SDK (Latest Version)
