@@ -1,8 +1,12 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.config.config import settings
 from app.db.db import SessionLocal
 from sqlalchemy.sql import text  # ✅ Import `text`
+import os
+import boto3
+from dotenv import load_dotenv
+import uvicorn
 
 from app.routes import (
     user_routes, 
@@ -17,6 +21,24 @@ from app.routes import (
 )   
 
 app = FastAPI()
+
+load_dotenv()
+
+
+# AWS Credentials
+AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY")
+AWS_SECRET_KEY = os.getenv("AWS_SECRET_KEY")
+AWS_BUCKET_NAME = os.getenv("AWS_BUCKET_NAME")
+AWS_REGION = os.getenv("AWS_REGION")
+
+# Initialize S3 Client
+s3_client = boto3.client(
+    "s3",
+    aws_access_key_id=AWS_ACCESS_KEY,
+    aws_secret_access_key=AWS_SECRET_KEY,
+    region_name=AWS_REGION,
+)
+
 
 # ✅ Include routers
 app.include_router(user_routes.user_router, prefix="/users", tags=["Users"])
@@ -55,10 +77,24 @@ def test_db(db: Session = Depends(get_db)):
     except Exception as e:
         return {"error": str(e)}
 
-import os
-import uvicorn
+
 
 # ✅ Ensure Uvicorn runs with Heroku's $PORT
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))  # Default to 8000 if PORT is not set
     uvicorn.run(app, host="0.0.0.0", port=port)
+
+@app.get("/generate-presigned-url/")
+def generate_presigned_url(filename: str):
+    """
+    Generates a pre-signed URL for secure file uploads to AWS S3.
+    """
+    try:
+        presigned_url = s3_client.generate_presigned_url(
+            "put_object",
+            Params={"Bucket": AWS_BUCKET_NAME, "Key": filename, "ContentType": "image/jpeg"},
+            ExpiresIn=3600,  # URL expires in 1 hour
+        )
+        return {"url": presigned_url}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating pre-signed URL: {str(e)}")
