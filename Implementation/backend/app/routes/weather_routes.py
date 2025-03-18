@@ -16,7 +16,7 @@ class WeatherRequest(BaseModel):
 def get_weather(latitude: float, longitude: float, db: Session = Depends(get_db)):
     
     weather_url = f"https://api.openweathermap.org/data/2.5/weather?lat={latitude}&lon={longitude}&appid={OPENWEATHERMAP_API_KEY}&units=metric"
-
+    
     try: 
         response = requests.get(weather_url)
         data = response.json()
@@ -28,6 +28,7 @@ def get_weather(latitude: float, longitude: float, db: Session = Depends(get_db)
             "temperature": data["main"]["temp"],
             "weather_main": data["weather"][0]["main"],
             "weather_icon": data["weather"][0]["icon"],
+            "weather_name": data["name"],
         }
 
         return {"status": "success", "data": weather_info}

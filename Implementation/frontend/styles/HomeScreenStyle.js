@@ -67,9 +67,10 @@ const HomeScreenStyles = StyleSheet.create({
         marginRight: 5,
     },
 
+    //WEATHER
     weatherBox: {
-        width: '25%',
-        height: '80%',
+        width: '80%',
+        height: '15%',
         backgroundColor: 'white',
         justifyContent: 'center',
         alignItems: 'center',
