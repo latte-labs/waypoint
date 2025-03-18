@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import { View, Text, TouchableOpacity, Button} from 'react-native';
 import { useNavigation } from "@react-navigation/native";
 import { navigationStyles } from "../../styles/NavigationStyles";
 
@@ -28,6 +28,8 @@ const MoreMenu = ({closeMenu}) => {
             <TouchableOpacity onPress={() => handleNavigate("Chatbot")} style={navigationStyles.moreMenuItem}>
                 <Text style={navigationStyles.moreMenuText}>🤖 Chatbot</Text>
             </TouchableOpacity>
+
+            <Button title="Log Out" onPress={() => navigation.replace('Login')} />
         </View>
     )
 }
