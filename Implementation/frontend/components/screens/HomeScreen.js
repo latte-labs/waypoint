@@ -197,26 +197,6 @@ function HomeScreen() {
                         </TouchableOpacity>
                     ))}
                 </ScrollView>
-
-                {/* ✅ 5. CURRENT FAVORITE DESTINATIONS (20% HEIGHT) */}
-                <Text style={HomeScreenStyles.favoriteTitle}>Current Favorite Destinations</Text>
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={true}
-                    contentContainerStyle={{ paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center' }}
-                    style={HomeScreenStyles.favoriteScrollView}
-                >
-                    {favorites.map((fav) => (
-                        <TouchableOpacity
-                            key={fav.id}
-                            onPress={handleTripClick}
-                            style={HomeScreenStyles.favoriteCard}
-                        >
-                            <Text style={HomeScreenStyles.favoritePlace}>{fav.placeName}</Text>
-                            <Text style={HomeScreenStyles.favoriteLocation}>{fav.location}</Text>
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
             </View>
         </SafeAreaWrapper>
     );

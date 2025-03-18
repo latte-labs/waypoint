@@ -111,22 +111,6 @@ const HomeScreenStyles = StyleSheet.create({
         resizeMode: 'contain',
     },
 
-    // ✅ SEARCH BAR (10% HEIGHT)
-    searchContainer: {
-        height: height * 0.05,
-        justifyContent: 'center',
-        width: 350,
-    },
-
-    searchInput: {
-        width: '100%',
-        height: 40,
-        backgroundColor: '#f2f2f2',
-        borderRadius: 20,
-        borderWidth: 0.25,
-        paddingHorizontal: 20,
-    },
-
     // ✅ TITLE SECTION (5% HEIGHT)
     titleContainer: {
         height: height * 0.05,
@@ -161,39 +145,6 @@ const HomeScreenStyles = StyleSheet.create({
     },
 
     tripDate: {
-        fontSize: 12,
-        marginTop: 5,
-    },
-
-    // ✅ CURRENT FAVORITE DESTINATIONS (20% HEIGHT)
-    favoriteTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginTop: 10,
-    },
-
-    favoriteScrollView: {
-        height: height * 0.2,
-    },
-
-    favoriteCard: {
-        backgroundColor: "#D3E3FC",
-        borderRadius: 15,
-        borderWidth: 0.25,
-        padding: 15,
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: 220,
-        height: '80%',
-        marginRight: 15,
-    },
-
-    favoritePlace: {
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-
-    favoriteLocation: {
         fontSize: 12,
         marginTop: 5,
     },
