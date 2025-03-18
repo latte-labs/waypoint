@@ -117,10 +117,6 @@ function HomeScreen() {
         Alert.alert("Feature is coming soon!");
     };
 
-    const handleProfileClick = () => {
-        navigation.navigate('Events'); // temporarily used for itinerary to allow back swiping
-    };
-
     // Shows the LocationPermissions screen if not granted, once granted, proceed to homescreen.
     if (!hasLocationPermission) {
         return <LocationPermissions onLocationGranted={handleLocationGranted} />;
@@ -168,23 +164,6 @@ function HomeScreen() {
                             <Text style={HomeScreenStyles.weatherText}>Fetching weather...</Text>
                         )}
                     </View>
-
-
-
-                    {/* Right: 20% - Profile Clickable Circle */}
-                    <TouchableOpacity style={HomeScreenStyles.profileButton} onPress={handleProfileClick}>
-                        <Text style={HomeScreenStyles.profileIcon}>👤</Text>
-                    </TouchableOpacity>
-                </View>
-
-                {/* ✅ 2. SEARCH BAR */}
-                <View style={HomeScreenStyles.searchContainer}>
-                    <TextInput
-                        style={HomeScreenStyles.searchInput}
-                        placeholder="Search..."
-                        value={searchQuery}
-                        onChangeText={setSearchQuery}
-                    />
                 </View>
 
                 {/* ✅ 3. TITLE SECTION (5% HEIGHT) */}
