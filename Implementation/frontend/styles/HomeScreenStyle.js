@@ -49,8 +49,8 @@ const HomeScreenStyles = StyleSheet.create({
     },
     brandContainer: {
         flexDirection: 'row',
-        justifyContent: 'flex-start', 
-        alignItems: 'center', 
+        justifyContent: 'flex-start',
+        alignItems: 'center',
         height: '80%',
         marginRight: 10,
         paddingLeft: 0,
@@ -68,56 +68,47 @@ const HomeScreenStyles = StyleSheet.create({
     },
 
     //WEATHER
-    weatherBox: {
-        width: '80%',
-        height: '15%',
+    weatherContainer: {
         backgroundColor: 'white',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 12,
-        padding: 5,
-        borderWidth: 0.25,
-        borderColor: "grey",
-        shadowColor: "grey",
-        shadowOffset: {width: 0, height: 3},
-        shadowOpacity: 0.5,
-        shadowRadius: 2,
-        marginBottom: 10,
-    },
-
-    weatherHorizontal: {
-        flexDirection: 'row'
-    },
-
-    weatherHorizontalText: {
-        fontSize: 10,
+        borderRadius: 10,
+        padding: 10,
+        marginVertical: 10,
         alignSelf: 'center',
-        fontSize: 16,
-    },
-
-    weatherText: {
-        fontSize: 10,
-    },
-
-    weather_icon: {
-        width: 30,
-        height: 30,
-    },
-
-    profileButton: {
-        width: height * 0.08,
-        height: height * 0.08,
-        borderRadius: 50,
-        backgroundColor: '#FF6F00',
         justifyContent: 'center',
-        alignItems: 'center',
-        marginLeft: 10,
+        width: '90%',
+        height: height * 0.08, // 15% of the screen height
+        borderWidth: 0.15,
+        borderColor: 'black',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
     },
 
-    profileIcon: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: 'white',
+    weatherRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+    },
+
+    cityText: {
+        paddingLeft: 10,
+        color: 'black',
+        fontSize: 18,
+        fontWeight: 'regular',
+        marginRight: 70,
+    },
+
+    temperatureText: {
+        color: 'black',
+        fontSize: 28,
+        fontWeight: 'regular',
+    },
+
+    weatherIcon: {
+        width: 60,
+        height: 60,
+        resizeMode: 'contain',
     },
 
     // ✅ SEARCH BAR (10% HEIGHT)
