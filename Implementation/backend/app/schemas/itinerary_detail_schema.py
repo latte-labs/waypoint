@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Dict, Any, List
 from uuid import UUID
 from typing import List, Optional
 
@@ -37,6 +37,7 @@ class ItineraryDetailResponseSchema(BaseModel):
     updated_at: datetime  # new field added
     last_updated_by: UUID    # NEW FIELD
     budget: Optional[float] = None
+    extra_data: Optional[Dict[str, Any]] = None  # NEW: include extra_data field
     days: List[ItineraryDaySchema]  # ✅ Correctly nested days & activities
 
     class Config:

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, memo } from 'react';
 import { 
-  View, Text, ActivityIndicator, Alert, StyleSheet, TouchableOpacity, Modal, TextInput, Pressable 
+  View, Text, ActivityIndicator, Alert, StyleSheet, TouchableOpacity, Modal, TextInput, Pressable, Platform, Image, ImageBackground 
 } from 'react-native';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -14,13 +14,15 @@ import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import { Calendar } from 'react-native-calendars';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { database } from '../../../firebase';
+// Using react-native-image-crop-picker for image selection and cropping
+import ImagePicker from 'react-native-image-crop-picker';
+import { check, request, PERMISSIONS, RESULTS } from "react-native-permissions";
 
 const DayCard = memo(({ item, onPress, onLongPress, onEdit, renderRightActions, onLayout }) => {
   return (
     <Swipeable
       overshootLeft={false}
       overshootRight={false}
-      // We'll keep only the right swipe (delete) action now.
       renderRightActions={() => renderRightActions(item.id)}
     >
       <TouchableOpacity 
@@ -48,7 +50,6 @@ const DayCard = memo(({ item, onPress, onLongPress, onEdit, renderRightActions, 
         ) : (
           <Text style={styles.noActivities}>No activities planned.</Text>
         )}
-        {/* Dedicated edit icon overlay */}
         <TouchableOpacity 
           style={styles.editIconContainer}
           onPress={() => onEdit(item.id)}
@@ -60,11 +61,12 @@ const DayCard = memo(({ item, onPress, onLongPress, onEdit, renderRightActions, 
   );
 });
 
-
 const ItineraryDetailScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { itineraryId } = route.params;
+  const [imageUrl, setImageUrl] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const [index, setIndex] = useState(0);
   const [routes] = useState([
@@ -76,7 +78,6 @@ const ItineraryDetailScreen = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [days, setDays] = useState([]);
-  // Use a ref for dynamic day heights to avoid re-renders
   const dayHeightsRef = useRef({});
 
   // Modal and Calendar state for Add/Edit day
@@ -88,11 +89,9 @@ const ItineraryDetailScreen = () => {
   const [owner, setOwner] = useState({ name: "", email: "" });
   const [editingDayId, setEditingDayId] = useState(null);
 
-  // To View Collaborators
+  // To view collaborators
   const [collaborators, setCollaborators] = useState([]);
 
-
-  // Load user data from AsyncStorage
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -107,13 +106,69 @@ const ItineraryDetailScreen = () => {
     fetchUserData();
   }, []);
 
-  // Helper: Parse date string (YYYY-MM-DD) to Date
+  const requestPhotoLibraryPermission = async () => {
+    if (Platform.OS === "ios") {
+      const result = await check(PERMISSIONS.IOS.PHOTO_LIBRARY);
+      if (result === RESULTS.DENIED) {
+        const newResult = await request(PERMISSIONS.IOS.PHOTO_LIBRARY);
+        if (newResult !== RESULTS.GRANTED) {
+          Alert.alert("Permission Denied", "Please allow access to photos in settings.");
+          return false;
+        }
+      }
+    }
+    return true;
+  };
+
+  // Crop to 1024x768 (4:3 ratio)
+  const selectImage = async () => {
+    const hasPermission = await requestPhotoLibraryPermission();
+    if (!hasPermission) return;
+    
+    try {
+      const image = await ImagePicker.openPicker({
+        width: 1024,
+        height: 768,
+        cropping: true,
+        compressImageQuality: 0.8,
+      });
+      if (image && image.path) {
+        setSelectedImage(image.path);
+        uploadImage(image.path);
+      }
+    } catch (error) {
+      if (error.code === 'E_PICKER_CANCELLED') {
+        Alert.alert("Cancelled", "User cancelled image picker");
+      } else {
+        Alert.alert("Error", error.message || "Image picker error");
+      }
+    }
+  };
+
+  // Upload image using presigned URL (with itineraryId)
+  const uploadImage = async (imageUri) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/generate-presigned-url/?itinerary_id=${itineraryId}`);
+      const { presigned_url, image_url } = response.data;
+      const imageResponse = await fetch(imageUri);
+      const blob = await imageResponse.blob();
+      await fetch(presigned_url, {
+        method: "PUT",
+        body: blob,
+        headers: { "Content-Type": "image/jpeg" },
+      });
+      setImageUrl(image_url);
+    } catch (error) {
+      console.error("Upload failed:", error);
+      Alert.alert("Error", "Image upload failed.");
+    }
+  };
+
   const parseLocalDate = (dateString) => {
     const [year, month, day] = dateString.split('-').map(Number);
     return new Date(year, month - 1, day);
   };
 
-  // Sort activities by time
   const sortActivitiesByTime = (activities) => {
     return activities.sort((a, b) => {
       const parseTime = (time) => {
@@ -130,7 +185,6 @@ const ItineraryDetailScreen = () => {
     });
   };
 
-  // Fetch itinerary details and owner info
   const fetchItineraryDetails = async () => {
     try {
       console.log("Fetching itinerary details...");
@@ -141,9 +195,12 @@ const ItineraryDetailScreen = () => {
           activities: sortActivitiesByTime(day.activities),
         }));
         setItinerary(response.data);
-        setDays(sortedDays);
+        setDays(response.data.days);
         console.log("Days updated:", sortedDays);
-
+        // If extra_data has image_url, extract it.
+        if (response.data.extra_data && response.data.extra_data.image_url) {
+          setImageUrl(response.data.extra_data.image_url);
+        }
         const ownerResponse = await axios.get(`${API_BASE_URL}/users/${response.data.created_by}`);
         if (ownerResponse.status === 200) {
           setOwner({
@@ -167,7 +224,6 @@ const ItineraryDetailScreen = () => {
     }, [itineraryId])
   );
 
-  // Check collaborator status in Firebase
   useEffect(() => {
     if (itinerary) {
       const collaboratorRef = database().ref(`/live_itineraries/${itineraryId}/collaborators`);
@@ -175,7 +231,6 @@ const ItineraryDetailScreen = () => {
         if (snapshot.exists()) {
           const collabData = snapshot.val();
           const userIds = Object.keys(collabData);
-          // Fetch user details from /users node
           const userSnapshot = await database().ref('/users').once('value');
           const usersData = userSnapshot.val();
           const collaboratorsList = userIds.map(userId => ({
@@ -214,7 +269,6 @@ const ItineraryDetailScreen = () => {
     }
   }, [itineraryId]);
 
-  // Use a default height (80) if no measured height exists
   const renderRightActions = useCallback((dayId) => (
     <TouchableOpacity 
       style={[styles.deleteDayButton, { height: dayHeightsRef.current[dayId] || 80 }]} 
@@ -237,7 +291,6 @@ const ItineraryDetailScreen = () => {
     </TouchableOpacity>
   ), [handleEditDay]);
 
-  // When editing, load the day info and open modal with a slight delay
   const handleEditDay = useCallback((dayId) => {
     const dayToEdit = days.find(day => day.id === dayId);
     if (dayToEdit) {
@@ -251,7 +304,6 @@ const ItineraryDetailScreen = () => {
     }
   }, [days]);
 
-  // Delete a day
   const handleDeleteDay = useCallback(async (dayId) => {
     Alert.alert(
       "Delete Day",
@@ -277,7 +329,6 @@ const ItineraryDetailScreen = () => {
     );
   }, [user, itineraryId]);
 
-  // Handle adding a new day
   const handleAddDay = async () => {
     if (!dayTitle.trim()) {
       Alert.alert("Missing Field", "Please enter a title for the day.");
@@ -316,7 +367,6 @@ const ItineraryDetailScreen = () => {
     }
   };
 
-  // Handle updating an existing day
   const handleUpdateDay = async () => {
     if (!dayTitle.trim()) {
       Alert.alert("Missing Field", "Please enter a title for the day.");
@@ -356,36 +406,72 @@ const ItineraryDetailScreen = () => {
     }
   };
 
-  // Overview route with itinerary and collaborator info
+  // OverviewRoute: if an image exists, use ImageBackground with overlay and white text/icon.
   const OverviewRoute = () => (
     <View style={styles.overviewContainer}>
       {loading ? (
         <ActivityIndicator size="large" color="#007bff" />
       ) : (
         <>
-          <View style={styles.overviewHeader}>
-            <Text style={styles.overviewTitle}>{itinerary?.name}</Text>
-            <TouchableOpacity 
-              style={styles.uploadIconContainer}
-              onPress={() => Alert.alert("Picture Upload", "Picture Upload feature coming soon")}
+          {selectedImage || imageUrl ? (
+            <ImageBackground 
+              source={{ uri: selectedImage || imageUrl }} 
+              style={styles.overviewHeader} 
+              imageStyle={styles.backgroundImage}
             >
-              <Icon name="camera" size={20} color="#007bff" />
-            </TouchableOpacity>
-            <Text style={styles.overviewSubtitle}>{itinerary?.destination}</Text>
-            <Text style={styles.overviewDates}>
-            {new Date(itinerary.start_date).toLocaleDateString('en-US', {
-                weekday: 'short',
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric'
-            })} - {new Date(itinerary.end_date).toLocaleDateString('en-US', {
-                weekday: 'short',
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric'
-            })}
-            </Text>
-          </View>
+              <View style={styles.overlay} />
+              <TouchableOpacity 
+                style={styles.cameraButton} 
+                onPress={selectImage}
+                activeOpacity={0.7}
+              >
+                <Icon name="camera" size={24} color="#fff" />
+              </TouchableOpacity>
+              <View style={styles.headerContent}>
+                <Text style={[styles.overviewTitle, { color: '#fff' }]}>{itinerary?.name}</Text>
+                <Text style={[styles.overviewSubtitle, { color: '#fff' }]}>{itinerary?.destination}</Text>
+                <Text style={[styles.overviewDates, { color: '#fff' }]}>
+                  {new Date(itinerary.start_date).toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })} - {new Date(itinerary.end_date).toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
+                </Text>
+              </View>
+            </ImageBackground>
+          ) : (
+            <View style={styles.overviewHeader}>
+              {/* Fallback content when no image exists */}
+              <TouchableOpacity 
+                style={styles.cameraButton} 
+                onPress={selectImage}
+                activeOpacity={0.7}
+              >
+                <Icon name="camera" size={24} color="#007bff" />
+              </TouchableOpacity>
+              <Text style={styles.overviewTitle}>{itinerary?.name}</Text>
+              <Text style={styles.overviewSubtitle}>{itinerary?.destination}</Text>
+              <Text style={styles.overviewDates}>
+                {new Date(itinerary.start_date).toLocaleDateString('en-US', {
+                  weekday: 'short',
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric'
+                })} - {new Date(itinerary.end_date).toLocaleDateString('en-US', {
+                  weekday: 'short',
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric'
+                })}
+              </Text>
+            </View>
+          )}
           <View style={styles.overviewCollaborators}>
             <Text style={styles.overviewSectionTitle}>Collaborators</Text>
             {collaborators.length > 0 ? (
@@ -406,7 +492,6 @@ const ItineraryDetailScreen = () => {
     </View>
   );
         
-  // Days route using DraggableFlatList and the memoized DayCard component
   const DaysRoute = () => (
     <View style={{ flex: 1, padding: 10 }}>
       {days.length === 0 ? (
@@ -466,7 +551,6 @@ const ItineraryDetailScreen = () => {
     days: DaysRoute,
   });
 
-  // Handle deleting the entire itinerary
   const handleDelete = async () => {
     Alert.alert(
       "Delete Itinerary",
@@ -492,7 +576,6 @@ const ItineraryDetailScreen = () => {
     );
   };
 
-  // Handle removing yourself as a collaborator
   const handleRemoveMyself = async () => {
     Alert.alert(
       "Leave Itinerary",
@@ -546,57 +629,61 @@ const ItineraryDetailScreen = () => {
           )}
         />
 
-        {/* Modal for Adding/Editing a Day */}
-        <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={() => {
-          setModalVisible(false);
-          setEditingDayId(null);
-        }}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>{editingDayId ? 'Edit Day' : 'Add a New Day'}</Text>
-              <TextInput
-                placeholder="Enter day title"
-                style={styles.input}
-                value={dayTitle}
-                onChangeText={setDayTitle}
-              />
-              <TouchableOpacity style={styles.datePicker} onPress={() => setShowDatePicker(true)}>
-                <Text style={styles.dateText}>
-                  {selectedDate ? parseLocalDate(selectedDate).toDateString() : "Select Date"}
-                </Text>
-              </TouchableOpacity>
-              {showDatePicker && (
-                <View style={styles.calendarContainer}>
-                  <Calendar
-                    onDayPress={(day) => {
-                      setSelectedDate(day.dateString);
-                      setShowDatePicker(false);
-                    }}
-                    markedDates={{
-                      [selectedDate]: { selected: true, selectedColor: '#007bff' },
-                    }}
-                    theme={{
-                      selectedDayBackgroundColor: '#007bff',
-                      todayTextColor: '#F82E08',
-                      arrowColor: '#007bff',
-                    }}
-                  />
-                </View>
-              )}
-              <Pressable style={styles.modalButton} onPress={editingDayId ? handleUpdateDay : handleAddDay}>
-                <Text style={styles.modalButtonText}>{editingDayId ? "Update Day" : "Add Day"}</Text>
-              </Pressable>
-              <Pressable style={[styles.modalButton, { backgroundColor: 'gray' }]} onPress={() => {
-                setModalVisible(false);
-                setEditingDayId(null);
-              }}>
-                <Text style={styles.modalButtonText}>Cancel</Text>
-              </Pressable>
+        {modalVisible && (
+          <Modal
+            transparent
+            animationType="slide"
+            onRequestClose={() => {
+              setModalVisible(false);
+              setEditingDayId(null);
+            }}
+          >
+            <View style={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>{editingDayId ? 'Edit Day' : 'Add a New Day'}</Text>
+                <TextInput
+                  placeholder="Enter day title"
+                  style={styles.input}
+                  value={dayTitle}
+                  onChangeText={setDayTitle}
+                />
+                <TouchableOpacity style={styles.datePicker} onPress={() => setShowDatePicker(true)}>
+                  <Text style={styles.dateText}>
+                    {selectedDate ? parseLocalDate(selectedDate).toDateString() : "Select Date"}
+                  </Text>
+                </TouchableOpacity>
+                {showDatePicker && (
+                  <View style={styles.calendarContainer}>
+                    <Calendar
+                      onDayPress={(day) => {
+                        setSelectedDate(day.dateString);
+                        setShowDatePicker(false);
+                      }}
+                      markedDates={{
+                        [selectedDate]: { selected: true, selectedColor: '#007bff' },
+                      }}
+                      theme={{
+                        selectedDayBackgroundColor: '#007bff',
+                        todayTextColor: '#F82E08',
+                        arrowColor: '#007bff',
+                      }}
+                    />
+                  </View>
+                )}
+                <Pressable style={styles.modalButton} onPress={editingDayId ? handleUpdateDay : handleAddDay}>
+                  <Text style={styles.modalButtonText}>{editingDayId ? "Update Day" : "Add Day"}</Text>
+                </Pressable>
+                <Pressable style={[styles.modalButton, { backgroundColor: 'gray' }]} onPress={() => {
+                  setModalVisible(false);
+                  setEditingDayId(null);
+                }}>
+                  <Text style={styles.modalButtonText}>Cancel</Text>
+                </Pressable>
+              </View>
             </View>
-          </View>
-        </Modal>
+          </Modal>
+        )}
 
-        {/* Fixed Bottom Buttons */}
         <View style={styles.buttonContainer}>
           {user?.id === itinerary?.created_by && (
             <TouchableOpacity 
@@ -624,6 +711,7 @@ const ItineraryDetailScreen = () => {
             )
           )}
         </View>
+        
       </SafeAreaWrapper>
     </GestureHandlerRootView>
   );
@@ -795,19 +883,37 @@ const styles = StyleSheet.create({
     backgroundColor: 'green',
     borderRadius: 12,
     padding: 4,
-    zIndex: 1, // make sure it sits above other content
+    zIndex: 1,
   },
   overviewContainer: {
     flex: 1,
     padding: 20,
     backgroundColor: '#fff',
   },
+  // Fixed header size for a nice background look
   overviewHeader: {
     position: 'relative',
-    marginBottom: 20,
-    backgroundColor: 'yellow',
+    height: 250,
     borderRadius: 12,
-    padding: 12
+    padding: 12,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  backgroundImage: {
+    resizeMode: 'cover',
+  },
+  // Transparent black overlay
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  },
+  // Header content container to ensure text/icon is above overlay
+  headerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 2,
   },
   uploadIconContainer: {
     position: 'absolute',
@@ -868,6 +974,22 @@ const styles = StyleSheet.create({
     color: '#888',
     fontStyle: 'italic',
     textAlign: 'center',
+  },
+  cameraButton: { 
+    position: 'absolute', 
+    top: 10, 
+    right: 10, 
+    padding: 10,
+    zIndex: 3 
+  },
+  imagePreview: { width: 200, height: 200, borderRadius: 10, marginBottom: 15 },
+  placeholderImage: {
+    width: 200, 
+    height: 200, 
+    backgroundColor: '#ddd', 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    borderRadius: 10
   },
 });
 

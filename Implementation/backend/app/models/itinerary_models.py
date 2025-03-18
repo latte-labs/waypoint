@@ -3,6 +3,8 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
+from sqlalchemy.ext.mutable import MutableDict
+
 
 from app.db.base import Base  # ✅ Import Base from base.py (Fix Circular Import)
 
@@ -70,7 +72,7 @@ class Activity(Base):
     location = Column(String, nullable=True)
     notes = Column(String, nullable=True)
     estimated_cost = Column(Float, nullable=True)
-    extra_data = Column(JSON, nullable=True)  # ✅ Allow storing structured extra data
+    extra_data = Column(MutableDict.as_mutable(JSON), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     day = relationship("ItineraryDay", back_populates="activities")

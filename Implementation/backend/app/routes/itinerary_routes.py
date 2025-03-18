@@ -9,6 +9,14 @@ import uuid
 from sqlalchemy.sql import func
 from datetime import datetime
 from uuid import UUID
+from urllib.parse import urlparse
+from app.aws.s3_client import s3_client, AWS_BUCKET_NAME
+
+
+def extract_key(url: str) -> str:
+    parsed = urlparse(url)
+    return parsed.path.lstrip('/')
+
 
 itinerary_router = APIRouter()
 
@@ -39,8 +47,22 @@ def get_itinerary(itinerary_id: str, db: Session = Depends(get_db)):
     if not itinerary:
         raise HTTPException(status_code=404, detail="Itinerary not found")
 
-    # ✅ Fetch days ordered by `order_index`
-    itinerary_days = db.query(ItineraryDay).filter(ItineraryDay.itinerary_id == itinerary_id).order_by(ItineraryDay.order_index).all()
+    itinerary_days = (
+        db.query(ItineraryDay)
+        .filter(ItineraryDay.itinerary_id == itinerary_id)
+        .order_by(ItineraryDay.order_index)
+        .all()
+    )
+
+    extra_data = itinerary.extra_data or {}
+    if "image_url" in extra_data:
+        key = extract_key(extra_data["image_url"])
+        presigned_get_url = s3_client.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": AWS_BUCKET_NAME, "Key": key},
+            ExpiresIn=3600,  # URL valid for 1 hour
+        )
+        extra_data["image_url"] = presigned_get_url
 
     return ItineraryDetailResponseSchema(
         id=itinerary.id,
@@ -50,8 +72,9 @@ def get_itinerary(itinerary_id: str, db: Session = Depends(get_db)):
         end_date=itinerary.end_date,
         created_by=itinerary.created_by,
         updated_at=itinerary.updated_at,
-        last_updated_by=itinerary.last_updated_by,  # NEW: pass this field
+        last_updated_by=itinerary.last_updated_by,
         budget=itinerary.budget,
+        extra_data=extra_data,
         days=[
             {
                 "id": day.id,
@@ -62,15 +85,16 @@ def get_itinerary(itinerary_id: str, db: Session = Depends(get_db)):
                         "id": activity.id,
                         "time": activity.time,
                         "name": activity.name,
-                        "location": activity.location
+                        "location": activity.location,
                     }
-                    for activity in db.query(Activity).filter(Activity.itinerary_day_id == day.id).all()
-                ]
+                    for activity in db.query(Activity)
+                        .filter(Activity.itinerary_day_id == day.id)
+                        .all()
+                ],
             }
             for day in itinerary_days
-        ]
+        ],
     )
-
 
 
 

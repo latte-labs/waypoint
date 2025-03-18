@@ -7,6 +7,8 @@ import os
 import boto3
 from dotenv import load_dotenv
 import uvicorn
+from app.models.itinerary_models import Itinerary
+import uuid
 
 from app.routes import (
     user_routes, 
@@ -85,16 +87,37 @@ if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=port)
 
 @app.get("/generate-presigned-url/")
-def generate_presigned_url(filename: str):
+def generate_presigned_url(itinerary_id: str, db: Session = Depends(get_db)):
     """
     Generates a pre-signed URL for secure file uploads to AWS S3.
+    Stores the uploaded image URL in the extra_data field of the itinerary.
     """
     try:
+        # Check if itinerary exists
+        itinerary = db.query(Itinerary).filter(Itinerary.id == itinerary_id).first()
+        if not itinerary:
+            raise HTTPException(status_code=404, detail="Itinerary not found")
+
+        # Generate a unique filename
+        file_name = f"itineraries/{itinerary_id}_{uuid.uuid4().hex}.jpg"
+
+        # Generate Pre-Signed URL
         presigned_url = s3_client.generate_presigned_url(
             "put_object",
-            Params={"Bucket": AWS_BUCKET_NAME, "Key": filename, "ContentType": "image/jpeg"},
+            Params={"Bucket": AWS_BUCKET_NAME, "Key": file_name, "ContentType": "image/jpeg"},
             ExpiresIn=3600,  # URL expires in 1 hour
         )
-        return {"url": presigned_url}
+
+        # Build the image URL (public URL or the base URL from S3)
+        image_url = f"https://{AWS_BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com/{file_name}"
+
+        # Update the itinerary's extra_data with the new image URL
+        extra_data = itinerary.extra_data or {}
+        extra_data = {**extra_data, "image_url": image_url}
+        itinerary.extra_data = extra_data
+        db.commit()
+
+        return {"presigned_url": presigned_url, "image_url": image_url}
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating pre-signed URL: {str(e)}")
