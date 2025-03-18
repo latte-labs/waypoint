@@ -5,6 +5,7 @@ import styles from "../../styles/ChatbotScreenStyles";
 import API_BASE_URL from "../../config";  // backend API
 import SafeAreaWrapper from "./SafeAreaWrapper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import MarkdownDisplay from "react-native-markdown-display";
 
 const ChatbotScreen = () => {
   const [user, setUser] = useState(null);
@@ -155,7 +156,9 @@ const ChatbotScreen = () => {
                 {item.role === "user" && (
                   <>
                     <View style={item.role === "user" ? styles.userMessage : styles.botMessage}>
-                      <Text style={styles.messageText}>{item.content}</Text>
+                      <Text style={[styles.messageText, item.role === "user" ? { color: "#fff" } : { color: "#000" }]}>
+                        {item.content === "..." ? typingDots : item.content}
+                      </Text>
                     </View>
                     <Image source={require("../../assets/images/woman.png")} style={styles.userAvatar} />
                   </>
@@ -164,7 +167,7 @@ const ChatbotScreen = () => {
                 {/* Bot Message */}
                 {item.role === "assistant" && (
                   <View style={styles.botMessage}>
-                    <Text style={styles.messageText}>{item.content === "..." ? typingDots : item.content}</Text>
+                    <MarkdownDisplay style={styles.messageText}>{item.content === "..." ? typingDots : item.content}</MarkdownDisplay>
                   </View>
                 )}
 

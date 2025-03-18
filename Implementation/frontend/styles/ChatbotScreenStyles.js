@@ -75,27 +75,30 @@ export default StyleSheet.create({
   userMessage: {
     alignSelf: "flex-end",
     backgroundColor: "#0084ff",
-    padding: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
     borderRadius: 20,
     borderBottomRightRadius: 0,
     marginVertical: 4,
     marginBottom: 17,
     marginRight: 5,
     maxWidth: "70%",
+    color: "#fff",
   },
   botMessage: {
     alignSelf: "flex-start",
     backgroundColor: "#f1f1f1",
-    padding: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
     borderRadius: 20,
     borderBottomLeftRadius: 0,
     marginLeft: 5,
     marginBottom: 17,
     marginVertical: 5,
     maxWidth: "70%",
+    color: "#000"
   },
   messageText: {
-    color: "#000",
     padding: 5,
   },
   inputContainer: {
