@@ -550,7 +550,14 @@ const ItineraryDetailScreen = () => {
               )}
 
               <View style={styles.overviewCollaborators}>
-                <Text style={styles.overviewSectionTitle}>Collaborators</Text>
+              <View style={styles.collaboratorsHeader}>
+              <Text style={styles.overviewSectionTitle}>Collaborators</Text>
+                {user?.id === itinerary?.created_by && (
+                  <TouchableOpacity onPress={() => navigation.navigate('InviteCollaborators', { itinerary })}>
+                    <FontAwesome5 name="pencil-alt" size={14} color="#007bff" style={styles.collaboratorEditIcon} />
+                  </TouchableOpacity>
+                )}
+              </View>
                 {collaborators.length > 0 ? (
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.collaboratorsList}>
                     {collaborators.map((collab) => (
@@ -1104,12 +1111,26 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingHorizontal: 10
   },
+  collaboratorsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  collaboratorEditContainer: {
+    flexDirection: 'row',
+    alignItems: 'center', 
+  },
   overviewSectionTitle: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#007bff',
     marginBottom: 10,
   },
+  collaboratorEditIcon: {
+    marginLeft: 10,
+    alignSelf: 'center',
+    marginBottom: 10
+  },
+
   collaboratorsList: {
     flexDirection: 'row', 
     alignItems: 'center',
