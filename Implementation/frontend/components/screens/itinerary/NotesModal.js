@@ -9,57 +9,40 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // Future: Enable Firebase when switching from AsyncStorage
-// import { database } from '../../../firebase';
+import { database } from '../../../firebase';
 
 
-const NotesModal = ({ visible, onClose }) => {
+const NotesModal = ({ visible, onClose, itineraryId }) => {
   const [notes, setNotes] = useState('');
 
   useEffect(() => {
-    const loadNotes = async () => {
-      try {
-        // Future: Load from Firebase
-        // const notesRef = database().ref(`/live_itineraries/${itineraryId}/notes`);
-        // notesRef.on('value', (snapshot) => {
-        //   if (snapshot.exists()) {
-        //     setNotes(snapshot.val());
-        //   }
-        // });
+    if (!visible) return;
   
-        // For now, load from AsyncStorage
-        const savedNotes = await AsyncStorage.getItem('itinerary_notes');
-        if (savedNotes) {
-          setNotes(savedNotes);
-        }
-      } catch (error) {
-        console.error('Error loading notes:', error);
+    const notesRef = database().ref(`/live_itineraries/${itineraryId}/notes`);
+    
+    notesRef.on('value', (snapshot) => {
+      if (snapshot.exists()) {
+        setNotes(snapshot.val());
+      } else {
+        setNotes(''); // Default empty note if none exists
       }
-    };
+    });
   
-    if (visible) {
-      loadNotes();
-    }
-  
-    // Future Cleanup for Firebase Listener
-    // return () => notesRef.off();
-  }, [visible]);
-  
+    return () => notesRef.off(); // Cleanup listener when modal closes
+  }, [visible, itineraryId]);
+    
   const saveNotes = async () => {
     try {
-      // Future: Save to Firebase
-      // await database().ref(`/live_itineraries/${itineraryId}/notes`).set(notes);
-  
-      // For now, save to AsyncStorage
-      await AsyncStorage.setItem('itinerary_notes', notes);
-      onClose();
+      await database().ref(`/live_itineraries/${itineraryId}/notes`).set(notes);
+      onClose(); // Close modal after saving
     } catch (error) {
       console.error('Error saving notes:', error);
     }
   };
-  
+    
   return (
     <Modal
-      animationType="slide"
+      animationType="fade"
       transparent={true}
       visible={visible}
       onRequestClose={onClose}
@@ -67,13 +50,18 @@ const NotesModal = ({ visible, onClose }) => {
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
           <Text style={styles.modalTitle}>Notes</Text>
+  
+          {/* Expandable Writing Area */}
           <TextInput
             style={styles.textInput}
             placeholder="Write your notes here..."
             multiline
             value={notes}
             onChangeText={setNotes}
+            textAlignVertical="top"
+            scrollEnabled={true} // Allows scrolling inside input if needed
           />
+  
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.saveButton} onPress={saveNotes}>
               <Text style={styles.buttonText}>Save</Text>
@@ -96,11 +84,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContainer: {
-    width: '80%',
+    width: '90%', 
+    height: '60%',
     backgroundColor: '#fff',
     padding: 20,
     borderRadius: 10,
     alignItems: 'center',
+    justifyContent: 'flex-start',
   },
   modalTitle: {
     fontSize: 18,
@@ -109,12 +99,14 @@ const styles = StyleSheet.create({
   },
   textInput: {
     width: '100%',
-    height: 120,
+    height: '70%', 
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 5,
-    padding: 10,
-    textAlignVertical: 'top',
+    padding: 15,
+    fontSize: 16, 
+    textAlignVertical: 'top', 
+    backgroundColor: '#f9f9f9',
   },
   buttonContainer: {
     flexDirection: 'row',

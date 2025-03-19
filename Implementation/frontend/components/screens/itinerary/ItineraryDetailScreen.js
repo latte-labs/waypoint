@@ -115,23 +115,21 @@ const ItineraryDetailScreen = () => {
   }, []);
 
   useEffect(() => {
-    if (!isNotesModalVisible) { // Only fetch when modal closes
-      const loadNotesPreview = async () => {
-        try {
-          const savedNotes = await AsyncStorage.getItem('itinerary_notes');
-          if (savedNotes) {
-            setNotesPreview(savedNotes.length > 100 ? savedNotes.substring(0, 100) + '... Click to view more' : savedNotes);
-          } else {
-            setNotesPreview("Tap to add notes");
-          }
-        } catch (error) {
-          console.error('Error loading notes:', error);
+    if (!isNotesModalVisible) {
+      const notesRef = database().ref(`/live_itineraries/${itineraryId}/notes`);
+  
+      notesRef.once('value', (snapshot) => {
+        if (snapshot.exists()) {
+          setNotesPreview(snapshot.val().length > 300 
+            ? snapshot.val().substring(0, 300) + '... Click to view more' 
+            : snapshot.val());
+        } else {
+          setNotesPreview("Tap to add notes");
         }
-      };
-      loadNotesPreview();
+      });
     }
-  }, [isNotesModalVisible]);
-
+  }, [isNotesModalVisible, itineraryId]);
+  
   useEffect(() => {
     if (!isPlacesModalVisible) { // Fetch places when modal closes
       const loadPlacesList = async () => {
@@ -704,6 +702,7 @@ const ItineraryDetailScreen = () => {
         <NotesModal
           visible={isNotesModalVisible}
           onClose={() => setIsNotesModalVisible(false)}
+          itineraryId={itineraryId}
         />
         <PlacesModal
           visible={isPlacesModalVisible}
@@ -1148,6 +1147,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9f9f9',
     borderRadius: 10,
     padding: 15,
+    paddingTop: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
