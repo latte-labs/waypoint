@@ -20,6 +20,7 @@ class ActivitySchema(BaseModel):
     time: str
     name: str
     location: Optional[str] = None
+    estimated_cost: Optional[float]  
 
 class ItineraryDaySchema(BaseModel):
     id: UUID

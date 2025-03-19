@@ -22,6 +22,9 @@ import PlacesModal from './PlacesModal';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
 const DayCard = memo(({ item, onPress, onLongPress, onEdit, renderRightActions, onLayout }) => {
+  const totalEstimatedCost = item.activities?.reduce((sum, activity) => {
+    return sum + (activity.estimated_cost ? parseFloat(activity.estimated_cost) : 0);
+  }, 0) || 0;
   return (
     <Swipeable
       overshootLeft={false}
@@ -42,6 +45,10 @@ const DayCard = memo(({ item, onPress, onLongPress, onEdit, renderRightActions, 
             day: 'numeric',
           })}
         </Text>
+        <Text style={styles.totalCostText}>
+          Est. Cost: ${totalEstimatedCost.toFixed(2)}
+        </Text>
+        
         {item.activities && item.activities.length > 0 ? (
           item.activities.map(activity => (
             <View key={activity.id} style={styles.activityCard}>
@@ -235,7 +242,7 @@ const ItineraryDetailScreen = () => {
         }));
         setItinerary(response.data);
         setDays(response.data.days);
-        console.log("Days updated:", sortedDays);
+        
         // If extra_data has image_url, extract it.
         if (response.data.extra_data && response.data.extra_data.image_url) {
           setImageUrl(response.data.extra_data.image_url);
@@ -248,12 +255,11 @@ const ItineraryDetailScreen = () => {
           });
         }
       }
+      
     } catch (error) {
-      console.error("Error in fetchItineraryDetails:", error.response?.data || error.message);
       Alert.alert("Error", "Failed to load itinerary details.");
     } finally {
       setLoading(false);
-      console.log("Finished loading itinerary details");
     }
   };
 
@@ -471,7 +477,7 @@ const ItineraryDetailScreen = () => {
                     onPress={selectImage}
                     activeOpacity={0.7}
                   >
-                    <Icon name="camera" size={24} color="#fff" />
+                    <Icon name="camera" size={16} color="#fff" />
                   </TouchableOpacity>
                   <View style={styles.headerContent}>
                     <Text style={[styles.overviewTitle, { color: '#fff' }]}>{itinerary?.name}</Text>
@@ -540,7 +546,9 @@ const ItineraryDetailScreen = () => {
               <View style={styles.budgetContainer}>
                 <View style={styles.squarePanel}>
                   <Text style={styles.panelTitle}>Budget</Text>
-                  <Text style={styles.panelValue}>$2,500</Text>
+                  <Text style={styles.panelValue}>
+                    {itinerary?.budget ? `$${itinerary.budget.toLocaleString()}` : 'N/A'}
+                  </Text>
                 </View>
                 <View style={styles.squarePanel}>
                   <Text style={styles.panelTitle}>Est. Cost</Text>
@@ -867,6 +875,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginLeft: 10,
   },
+  totalCostText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#007bff',
+    marginBottom: 5,
+  },
   deleteDayText: { color: '#fff', fontSize: 14, fontWeight: 'bold', textAlign: 'center' },
   activityCard: {
     backgroundColor: '#fff',
@@ -1001,24 +1015,23 @@ const styles = StyleSheet.create({
   },
   overviewContainer: {
     flex: 1,
-    // padding: 20,
     backgroundColor: '#fff',
     paddingBottom: 80,
   },
   // Fixed header size for a nice background look
   overviewHeader: {
-    width: '100%', // ✅ Makes it full width
-    height: 250, // Keeps the height consistent
-    borderRadius: 0, // ✅ Removes any rounded edges that could affect width
-    padding: 0, // ✅ Ensures no extra padding that could shrink it
+    width: '100%',
+    height: 250, 
+    borderRadius: 0, 
+    padding: 0, 
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
   },
   backgroundImage: {
-    width: '100%', // ✅ Ensures the image background spans full width
-    height: '100%', // ✅ Covers the full height of the container
-    resizeMode: 'cover', // ✅ Makes sure the image scales correctly
+    width: '100%',
+    height: '100%', 
+    resizeMode: 'cover', 
   },
   // Transparent black overlay
   overlay: {
@@ -1129,7 +1142,7 @@ const styles = StyleSheet.create({
   },
   squarePanel: {
     width: '48%',
-    aspectRatio: 1,
+    aspectRatio: 1.5,
     backgroundColor: '#eef7ff',
     justifyContent: 'center',
     alignItems: 'center',
@@ -1143,11 +1156,10 @@ const styles = StyleSheet.create({
   },
   panelTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
     color: '#007bff',
-    position: 'absolute', // Positions text inside the container
-    top: 10, // Pushes it towards the top
-    left: 10, // Aligns to the left edge
+    position: 'absolute', 
+    top: 10, 
+    left: 10, 
   },
   panelValue: {
     fontSize: 18,
@@ -1232,7 +1244,6 @@ const styles = StyleSheet.create({
 
   placesTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
     color: '#007bff',
     marginBottom: 5,
   },

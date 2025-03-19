@@ -86,6 +86,7 @@ def get_itinerary(itinerary_id: str, db: Session = Depends(get_db)):
                         "time": activity.time,
                         "name": activity.name,
                         "location": activity.location,
+                        "estimated_cost": activity.estimated_cost if activity.estimated_cost is not None else 0, 
                     }
                     for activity in db.query(Activity)
                         .filter(Activity.itinerary_day_id == day.id)
