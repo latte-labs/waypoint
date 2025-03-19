@@ -542,9 +542,26 @@ const ItineraryDetailScreen = () => {
               </View>
 
               <View style={styles.notesContainer}>
-                <TouchableOpacity style={styles.notesPanel} onPress={() => setIsNotesModalVisible(true)}>
+                <TouchableOpacity 
+                  style={styles.notesPanel} 
+                  onPress={() => setIsNotesModalVisible(true)}
+                  activeOpacity={1} 
+                >
                   <Text style={styles.panelTitle}>Notes</Text>
-                  <Text style={styles.notesPreview}>{notesPreview}</Text>
+
+                  {/* Scrollable Preview Below Title */}
+                  <ScrollView 
+                    style={styles.notesScroll} 
+                    nestedScrollEnabled={true} 
+                    keyboardShouldPersistTaps="handled"
+                  >
+                    {notesPreview.trim() ? (
+                      <Text style={styles.notesPreview}>{notesPreview}</Text>
+                    ) : (
+                      <Text style={styles.notesPlaceholder}>Tap to add notes</Text>
+                    )}
+                  </ScrollView>
+
                 </TouchableOpacity>
               </View>
 
@@ -1120,11 +1137,12 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flex: 1
   },
+
   notesContainer: {
     marginTop: 20,
     paddingHorizontal: 10,
-    minHeight: 96
   },
+  
   notesPanel: {
     width: '100%',
     backgroundColor: '#f9f9f9',
@@ -1137,22 +1155,36 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderWidth: 1,
     borderColor: '#ddd',
-    alignItems: 'flex-start', 
-    justifyContent: 'flex-start', 
-    minHeight: 50,
-    flexGrow: 1,
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+    minHeight: 96, 
+    maxHeight: 200, 
+    overflow: 'hidden', 
+    position: 'relative', 
   },
+  
+  notesScroll: {
+    flexGrow: 1, 
+    maxHeight: 180,
+    marginTop: 30,
+    width: '100%', 
+  },
+  
   notesPreview: {
     fontSize: 14,
     color: '#555',
-    textAlign: 'left', 
-    alignSelf: 'flex-start', 
-    position: 'absolute', 
-    top: 35, 
-    left: 10, 
-    right: 10, 
+    textAlign: 'left',
+    alignSelf: 'flex-start',
   },
-
+  notesPlaceholder: {
+    fontSize: 14,
+    color: '#888',
+    fontStyle: 'italic',
+    textAlign: 'left',
+    alignSelf: 'flex-start',
+  },
+  
+  
   placesContainer: {
     marginTop: 20,
     paddingHorizontal: 10,
