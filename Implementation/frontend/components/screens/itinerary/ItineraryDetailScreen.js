@@ -106,7 +106,8 @@ const ItineraryDetailScreen = () => {
   const [notesPreview, setNotesPreview] = useState('');
   const [isPlacesModalVisible, setIsPlacesModalVisible] = useState(false);
   const [placesList, setPlacesList] = useState([]);
-  
+  const [totalItineraryCost, setTotalItineraryCost] = useState(0);
+
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -236,12 +237,32 @@ const ItineraryDetailScreen = () => {
       console.log("Fetching itinerary details...");
       const response = await axios.get(`${API_BASE_URL}/itineraries/${itineraryId}`);
       if (response.status === 200) {
+        console.log("✅ API Response:", response.data);
+
+        // ✅ Ensure `estimated_cost` is included and not null
         const sortedDays = response.data.days.map(day => ({
-          ...day,
-          activities: sortActivitiesByTime(day.activities),
+            ...day,
+            activities: day.activities
+                ? sortActivitiesByTime(
+                    day.activities.map(act => ({
+                        ...act,
+                        estimated_cost: act.estimated_cost ?? 0, 
+                    }))
+                )
+                : []
         }));
         setItinerary(response.data);
         setDays(response.data.days);
+
+        const totalCost = sortedDays.reduce((sum, day) => {
+          const dayCost = day.activities.reduce((daySum, activity) => 
+              daySum + (activity.estimated_cost ? parseFloat(activity.estimated_cost) : 0)
+          , 0);
+          return sum + dayCost;
+        }, 0);
+
+        setTotalItineraryCost(totalCost);
+      
         
         // If extra_data has image_url, extract it.
         if (response.data.extra_data && response.data.extra_data.image_url) {
@@ -407,7 +428,6 @@ const ItineraryDetailScreen = () => {
       );
       if (response.status === 200) {
         const newDayId = response.data.id;
-        Alert.alert("Success", "Day added successfully!");
         setModalVisible(false);
         fetchItineraryDetails();
         navigation.navigate('ItineraryDay', { itineraryId, dayId: newDayId, user });
@@ -551,8 +571,8 @@ const ItineraryDetailScreen = () => {
                   </Text>
                 </View>
                 <View style={styles.squarePanel}>
-                  <Text style={styles.panelTitle}>Est. Cost</Text>
-                  <Text style={styles.panelValue}>$2,100</Text>
+                  <Text style={styles.panelTitle}>Activities Cost</Text>
+                  <Text style={styles.panelValue}>${totalItineraryCost.toFixed(0)}</Text>
                 </View>
               </View>
 
@@ -676,7 +696,6 @@ const ItineraryDetailScreen = () => {
             try {
               const config = { headers: { "X-User-Id": user.id } };
               await axios.delete(`${API_BASE_URL}/itineraries/${itineraryId}`, config);
-              Alert.alert("Success", "Itinerary deleted successfully!");
               navigation.navigate("Itinerary");
             } catch (error) {
               console.error("Error deleting itinerary:", error.response?.data || error.message);
@@ -701,7 +720,6 @@ const ItineraryDetailScreen = () => {
             try {
               await database().ref(`/live_itineraries/${itineraryId}/collaborators/${user.id}`).remove();
               console.log(`User ${user.id} removed from itinerary ${itineraryId}`);
-              Alert.alert("Success", "You have been removed from this itinerary.");
               navigation.navigate('Itinerary');
             } catch (error) {
               console.error("Error removing user:", error);
@@ -1162,7 +1180,7 @@ const styles = StyleSheet.create({
     left: 10, 
   },
   panelValue: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: '600',
     color: '#222',
   },
