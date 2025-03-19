@@ -385,8 +385,8 @@ const ItineraryListScreen = () => {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#fff' },
     title: { fontSize: 22, fontWeight: 'bold', textAlign: 'center', marginVertical: 20 },
-    tabBar: { backgroundColor: '#fff', elevation: 3 },
-    tabLabel: { color: '#333', fontWeight: 'bold' },
+    tabBar: { backgroundColor: '#1d3a8a', elevation: 3 },
+    tabLabel: { color: '#1d3a8a', fontWeight: 'bold' },
     listContainer: { paddingVertical: 10 },
     itineraryCard: {
         padding: 15,
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',  // ✅ Bold text for active tab
     },
     indicatorStyle: {
-        backgroundColor: '#007bff', // ✅ Blue underline indicator
+        backgroundColor: '#1d3a8a', // ✅ Blue underline indicator
         height: 4, // ✅ Thicker for better visibility
         borderRadius: 2, // ✅ Slightly rounded for a smooth look
     },
