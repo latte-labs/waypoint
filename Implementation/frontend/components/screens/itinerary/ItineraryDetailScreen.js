@@ -131,21 +131,18 @@ const ItineraryDetailScreen = () => {
   }, [isNotesModalVisible, itineraryId]);
   
   useEffect(() => {
-    if (!isPlacesModalVisible) { // Fetch places when modal closes
-      const loadPlacesList = async () => {
-        try {
-          const savedPlaces = await AsyncStorage.getItem('itinerary_places');
-          if (savedPlaces) {
-            setPlacesList(JSON.parse(savedPlaces));
-          }
-        } catch (error) {
-          console.error('Error loading places:', error);
-        }
-      };
-      loadPlacesList();
-    }
-  }, [isPlacesModalVisible]);
+    if (!isPlacesModalVisible) {
+      const placesRef = database().ref(`/live_itineraries/${itineraryId}/places`);
   
+      placesRef.once('value', (snapshot) => {
+        if (snapshot.exists()) {
+          setPlacesList(snapshot.val());
+        } else {
+          setPlacesList([]);
+        }
+      });
+    }
+  }, [isPlacesModalVisible, itineraryId]);    
     
 
   const requestPhotoLibraryPermission = async () => {
@@ -713,9 +710,8 @@ const ItineraryDetailScreen = () => {
         <PlacesModal
           visible={isPlacesModalVisible}
           onClose={() => setIsPlacesModalVisible(false)}
+          itineraryId={itineraryId} // ✅ Pass itineraryId as a prop
         />
-
-
         <TabView
           navigationState={{ index, routes }}
           renderScene={renderScene}

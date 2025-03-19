@@ -10,28 +10,29 @@ import {
   Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { database } from '../../../firebase';
 
-const PlacesModal = ({ visible, onClose }) => {
+const PlacesModal = ({ visible, onClose, itineraryId }) => {
   const [place, setPlace] = useState('');
   const [placesList, setPlacesList] = useState([]);
 
   // Load places from AsyncStorage when modal opens
   useEffect(() => {
-    if (visible) {
-      const loadPlaces = async () => {
-        try {
-          const savedPlaces = await AsyncStorage.getItem('itinerary_places');
-          if (savedPlaces) {
-            setPlacesList(JSON.parse(savedPlaces));
-          }
-        } catch (error) {
-          console.error('Error loading places:', error);
-        }
-      };
-      loadPlaces();
-    }
-  }, [visible]);
-
+    if (!visible) return;
+  
+    const placesRef = database().ref(`/live_itineraries/${itineraryId}/places`);
+    
+    placesRef.on('value', (snapshot) => {
+      if (snapshot.exists()) {
+        setPlacesList(snapshot.val());
+      } else {
+        setPlacesList([]); // Default empty list if none exists
+      }
+    });
+  
+    return () => placesRef.off();
+  }, [visible, itineraryId]);
+  
   // Function to add a place
   const addPlace = () => {
     if (place.trim() === '') {
@@ -51,13 +52,13 @@ const PlacesModal = ({ visible, onClose }) => {
   // Function to save places to AsyncStorage and close modal
   const savePlaces = async () => {
     try {
-      await AsyncStorage.setItem('itinerary_places', JSON.stringify(placesList));
+      await database().ref(`/live_itineraries/${itineraryId}/places`).set(placesList);
       onClose();
     } catch (error) {
       console.error('Error saving places:', error);
     }
   };
-
+  
   return (
     <Modal
       animationType="slide"
