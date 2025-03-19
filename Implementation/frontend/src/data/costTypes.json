@@ -1,0 +1,9 @@
+{
+    "Transportation": ["Flights", "Train", "Bus", "Taxi", "Car Rental", "Fuel & Tolls", "Parking"],
+    "Accommodation": ["Hotels", "Vacation Rentals", "Hostels", "Camping"],
+    "Food & Drinks": ["Restaurants", "Groceries", "Snacks", "Beverages"],
+    "Shopping": ["Souvenirs", "Clothing", "Gifts"],
+    "Travel Documents": ["Visa Fees", "Passport Fees", "Travel Insurance", "Currency Exchange"],
+    "Medical & Emergencies": ["Doctor Visit", "Medication", "Lost Items"],
+    "Miscellaneous": ["Laundry", "Wi-Fi/SIM Card", "Tips & Gratuities", "Baggage Fees"]
+}  
