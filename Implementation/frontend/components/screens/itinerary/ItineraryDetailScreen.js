@@ -279,18 +279,24 @@ const ItineraryDetailScreen = () => {
             name: usersData[userId]?.name || "Unknown",
             email: usersData[userId]?.email || "No Email",
           }));
+  
           setCollaborators(collaboratorsList);
+  
+          // ✅ Check if the current user is in the collaborators list
+          setIsCollaborator(userIds.includes(user?.id));
         } else {
           setCollaborators([]);
+          setIsCollaborator(false); // ✅ Ensure it resets correctly
         }
       };
+  
       collaboratorRef.on('value', handleCollaboratorChange);
       return () => {
         collaboratorRef.off('value', handleCollaboratorChange);
       };
     }
-  }, [itineraryId, itinerary]);
-  
+  }, [itineraryId, itinerary, user]);
+    
   const handleDayPress = useCallback((dayId) => {
     navigation.navigate('ItineraryDay', { itineraryId, dayId });
   }, [itineraryId, navigation]);
