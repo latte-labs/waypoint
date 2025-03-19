@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, memo } from 'react';
 import { 
-  View, Text, ActivityIndicator, Alert, StyleSheet, TouchableOpacity, Modal, TextInput, Pressable, Platform, Image, ImageBackground 
+  View, Text, ActivityIndicator, Alert, StyleSheet, TouchableOpacity, Modal, TextInput, Pressable, Platform, Image, ImageBackground, ScrollView 
 } from 'react-native';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -17,6 +17,7 @@ import { database } from '../../../firebase';
 // Using react-native-image-crop-picker for image selection and cropping
 import ImagePicker from 'react-native-image-crop-picker';
 import { check, request, PERMISSIONS, RESULTS } from "react-native-permissions";
+import NotesModal from './NotesModal';
 
 const DayCard = memo(({ item, onPress, onLongPress, onEdit, renderRightActions, onLayout }) => {
   return (
@@ -91,6 +92,8 @@ const ItineraryDetailScreen = () => {
 
   // To view collaborators
   const [collaborators, setCollaborators] = useState([]);
+
+  const [isNotesModalVisible, setIsNotesModalVisible] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -408,88 +411,107 @@ const ItineraryDetailScreen = () => {
 
   // OverviewRoute: if an image exists, use ImageBackground with overlay and white text/icon.
   const OverviewRoute = () => (
-    <View style={styles.overviewContainer}>
-      {loading ? (
-        <ActivityIndicator size="large" color="#007bff" />
-      ) : (
-        <>
-          {selectedImage || imageUrl ? (
-            <ImageBackground 
-              source={{ uri: selectedImage || imageUrl }} 
-              style={styles.overviewHeader} 
-              imageStyle={styles.backgroundImage}
-            >
-              <View style={styles.overlay} />
-              <TouchableOpacity 
-                style={styles.cameraButton} 
-                onPress={selectImage}
-                activeOpacity={0.7}
-              >
-                <Icon name="camera" size={24} color="#fff" />
-              </TouchableOpacity>
-              <View style={styles.headerContent}>
-                <Text style={[styles.overviewTitle, { color: '#fff' }]}>{itinerary?.name}</Text>
-                <Text style={[styles.overviewSubtitle, { color: '#fff' }]}>{itinerary?.destination}</Text>
-                <Text style={[styles.overviewDates, { color: '#fff' }]}>
-                  {new Date(itinerary.start_date).toLocaleDateString('en-US', {
-                    weekday: 'short',
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })} - {new Date(itinerary.end_date).toLocaleDateString('en-US', {
-                    weekday: 'short',
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}
-                </Text>
-              </View>
-            </ImageBackground>
+    <ScrollView style={styles.scrollContainer}>
+        <View style={styles.overviewContainer}>
+          {loading ? (
+            <ActivityIndicator size="large" color="#007bff" />
           ) : (
-            <View style={styles.overviewHeader}>
-              {/* Fallback content when no image exists */}
-              <TouchableOpacity 
-                style={styles.cameraButton} 
-                onPress={selectImage}
-                activeOpacity={0.7}
-              >
-                <Icon name="camera" size={24} color="#007bff" />
-              </TouchableOpacity>
-              <Text style={styles.overviewTitle}>{itinerary?.name}</Text>
-              <Text style={styles.overviewSubtitle}>{itinerary?.destination}</Text>
-              <Text style={styles.overviewDates}>
-                {new Date(itinerary.start_date).toLocaleDateString('en-US', {
-                  weekday: 'short',
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric'
-                })} - {new Date(itinerary.end_date).toLocaleDateString('en-US', {
-                  weekday: 'short',
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric'
-                })}
-              </Text>
-            </View>
-          )}
-          <View style={styles.overviewCollaborators}>
-            <Text style={styles.overviewSectionTitle}>Collaborators</Text>
-            {collaborators.length > 0 ? (
-              <View style={styles.collaboratorsList}>
-                {collaborators.map((collab) => (
-                  <View key={collab.userId} style={styles.collaboratorCard}>
-                    <Icon name="user" size={16} color="#007bff" style={styles.collaboratorIcon} />
-                    <Text style={styles.collaboratorName}>{collab.name}</Text>
+            <>
+              {selectedImage || imageUrl ? (
+                <ImageBackground 
+                  source={{ uri: selectedImage || imageUrl }} 
+                  style={styles.overviewHeader} 
+                  imageStyle={styles.backgroundImage}
+                >
+                  <View style={styles.overlay} />
+                  <TouchableOpacity 
+                    style={styles.cameraButton} 
+                    onPress={selectImage}
+                    activeOpacity={0.7}
+                  >
+                    <Icon name="camera" size={24} color="#fff" />
+                  </TouchableOpacity>
+                  <View style={styles.headerContent}>
+                    <Text style={[styles.overviewTitle, { color: '#fff' }]}>{itinerary?.name}</Text>
+                    <Text style={[styles.overviewSubtitle, { color: '#fff' }]}>{itinerary?.destination}</Text>
+                    <Text style={[styles.overviewDates, { color: '#fff' }]}> 
+                      {new Date(itinerary.start_date).toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })} - {new Date(itinerary.end_date).toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                    </Text>
                   </View>
-                ))}
+                </ImageBackground>
+              ) : (
+                <View style={styles.overviewHeader}>
+                  <TouchableOpacity 
+                    style={styles.cameraButton} 
+                    onPress={selectImage}
+                    activeOpacity={0.7}
+                  >
+                    <Icon name="camera" size={24} color="#007bff" />
+                  </TouchableOpacity>
+                  <Text style={styles.overviewTitle}>{itinerary?.name}</Text>
+                  <Text style={styles.overviewSubtitle}>{itinerary?.destination}</Text>
+                  <Text style={styles.overviewDates}>
+                    {new Date(itinerary.start_date).toLocaleDateString('en-US', {
+                      weekday: 'short',
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })} - {new Date(itinerary.end_date).toLocaleDateString('en-US', {
+                      weekday: 'short',
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}
+                  </Text>
+                </View>
+              )}
+              <View style={styles.overviewCollaborators}>
+                <Text style={styles.overviewSectionTitle}>Collaborators</Text>
+                {collaborators.length > 0 ? (
+                  <View style={styles.collaboratorsList}>
+                    {collaborators.map((collab) => (
+                      <View key={collab.userId} style={styles.collaboratorCard}>
+                        <Icon name="user" size={16} color="#007bff" style={styles.collaboratorIcon} />
+                        <Text style={styles.collaboratorName}>{collab.name}</Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : (
+                  <Text style={styles.noCollaboratorsText}>No collaborators yet.</Text>
+                )}
               </View>
-            ) : (
-              <Text style={styles.noCollaboratorsText}>No collaborators yet.</Text>
-            )}
-          </View>
-        </>
-      )}
-    </View>
+              <View style={styles.budgetContainer}>
+                <View style={styles.squarePanel}>
+                  <Text style={styles.panelTitle}>Budget</Text>
+                  <Text style={styles.panelValue}>$2,500</Text>
+                </View>
+                <View style={styles.squarePanel}>
+                  <Text style={styles.panelTitle}>Est. Cost</Text>
+                  <Text style={styles.panelValue}>$2,100</Text>
+                </View>
+              </View>
+
+              <View style={styles.notesContainer}>
+                <TouchableOpacity style={styles.notesPanel} onPress={() => setIsNotesModalVisible(true)}>
+                  <Text style={styles.panelTitle}>Notes</Text>
+                  <Text style={styles.notesPlaceholder}>Tap to add notes</Text>
+                </TouchableOpacity>
+              </View>
+
+            </>
+          )}
+        </View>
+      </ScrollView>
   );
         
   const DaysRoute = () => (
@@ -604,6 +626,11 @@ const ItineraryDetailScreen = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaWrapper>
+        <NotesModal
+          visible={isNotesModalVisible}
+          onClose={() => setIsNotesModalVisible(false)}
+        />
+
         <TabView
           navigationState={{ index, routes }}
           renderScene={renderScene}
@@ -889,6 +916,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: '#fff',
+    paddingBottom: 80
   },
   // Fixed header size for a nice background look
   overviewHeader: {
@@ -991,6 +1019,68 @@ const styles = StyleSheet.create({
     alignItems: 'center', 
     borderRadius: 10
   },
+
+  // BUDGET CONTAINER
+  budgetContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+    paddingHorizontal: 10,
+  },
+  squarePanel: {
+    width: '48%',
+    aspectRatio: 1,
+    backgroundColor: '#eef7ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 10,
+    padding: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  panelTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#007bff',
+    marginBottom: 5,
+  },
+  panelValue: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#222',
+  },
+  scrollContainer: {
+    flex: 1
+  },
+  notesContainer: {
+    marginTop: 20,
+    paddingHorizontal: 10,
+  },
+  notesPanel: {
+    width: '100%',
+    aspectRatio: 2.5,
+    backgroundColor: '#f9f9f9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 10,
+    padding: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  notesPlaceholder: {
+    fontSize: 14,
+    color: '#888',
+    fontStyle: 'italic',
+  },
+  
 });
 
 export default ItineraryDetailScreen;

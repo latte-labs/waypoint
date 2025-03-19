@@ -1,0 +1,128 @@
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  Modal,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const NotesModal = ({ visible, onClose }) => {
+  const [notes, setNotes] = useState('');
+
+  useEffect(() => {
+    const loadNotes = async () => {
+      try {
+        const savedNotes = await AsyncStorage.getItem('itinerary_notes');
+        if (savedNotes) {
+          setNotes(savedNotes);
+        }
+      } catch (error) {
+        console.error('Error loading notes:', error);
+      }
+    };
+    if (visible) {
+      loadNotes();
+    }
+  }, [visible]);
+
+  const saveNotes = async () => {
+    try {
+      await AsyncStorage.setItem('itinerary_notes', notes);
+      onClose();
+    } catch (error) {
+      console.error('Error saving notes:', error);
+    }
+  };
+
+  return (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={visible}
+      onRequestClose={onClose}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContainer}>
+          <Text style={styles.modalTitle}>Notes</Text>
+          <TextInput
+            style={styles.textInput}
+            placeholder="Write your notes here..."
+            multiline
+            value={notes}
+            onChangeText={setNotes}
+          />
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.saveButton} onPress={saveNotes}>
+              <Text style={styles.buttonText}>Save</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+              <Text style={styles.buttonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContainer: {
+    width: '80%',
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  textInput: {
+    width: '100%',
+    height: 120,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 5,
+    padding: 10,
+    textAlignVertical: 'top',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 15,
+    width: '100%',
+  },
+  saveButton: {
+    flex: 1,
+    backgroundColor: '#007bff',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginRight: 5,
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: 'gray',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginLeft: 5,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});
+
+export default NotesModal;
