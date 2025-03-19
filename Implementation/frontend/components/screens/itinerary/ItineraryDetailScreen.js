@@ -548,21 +548,23 @@ const ItineraryDetailScreen = () => {
                   </Text>
                 </View>
               )}
+
               <View style={styles.overviewCollaborators}>
                 <Text style={styles.overviewSectionTitle}>Collaborators</Text>
                 {collaborators.length > 0 ? (
-                  <View style={styles.collaboratorsList}>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.collaboratorsList}>
                     {collaborators.map((collab) => (
                       <View key={collab.userId} style={styles.collaboratorCard}>
                         <Icon name="user" size={16} color="#007bff" style={styles.collaboratorIcon} />
                         <Text style={styles.collaboratorName}>{collab.name}</Text>
                       </View>
                     ))}
-                  </View>
+                  </ScrollView>
                 ) : (
                   <Text style={styles.noCollaboratorsText}>No collaborators yet.</Text>
                 )}
               </View>
+
               <View style={styles.budgetContainer}>
                 <View style={styles.squarePanel}>
                   <Text style={styles.panelTitle}>Budget</Text>
@@ -1109,8 +1111,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   collaboratorsList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: 'row', 
+    alignItems: 'center',
   },
   collaboratorCard: {
     flexDirection: 'row',
@@ -1120,12 +1122,14 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginRight: 10,
     marginBottom: 10,
+    minWidth: 100,
+    justifyContent: 'center'
   },
   collaboratorIcon: {
     marginRight: 5,
   },
   collaboratorName: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#007bff',
   },
   noCollaboratorsText: {
