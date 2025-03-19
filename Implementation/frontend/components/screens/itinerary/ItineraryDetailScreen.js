@@ -94,6 +94,8 @@ const ItineraryDetailScreen = () => {
   const [collaborators, setCollaborators] = useState([]);
 
   const [isNotesModalVisible, setIsNotesModalVisible] = useState(false);
+  const [notesPreview, setNotesPreview] = useState('');
+
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -108,6 +110,25 @@ const ItineraryDetailScreen = () => {
     };
     fetchUserData();
   }, []);
+
+  useEffect(() => {
+    if (!isNotesModalVisible) { // Only fetch when modal closes
+      const loadNotesPreview = async () => {
+        try {
+          const savedNotes = await AsyncStorage.getItem('itinerary_notes');
+          if (savedNotes) {
+            setNotesPreview(savedNotes.length > 100 ? savedNotes.substring(0, 100) + '... Click to view more' : savedNotes);
+          } else {
+            setNotesPreview("Tap to add notes");
+          }
+        } catch (error) {
+          console.error('Error loading notes:', error);
+        }
+      };
+      loadNotesPreview();
+    }
+  }, [isNotesModalVisible]);
+    
 
   const requestPhotoLibraryPermission = async () => {
     if (Platform.OS === "ios") {
@@ -504,9 +525,10 @@ const ItineraryDetailScreen = () => {
               <View style={styles.notesContainer}>
                 <TouchableOpacity style={styles.notesPanel} onPress={() => setIsNotesModalVisible(true)}>
                   <Text style={styles.panelTitle}>Notes</Text>
-                  <Text style={styles.notesPlaceholder}>Tap to add notes</Text>
+                  <Text style={styles.notesPreview}>{notesPreview}</Text>
                 </TouchableOpacity>
               </View>
+
 
             </>
           )}
@@ -1045,7 +1067,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#007bff',
-    marginBottom: 5,
+    position: 'absolute', // Positions text inside the container
+    top: 10, // Pushes it towards the top
+    left: 10, // Aligns to the left edge
   },
   panelValue: {
     fontSize: 18,
@@ -1075,11 +1099,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
   },
-  notesPlaceholder: {
+  notesPreview: {
     fontSize: 14,
-    color: '#888',
-    fontStyle: 'italic',
+    color: '#555',
+    textAlign: 'left', // Align text to the left
+    alignSelf: 'flex-start', // Ensure text starts from the left
+    position: 'absolute', // Fix position inside the panel
+    top: 35, // Position below the title
+    left: 10, // Align to the left edge
+    right: 10, // Ensures proper wrapping
   },
+    
   
 });
 

@@ -8,6 +8,9 @@ import {
   StyleSheet,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+// Future: Enable Firebase when switching from AsyncStorage
+// import { database } from '../../../firebase';
+
 
 const NotesModal = ({ visible, onClose }) => {
   const [notes, setNotes] = useState('');
@@ -15,6 +18,15 @@ const NotesModal = ({ visible, onClose }) => {
   useEffect(() => {
     const loadNotes = async () => {
       try {
+        // Future: Load from Firebase
+        // const notesRef = database().ref(`/live_itineraries/${itineraryId}/notes`);
+        // notesRef.on('value', (snapshot) => {
+        //   if (snapshot.exists()) {
+        //     setNotes(snapshot.val());
+        //   }
+        // });
+  
+        // For now, load from AsyncStorage
         const savedNotes = await AsyncStorage.getItem('itinerary_notes');
         if (savedNotes) {
           setNotes(savedNotes);
@@ -23,20 +35,28 @@ const NotesModal = ({ visible, onClose }) => {
         console.error('Error loading notes:', error);
       }
     };
+  
     if (visible) {
       loadNotes();
     }
+  
+    // Future Cleanup for Firebase Listener
+    // return () => notesRef.off();
   }, [visible]);
-
+  
   const saveNotes = async () => {
     try {
+      // Future: Save to Firebase
+      // await database().ref(`/live_itineraries/${itineraryId}/notes`).set(notes);
+  
+      // For now, save to AsyncStorage
       await AsyncStorage.setItem('itinerary_notes', notes);
       onClose();
     } catch (error) {
       console.error('Error saving notes:', error);
     }
   };
-
+  
   return (
     <Modal
       animationType="slide"
