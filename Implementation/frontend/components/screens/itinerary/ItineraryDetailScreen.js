@@ -763,7 +763,7 @@ const ItineraryDetailScreen = () => {
               {...props}
               indicatorStyle={{
                 height: 4,
-                backgroundColor: 'blue',
+                backgroundColor: '#1d3a8a',
                 borderRadius: 2,
               }}
               style={{ backgroundColor: 'white', elevation: 0 }}
@@ -834,14 +834,6 @@ const ItineraryDetailScreen = () => {
         )}
 
         <View style={styles.buttonContainer}>
-          {user?.id === itinerary?.created_by && (
-            <TouchableOpacity 
-              style={styles.inviteButton} 
-              onPress={() => navigation.navigate('InviteCollaborators', { itinerary })}
-            >
-              <Text style={styles.buttonText}>Invite</Text>
-            </TouchableOpacity>
-          )}
           <TouchableOpacity 
             style={styles.editButton}
             onPress={() => navigation.navigate('ItineraryForm', { itineraryId: itinerary.id, userId: itinerary.created_by })}
