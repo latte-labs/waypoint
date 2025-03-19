@@ -18,6 +18,7 @@ import { database } from '../../../firebase';
 import ImagePicker from 'react-native-image-crop-picker';
 import { check, request, PERMISSIONS, RESULTS } from "react-native-permissions";
 import NotesModal from './NotesModal';
+import PlacesModal from './PlacesModal';
 
 const DayCard = memo(({ item, onPress, onLongPress, onEdit, renderRightActions, onLayout }) => {
   return (
@@ -95,7 +96,9 @@ const ItineraryDetailScreen = () => {
 
   const [isNotesModalVisible, setIsNotesModalVisible] = useState(false);
   const [notesPreview, setNotesPreview] = useState('');
-
+  const [isPlacesModalVisible, setIsPlacesModalVisible] = useState(false);
+  const [placesList, setPlacesList] = useState([]);
+  
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -128,6 +131,23 @@ const ItineraryDetailScreen = () => {
       loadNotesPreview();
     }
   }, [isNotesModalVisible]);
+
+  useEffect(() => {
+    if (!isPlacesModalVisible) { // Fetch places when modal closes
+      const loadPlacesList = async () => {
+        try {
+          const savedPlaces = await AsyncStorage.getItem('itinerary_places');
+          if (savedPlaces) {
+            setPlacesList(JSON.parse(savedPlaces));
+          }
+        } catch (error) {
+          console.error('Error loading places:', error);
+        }
+      };
+      loadPlacesList();
+    }
+  }, [isPlacesModalVisible]);
+  
     
 
   const requestPhotoLibraryPermission = async () => {
@@ -162,7 +182,6 @@ const ItineraryDetailScreen = () => {
       }
     } catch (error) {
       if (error.code === 'E_PICKER_CANCELLED') {
-        Alert.alert("Cancelled", "User cancelled image picker");
       } else {
         Alert.alert("Error", error.message || "Image picker error");
       }
@@ -529,6 +548,23 @@ const ItineraryDetailScreen = () => {
                 </TouchableOpacity>
               </View>
 
+              <View style={styles.placesContainer}>
+                <TouchableOpacity style={styles.placesPanel} onPress={() => setIsPlacesModalVisible(true)}>
+                  {/* Title Positioned at the Top */}
+                  <Text style={styles.placesTitle}>Places to Visit</Text>
+
+                  {/* Content Wrapper to Ensure List is Below Title */}
+                  <View style={styles.placesList}>
+                    {placesList.length > 0 ? (
+                      placesList.map((place, index) => (
+                        <Text key={index} style={styles.placesItem}>• {place}</Text>
+                      ))
+                    ) : (
+                      <Text style={styles.placesPlaceholder}>Tap to add places</Text>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              </View>
 
             </>
           )}
@@ -652,6 +688,11 @@ const ItineraryDetailScreen = () => {
           visible={isNotesModalVisible}
           onClose={() => setIsNotesModalVisible(false)}
         />
+        <PlacesModal
+          visible={isPlacesModalVisible}
+          onClose={() => setIsPlacesModalVisible(false)}
+        />
+
 
         <TabView
           navigationState={{ index, routes }}
@@ -1082,13 +1123,11 @@ const styles = StyleSheet.create({
   notesContainer: {
     marginTop: 20,
     paddingHorizontal: 10,
+    minHeight: 96
   },
   notesPanel: {
     width: '100%',
-    aspectRatio: 2.5,
     backgroundColor: '#f9f9f9',
-    justifyContent: 'center',
-    alignItems: 'center',
     borderRadius: 10,
     padding: 15,
     shadowColor: '#000',
@@ -1098,18 +1137,72 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderWidth: 1,
     borderColor: '#ddd',
+    alignItems: 'flex-start', 
+    justifyContent: 'flex-start', 
+    minHeight: 50,
+    flexGrow: 1,
   },
   notesPreview: {
     fontSize: 14,
     color: '#555',
-    textAlign: 'left', // Align text to the left
-    alignSelf: 'flex-start', // Ensure text starts from the left
-    position: 'absolute', // Fix position inside the panel
-    top: 35, // Position below the title
-    left: 10, // Align to the left edge
-    right: 10, // Ensures proper wrapping
+    textAlign: 'left', 
+    alignSelf: 'flex-start', 
+    position: 'absolute', 
+    top: 35, 
+    left: 10, 
+    right: 10, 
   },
-    
+
+  placesContainer: {
+    marginTop: 20,
+    paddingHorizontal: 10,
+    minHeight: 96
+  },
+
+  placesPanel: {
+    width: '100%',
+    backgroundColor: '#f9f9f9',
+    borderRadius: 10,
+    padding: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+    minHeight: 50,
+    flexGrow: 1, 
+  },
+
+  placesTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#007bff',
+    marginBottom: 5,
+  },
+
+  placesList: {
+    width: '100%',
+    paddingTop: 5, 
+  },
+
+  placesItem: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 3, 
+  },
+
+  placesPlaceholder: {
+    fontSize: 14,
+    color: '#888',
+    fontStyle: 'italic',
+  },
+
+  
+      
   
 });
 
