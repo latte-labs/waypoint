@@ -19,6 +19,7 @@ import ImagePicker from 'react-native-image-crop-picker';
 import { check, request, PERMISSIONS, RESULTS } from "react-native-permissions";
 import NotesModal from './NotesModal';
 import PlacesModal from './PlacesModal';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
 const DayCard = memo(({ item, onPress, onLongPress, onEdit, renderRightActions, onLayout }) => {
   return (
@@ -474,7 +475,12 @@ const ItineraryDetailScreen = () => {
                   </TouchableOpacity>
                   <View style={styles.headerContent}>
                     <Text style={[styles.overviewTitle, { color: '#fff' }]}>{itinerary?.name}</Text>
+                    <View style={styles.destinationContainer}>
+                    <FontAwesome5 name="map-marker-alt" size={16} color="#fff" style={styles.locationIcon} />
                     <Text style={[styles.overviewSubtitle, { color: '#fff' }]}>{itinerary?.destination}</Text>
+                    </View>
+
+                    {/* <Text style={[styles.overviewSubtitle, { color: '#fff' }]}>{itinerary?.destination}</Text> */}
                     <Text style={[styles.overviewDates, { color: '#fff' }]}> 
                       {new Date(itinerary.start_date).toLocaleDateString('en-US', {
                         weekday: 'short',
@@ -995,22 +1001,24 @@ const styles = StyleSheet.create({
   },
   overviewContainer: {
     flex: 1,
-    padding: 20,
+    // padding: 20,
     backgroundColor: '#fff',
-    paddingBottom: 80
+    paddingBottom: 80,
   },
   // Fixed header size for a nice background look
   overviewHeader: {
-    position: 'relative',
-    height: 250,
-    borderRadius: 12,
-    padding: 12,
+    width: '100%', // ✅ Makes it full width
+    height: 250, // Keeps the height consistent
+    borderRadius: 0, // ✅ Removes any rounded edges that could affect width
+    padding: 0, // ✅ Ensures no extra padding that could shrink it
     overflow: 'hidden',
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   backgroundImage: {
-    resizeMode: 'cover',
+    width: '100%', // ✅ Ensures the image background spans full width
+    height: '100%', // ✅ Covers the full height of the container
+    resizeMode: 'cover', // ✅ Makes sure the image scales correctly
   },
   // Transparent black overlay
   overlay: {
@@ -1038,11 +1046,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   overviewSubtitle: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#333',
     marginBottom: 8,
     textAlign: 'center',
   },
+  destinationContainer: {
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+  },
+  locationIcon: {
+    marginRight: 5, 
+    alignSelf: 'center',
+    marginBottom: 8,
+  },  
   overviewDates: {
     fontSize: 16,
     color: '#666',
@@ -1051,6 +1069,7 @@ const styles = StyleSheet.create({
   },
   overviewCollaborators: {
     marginTop: 10,
+    paddingHorizontal: 10
   },
   overviewSectionTitle: {
     fontSize: 20,
