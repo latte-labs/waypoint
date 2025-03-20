@@ -20,6 +20,8 @@ import { check, request, PERMISSIONS, RESULTS } from "react-native-permissions";
 import NotesModal from './NotesModal';
 import PlacesModal from './PlacesModal';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import OtherCostsModal from './OtherCostsModal';
+
 
 const DayCard = memo(({ item, onPress, onLongPress, onEdit, renderRightActions, onLayout }) => {
   const totalEstimatedCost = item.activities?.reduce((sum, activity) => {
@@ -107,6 +109,9 @@ const ItineraryDetailScreen = () => {
   const [isPlacesModalVisible, setIsPlacesModalVisible] = useState(false);
   const [placesList, setPlacesList] = useState([]);
   const [totalItineraryCost, setTotalItineraryCost] = useState(0);
+  const [isOtherCostsModalVisible, setIsOtherCostsModalVisible] = useState(false);
+  const [otherCosts, setOtherCosts] = useState([]);
+
 
 
   useEffect(() => {
@@ -210,6 +215,10 @@ const ItineraryDetailScreen = () => {
       Alert.alert("Error", "Image upload failed.");
     }
   };
+  const handleOtherCosts = () => {
+    Alert.alert("Other Costs", "This section will track additional expenses.");
+  };
+
 
   const parseLocalDate = (dateString) => {
     const [year, month, day] = dateString.split('-').map(Number);
@@ -572,18 +581,31 @@ const ItineraryDetailScreen = () => {
                 )}
               </View>
 
-              <View style={styles.budgetContainer}>
-                <View style={styles.squarePanel}>
-                  <Text style={styles.panelTitle}>Budget</Text>
-                  <Text style={styles.panelValue}>
-                    {itinerary?.budget ? `$${itinerary.budget.toLocaleString()}` : 'N/A'}
-                  </Text>
-                </View>
-                <View style={styles.squarePanel}>
-                  <Text style={styles.panelTitle}>Activities Cost</Text>
-                  <Text style={styles.panelValue}>${totalItineraryCost.toFixed(0)}</Text>
-                </View>
-              </View>
+              <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false} 
+                  contentContainerStyle={styles.budgetContainer}
+              >
+                  <View style={styles.squarePanel}>
+                      <Text style={styles.panelTitle}>Budget</Text>
+                      <Text style={styles.panelValue}>
+                          {itinerary?.budget ? `$${itinerary.budget.toLocaleString()}` : 'N/A'}
+                      </Text>
+                  </View>
+
+                  <View style={styles.squarePanel}>
+                      <Text style={styles.panelTitle}>Activities Cost</Text>
+                      <Text style={styles.panelValue}>
+                          {totalItineraryCost ? `$${totalItineraryCost.toLocaleString()}` : 'N/A'}
+                      </Text>
+                  </View>
+
+                  {/* ✅ "Other Costs" Panel */}
+                  <TouchableOpacity style={styles.squarePanel} onPress={() => setIsOtherCostsModalVisible(true)}>
+                    <Text style={styles.panelTitle}>Other Costs</Text>
+                    <Text style={styles.panelValue}>Tap to View</Text>
+                  </TouchableOpacity>
+              </ScrollView>
 
               <View style={styles.notesContainer}>
                 <TouchableOpacity 
@@ -743,6 +765,12 @@ const ItineraryDetailScreen = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaWrapper>
+        <OtherCostsModal
+            visible={isOtherCostsModalVisible}
+            onClose={() => setIsOtherCostsModalVisible(false)}
+            otherCosts={otherCosts} 
+            setOtherCosts={setOtherCosts} 
+        />
         <NotesModal
           visible={isNotesModalVisible}
           onClose={() => setIsNotesModalVisible(false)}
@@ -1170,19 +1198,20 @@ const styles = StyleSheet.create({
 
   // BUDGET CONTAINER
   budgetContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
-    paddingHorizontal: 10,
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingVertical: 10,
+    marginLeft: 10
   },
   squarePanel: {
-    width: '48%',
+    width: 140, // ✅ Ensures uniform size for horizontal scrolling
     aspectRatio: 1.5,
     backgroundColor: '#eef7ff',
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,
     padding: 10,
+    marginRight: 10, // ✅ Adds space between panels
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -1190,17 +1219,17 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   panelTitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#007bff',
-    position: 'absolute', 
-    top: 10, 
-    left: 10, 
+    fontWeight: 'bold',
+    marginBottom: 5,
   },
   panelValue: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: '600',
     color: '#222',
   },
+
   scrollContainer: {
     flex: 1
   },
