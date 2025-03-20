@@ -10,6 +10,7 @@ import { database } from '../../../firebase';
 import SafeAreaWrapper from '../SafeAreaWrapper';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import UserNameDisplay from '../../UserNameDisplay';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 const ItineraryListScreen = () => {
     const navigation = useNavigation();
@@ -217,35 +218,47 @@ const ItineraryListScreen = () => {
 
     // ✅ Define the Shared Itineraries Tab
     const SharedItineraries = () => (
-        <View>
-            {/* ✅ Pending Invitations List */}
-            {pendingInvites.length > 0 && (
+        sharedItineraries.length === 0 && pendingInvites.length === 0 ? (
+            <View style={styles.emptyContainer}>
+                <Text style={styles.noItineraries}>You have no shared itineraries yet.</Text>
+            </View>
+        ) : (
+            <View>
+                {/* ✅ Pending Invitations List */}
+                {pendingInvites.length > 0 && (
+                    <FlatList 
+                        data={pendingInvites}
+                        renderItem={renderInviteItem}
+                        keyExtractor={(item, index) => `invite-${index}`}
+                        contentContainerStyle={styles.listContainer}
+                    />
+                )}
+    
+                {/* ✅ Shared Itineraries List */}
                 <FlatList 
-                    data={pendingInvites}
-                    renderItem={renderInviteItem}
-                    keyExtractor={(item, index) => `invite-${index}`}
+                    data={sharedItineraries}
+                    renderItem={renderItineraryItem}
+                    keyExtractor={(item, index) => item.id ? item.id.toString() : `shared-${index}`}
                     contentContainerStyle={styles.listContainer}
                 />
-            )}
-
-            {/* ✅ Shared Itineraries List */}
-            <FlatList 
-                data={sharedItineraries}
-                renderItem={renderItineraryItem}
-                keyExtractor={(item, index) => item.id ? item.id.toString() : `shared-${index}`}
-                contentContainerStyle={styles.listContainer}
-            />
-        </View>
+            </View>
+        )
     );
-
+    
     const renderScene = SceneMap({
         personal: () => (
-            <FlatList 
-                data={ownedItineraries}
-                renderItem={renderItineraryItem}
-                keyExtractor={(item, index) => item.id ? item.id.toString() : `owned-${index}`}
-                contentContainerStyle={styles.listContainer}
-            />
+            ownedItineraries.length === 0 ? (
+                <View style={styles.emptyContainer}>
+                    <Text style={styles.noItineraries}>You have no itineraries created yet.</Text>
+                </View>
+            ) : (
+                <FlatList 
+                    data={ownedItineraries}
+                    renderItem={renderItineraryItem}
+                    keyExtractor={(item, index) => item.id ? item.id.toString() : `owned-${index}`}
+                    contentContainerStyle={styles.listContainer}
+                />
+            )
         ),
         shared: SharedItineraries,
     });
@@ -374,7 +387,7 @@ const ItineraryListScreen = () => {
 
                 {/* ✅ Add Itinerary Button */}
                 <TouchableOpacity style={styles.addButton} onPress={handleAddItinerary}>
-                    <Text style={styles.addButtonText}>+ Create New Itinerary</Text>
+                    <Icon name="plus" size={16} color="white" />
                 </TouchableOpacity>
             </View>
         </SafeAreaWrapper>
@@ -403,7 +416,22 @@ const styles = StyleSheet.create({
     itineraryName: { fontSize: 16, fontWeight: 'bold', color: '#333' },
     itineraryDestination: { fontSize: 14, color: '#666' },
     itineraryDate: { fontSize: 12, fontWeight: '600', color: '#007bff' },
-    addButton: { margin: 20, padding: 15, backgroundColor: '#007bff', borderRadius: 8, alignItems: 'center' },
+    addButton: {
+        position: 'absolute',
+        bottom: 20,
+        right: 20,
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        backgroundColor: '#253985',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3, // For Android shadow
+    },
     addButtonText: { color: '#fff', fontSize: 14 },
     emptyContainer: {
         flex: 1,
