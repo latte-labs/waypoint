@@ -162,7 +162,7 @@ const InteractiveRecommendations = () => {
     <View style={styles.listContainer}>
         <FlatList
             data={selectedCategory ? mapPlaces.filter(place => place.category === selectedCategory) : mapPlaces}
-            keyExtractor={(item) => item.place_id || `${item.name}-${item.latitude}-${item.longitude}`}
+            keyExtractor={(item) => item.cached_data.place_id || `${item.name}-${item.latitude}-${item.longitude}`}
             renderItem={({ item }) => {
                 let imageUrl;
 
@@ -181,6 +181,7 @@ const InteractiveRecommendations = () => {
                             <Text style={styles.cardTitle}>{item.name}</Text>
                             <Text>{item.category}</Text>
                             <Text>⭐ {item.rating || "N/A"}</Text>
+                            <Text>{item.cached_data.place_id}</Text>
                         </View>
                     </View>
                 );

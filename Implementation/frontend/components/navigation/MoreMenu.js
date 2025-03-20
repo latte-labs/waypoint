@@ -36,6 +36,10 @@ const MoreMenu = ({ closeMenu }) => {
                 <Text style={navigationStyles.moreMenuText}>🤖 Chatbot</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity onPress={() => handleNavigate("CheckIn")} style={navigationStyles.moreMenuItem}>
+                <Text style={navigationStyles.moreMenuText}>Check In</Text>
+            </TouchableOpacity>
+
             <Button title="Log Out" onPress={(handleLogout)} />
         </View>
     )
