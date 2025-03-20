@@ -12,7 +12,7 @@ class WeatherRequest(BaseModel):
     latitude: float
     longitude: float
 
-@weather_router.get('/')
+@weather_router.get("")
 def get_weather(latitude: float, longitude: float, db: Session = Depends(get_db)):
     
     weather_url = f"https://api.openweathermap.org/data/2.5/weather?lat={latitude}&lon={longitude}&appid={OPENWEATHERMAP_API_KEY}&units=metric"

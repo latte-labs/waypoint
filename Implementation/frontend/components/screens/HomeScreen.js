@@ -94,12 +94,11 @@ function HomeScreen() {
     };
 
     const handleLocationGranted = (coords) => {
-        console.log('Location received in HomeScreen:', coords);
-        setLocation(coords);
+        // console.log('Location received in HomeScreen:', coords);
+        setLocation(coords); // This will trigger useEffect, which will fetch weather
         setHasLocationPermission(true);
-        fetchWeather(coords.latitude, coords.longitude);
     };
-
+    
     // ✅ Fetch weather when HomeScreen mounts & location exists
     useEffect(() => {
         if (location) {
