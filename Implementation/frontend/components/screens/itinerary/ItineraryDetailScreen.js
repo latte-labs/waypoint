@@ -603,7 +603,11 @@ const ItineraryDetailScreen = () => {
                   {/* ✅ "Other Costs" Panel */}
                   <TouchableOpacity style={styles.squarePanel} onPress={() => setIsOtherCostsModalVisible(true)}>
                     <Text style={styles.panelTitle}>Other Costs</Text>
-                    <Text style={styles.panelValue}>Tap to View</Text>
+                    <Text style={styles.panelValue}>
+                        {otherCosts.length > 0 
+                            ? `$${otherCosts.reduce((sum, cost) => sum + parseFloat(cost.amount), 0).toLocaleString()}`
+                            : 'N/A'}
+                    </Text>
                   </TouchableOpacity>
               </ScrollView>
 
@@ -1204,8 +1208,8 @@ const styles = StyleSheet.create({
     marginLeft: 10
   },
   squarePanel: {
-    width: 140, // ✅ Ensures uniform size for horizontal scrolling
-    aspectRatio: 1.5,
+    width: 175, // ✅ Ensures uniform size for horizontal scrolling
+    aspectRatio: 2.1,
     backgroundColor: '#eef7ff',
     justifyContent: 'center',
     alignItems: 'center',
