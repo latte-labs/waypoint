@@ -18,6 +18,8 @@ import HomeScreenStyles from '../../styles/HomeScreenStyle';
 import LocationPermissions from './permissions/LocationPermissions';
 import axios from 'axios';
 import API_BASE_URL from '../../config';
+import FeatureCarousel from './FeatureCarousel';
+
 
 const { width, height } = Dimensions.get('window');
 
@@ -173,10 +175,14 @@ function HomeScreen() {
                 </View>
 
 
+
+                {/* ✅ Feature Highlights Carousel */}
+                <FeatureCarousel />
                 {/* ✅ 3. TITLE SECTION (5% HEIGHT) */}
                 <View style={HomeScreenStyles.titleContainer}>
                     <Text style={HomeScreenStyles.titleText}>Trip Plans</Text>
                 </View>
+
 
                 {/* ✅ 4. TRIPS LIST */}
                 <ScrollView
