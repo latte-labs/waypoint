@@ -19,6 +19,8 @@ import LocationPermissions from './permissions/LocationPermissions';
 import axios from 'axios';
 import API_BASE_URL from '../../config';
 import FeatureCarousel from './FeatureCarousel';
+import StartJourneyBanner from './StartJourneyBanner';
+
 
 
 const { width, height } = Dimensions.get('window');
@@ -127,32 +129,13 @@ function HomeScreen() {
             <View style={{ flex: 1, backgroundColor: 'white', padding: 15, marginBottom: 70 }}>
                 {/* ✅ 1. HEADER SECTION (30% HEIGHT) */}
                 <View style={HomeScreenStyles.headerContainer}>
-                    {/* Left: Take Quiz or WayPoint */}
-                    <View style={{ width: '50%', height: '100%', justifyContent: 'center' }}>
-                        {showQuizPrompt ? (
-                            <TouchableOpacity
-                                style={HomeScreenStyles.takeQuizContainer}
-                                onPress={handleQuizStart}
-                            >
-                                <Text style={HomeScreenStyles.takeQuizText}>Discover your travel style!</Text>
-                                <TouchableOpacity
-                                    style={HomeScreenStyles.takeQuizButton}
-                                    onPress={handleQuizStart}
-                                >
-                                    <Text style={HomeScreenStyles.takeQuizButtonText}>Start</Text>
-                                </TouchableOpacity>
-                            </TouchableOpacity>
-                        ) : (
-                            <View style={HomeScreenStyles.brandContainer}>
-                                <Image
-                                    source={require('../../assets/images/logo.png')}
-                                    style={HomeScreenStyles.logo}
-                                />
-                                <Text style={HomeScreenStyles.waypointText}>WayPoint</Text>
-                            </View>
-                        )}
+                    <View style={HomeScreenStyles.brandContainer}>
+                        <Image
+                            source={require('../../assets/images/logo.png')}
+                            style={HomeScreenStyles.logo}
+                        />
+                        <Text style={HomeScreenStyles.waypointText}>WayPoint</Text>
                     </View>
-
                 </View>
 
                 {/* Weather */}
@@ -178,6 +161,17 @@ function HomeScreen() {
 
                 {/* ✅ Feature Highlights Carousel */}
                 <FeatureCarousel />
+
+                {showQuizPrompt ? (
+                    <StartJourneyBanner
+                        title="Not sure where to go?"
+                        subtitle="Take our travel style quiz to unlock personalized destinations."
+                        buttonText="Start Quiz"
+                        // image={require('../../assets/images/start-banner.jpg')} 
+                        onPress={handleQuizStart} 
+                    />
+                ) : null}
+
                 {/* ✅ 3. TITLE SECTION (5% HEIGHT) */}
                 <View style={HomeScreenStyles.titleContainer}>
                     <Text style={HomeScreenStyles.titleText}>Trip Plans</Text>

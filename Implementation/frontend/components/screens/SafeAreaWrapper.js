@@ -6,7 +6,7 @@ const SafeAreaWrapper = ({ children }) => {
   const insets = useSafeAreaInsets();
 
   return (
-    <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
+    <SafeAreaView style={[styles.container, { paddingTop: insets.top * 0.6 }]}>
       {children}
     </SafeAreaView>
   );

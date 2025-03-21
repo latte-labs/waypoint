@@ -12,11 +12,11 @@ const HomeScreenStyles = StyleSheet.create({
 
     // ✅ HEADER SECTION (30% HEIGHT)
     headerContainer: {
-        height: height * 0.1,
+        height: height * 0.05, // Reduce even more
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 15,
+        paddingBottom: 10
     },
 
     takeQuizContainer: {
@@ -49,10 +49,8 @@ const HomeScreenStyles = StyleSheet.create({
     },
     brandContainer: {
         flexDirection: 'row',
-        justifyContent: 'flex-start',
         alignItems: 'center',
-        height: '80%',
-        marginRight: 10,
+        height: '90%', 
         paddingLeft: 0,
     },
 
