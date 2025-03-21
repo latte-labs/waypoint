@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { database } from '../../firebase'; // ensure firebase is properly initialized
 import API_BASE_URL from '../../config';
+import styles from '../../styles/CheckInScreenStyles';
 
 const CheckIn = () => {
     const [loading, setLoading] = useState(false);
@@ -147,7 +148,7 @@ const CheckIn = () => {
 
     if (loading) {
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" />
                 <Text>Loading...</Text>
             </View>
@@ -156,7 +157,7 @@ const CheckIn = () => {
 
     if (locationError) {
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <View style={styles.errorContainer}>
                 <Text>{locationError}</Text>
                 <Button title="Try Again" onPress={fetchLocationAndPlaces} />
             </View>
@@ -164,8 +165,8 @@ const CheckIn = () => {
     }
 
     return (
-        <View style={{ flex: 1, padding: 20 }}>
-            <Text style={{ fontSize: 20, marginBottom: 10 }}>Select a Place to Check In</Text>
+        <View style={styles.container}>
+            <Text style={styles.title}>Select a Place to Check In</Text>
             <FlatList
                 data={filteredPlaces}
                 keyExtractor={(item) => item.cached_data.place_id}
@@ -173,18 +174,13 @@ const CheckIn = () => {
                     const alreadyCheckedIn = userCheckIns.includes(item.cached_data.place_id);
                     return (
                         <TouchableOpacity
-                            style={{
-                                padding: 15,
-                                borderBottomWidth: 1,
-                                borderBottomColor: '#ccc',
-                                opacity: alreadyCheckedIn ? 0.5 : 1,
-                            }}
+                            style={[styles.flatListItem, { opacity: alreadyCheckedIn ? 0.5 : 1 }]}
                             onPress={() => handlePlaceSelection(item)}
                             disabled={alreadyCheckedIn}
                         >
-                            <Text style={{ fontSize: 16 }}>{item.cached_data?.name || item.name}</Text>
-                            <Text style={{ color: 'gray' }}>{item.category}</Text>
-                            {alreadyCheckedIn && <Text style={{ color: 'green' }}>Checked In</Text>}
+                            <Text style={styles.placeName}>{item.cached_data?.name || item.name}</Text>
+                            <Text style={styles.categoryText}>{item.category}</Text>
+                            {alreadyCheckedIn && <Text style={styles.checkedInText}>Checked In</Text>}
                         </TouchableOpacity>
                     );
                 }}
