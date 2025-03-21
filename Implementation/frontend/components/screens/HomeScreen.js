@@ -126,7 +126,6 @@ function HomeScreen() {
 
     return (
         <SafeAreaWrapper>
-            <View style={{ flex: 1, backgroundColor: 'white', padding: 15, marginBottom: 70 }}>
                 {/* ✅ 1. HEADER SECTION (30% HEIGHT) */}
                 <View style={HomeScreenStyles.headerContainer}>
                     <View style={HomeScreenStyles.brandContainer}>
@@ -138,6 +137,11 @@ function HomeScreen() {
                     </View>
                 </View>
 
+                <ScrollView 
+                    style={{ flex: 1, backgroundColor: 'white' }} 
+                    contentContainerStyle={{ paddingBottom: 70 }} 
+                    keyboardShouldPersistTaps="handled"
+                >
                 {/* Weather */}
                 <View style={HomeScreenStyles.weatherContainer}>
                     <View style={HomeScreenStyles.weatherRow}>
@@ -196,7 +200,7 @@ function HomeScreen() {
                         </TouchableOpacity>
                     ))}
                 </ScrollView>
-            </View>
+            </ScrollView>
         </SafeAreaWrapper>
     );
 }
