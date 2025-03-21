@@ -8,155 +8,193 @@ import { database } from '../../firebase'; // ensure firebase is properly initia
 import API_BASE_URL from '../../config';
 
 const CheckIn = () => {
-  const [loading, setLoading] = useState(false);
-  const [places, setPlaces] = useState([]);
-  const [locationError, setLocationError] = useState(null);
-  const allowedCategories = ['park', 'museum', 'bar'];
+    const [loading, setLoading] = useState(false);
+    const [places, setPlaces] = useState([]);
+    const [locationError, setLocationError] = useState(null);
+    const [userCheckIns, setUserCheckIns] = useState([]);
+    const allowedCategories = ['park', 'museum', 'bar'];
 
-  useEffect(() => {
-    fetchLocationAndPlaces();
-  }, []);
+    // Fetch user's existing check-ins from Firebase
+    useEffect(() => {
+        const fetchUserCheckIns = async () => {
+            try {
+                const storedUser = await AsyncStorage.getItem('user');
+                if (storedUser) {
+                    const userData = JSON.parse(storedUser);
+                    const userId = userData.id;
+                    const snapshot = await database().ref(`/game/${userId}`).once('value');
+                    const data = snapshot.val();
+                    let checkedPlaceIds = [];
+                    if (data) {
+                        Object.values(data).forEach(category => {
+                            Object.values(category).forEach(checkInData => {
+                                checkedPlaceIds.push(checkInData.place_id);
+                            });
+                        });
+                    }
+                    setUserCheckIns(checkedPlaceIds);
+                }
+            } catch (error) {
+                console.error("Error fetching user check-ins:", error);
+            }
+        };
 
-  // Retrieves current location then fetches nearby places
-  const fetchLocationAndPlaces = () => {
-    setLoading(true);
-    Geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        fetchNearbyPlaces(latitude, longitude);
-      },
-      (error) => {
-        console.error("Location Error:", error);
-        setLocationError("Unable to retrieve current location.");
-        setLoading(false);
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-    );
-  };
+        fetchUserCheckIns();
+    }, []);
 
-  // Calls backend API to get places within a small radius
-  const fetchNearbyPlaces = async (latitude, longitude) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/places/search`, {
-        params: {
-          location: `${latitude},${longitude}`,
-          radius:500, // small radius for precise check in
-        },
-      });
-      setPlaces(response.data);
-    } catch (error) {
-      console.error("Error fetching nearby places:", error);
-      Alert.alert("Error", "Failed to fetch nearby places. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    useEffect(() => {
+        fetchLocationAndPlaces();
+    }, []);
 
-  const deduplicatedPlaces = places.filter((place, index, self) =>
-    index === self.findIndex((p) => p.cached_data.place_id === place.cached_data.place_id)
-  );
-  const filteredPlaces = deduplicatedPlaces.filter(place =>
-    allowedCategories.includes(place.category.toLowerCase())
-  );
+    // Retrieves current location then fetches nearby places
+    const fetchLocationAndPlaces = () => {
+        setLoading(true);
+        Geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                fetchNearbyPlaces(latitude, longitude);
+            },
+            (error) => {
+                console.error("Location Error:", error);
+                setLocationError("Unable to retrieve current location.");
+                setLoading(false);
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+        );
+    };
 
-  const handlePlaceSelection = (place) => {
-    Alert.alert(
-      "Confirm Check In",
-      `Do you want to check in at ${place.name}?`,
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
-        {
-          text: "Confirm",
-          onPress: () => confirmCheckIn(place)
+    // Calls backend API to get places within a small radius
+    const fetchNearbyPlaces = async (latitude, longitude) => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/places/search`, {
+                params: {
+                    location: `${latitude},${longitude}`,
+                    radius: 300, // small radius for precise check in
+                },
+            });
+            setPlaces(response.data);
+        } catch (error) {
+            console.error("Error fetching nearby places:", error);
+            Alert.alert("Error", "Failed to fetch nearby places. Please try again.");
+        } finally {
+            setLoading(false);
         }
-      ]
+    };
+
+    const deduplicatedPlaces = places.filter((place, index, self) =>
+        index === self.findIndex((p) => p.cached_data.place_id === place.cached_data.place_id)
     );
-  };
+    const filteredPlaces = deduplicatedPlaces.filter(place =>
+        allowedCategories.includes(place.category.toLowerCase())
+    );
 
-  // Writes the check in information to Firebase
-  const confirmCheckIn = async (place) => {
-    setLoading(true);
-    try {
-      const checkinId = uuidv4();
-      const createdAt = new Date().toISOString();
+    const handlePlaceSelection = (place) => {
+        if (userCheckIns.includes(place.cached_data.place_id)) return;
 
-      // Retrieve the current user data from AsyncStorage (as set in LoginScreen.js)
-      const storedUser = await AsyncStorage.getItem('user');
-      if (!storedUser) {
-        Alert.alert("Error", "User not logged in.");
-        setLoading(false);
-        return;
-      }
-      const userData = JSON.parse(storedUser);
-      const userId = userData.id;
+        Alert.alert(
+            "Confirm Check In",
+            `Do you want to check in at ${place.cached_data?.name || place.name}?`,
+            [
+                {
+                    text: "Cancel",
+                    style: "cancel"
+                },
+                {
+                    text: "Confirm",
+                    onPress: () => confirmCheckIn(place)
+                }
+            ]
+        );
+    };
 
-      // Prepare check in data. If the API returns a coordinates object, use it; otherwise, fallback.
-      const checkInData = {
-        coordinates: place.coordinates || { latitude: place.latitude, longitude: place.longitude },
-        place_id: place.place_id,
-        created_at: createdAt,
-      };
+    // Writes the check in information to Firebase
+    const confirmCheckIn = async (place) => {
+        setLoading(true);
+        try {
+            const checkinId = uuidv4();
+            const createdAt = new Date().toISOString();
 
-      // Write data to Firebase following the structure:
-      // game -> user_id -> category -> checkin_completion_id -> checkInData
-      await database().ref(`/game/${userId}/${place.category.toLowerCase()}/${checkinId}`).set(checkInData);
+            // Retrieve the current user data from AsyncStorage (as set in LoginScreen.js)
+            const storedUser = await AsyncStorage.getItem('user');
+            if (!storedUser) {
+                Alert.alert("Error", "User not logged in.");
+                setLoading(false);
+                return;
+            }
+            const userData = JSON.parse(storedUser);
+            const userId = userData.id;
 
-      Alert.alert("Check In Successful", `You have checked in at ${place.name}`);
-    } catch (error) {
-      console.error("Check In Error:", error);
-      Alert.alert("Error", "Failed to complete check in. Please try again.");
-    } finally {
-      setLoading(false);
+            // Prepare check in data. If the API returns a coordinates object, use it; otherwise, fallback.
+            const checkInData = {
+                coordinates: place.coordinates || { latitude: place.latitude, longitude: place.longitude },
+                place_id: place.cached_data.place_id,
+                created_at: createdAt,
+            };
+
+            // Write data to Firebase following the structure:
+            // game -> user_id -> category -> checkin_completion_id -> checkInData
+            await database().ref(`/game/${userId}/${place.category.toLowerCase()}/${checkinId}`).set(checkInData);
+
+            setUserCheckIns(prev => [...prev, place.cached_data.place_id]);
+            Alert.alert("Check In Successful", `You have checked in at ${place.cached_data?.name || place.name}`);
+        } catch (error) {
+            console.error("Check In Error:", error);
+            Alert.alert("Error", "Failed to complete check in. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" />
+                <Text>Loading...</Text>
+            </View>
+        );
     }
-  };
 
-  if (loading) {
+    if (locationError) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <Text>{locationError}</Text>
+                <Button title="Try Again" onPress={fetchLocationAndPlaces} />
+            </View>
+        );
+    }
+
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" />
-        <Text>Loading...</Text>
-      </View>
+        <View style={{ flex: 1, padding: 20 }}>
+            <Text style={{ fontSize: 20, marginBottom: 10 }}>Select a Place to Check In</Text>
+            <FlatList
+                data={filteredPlaces}
+                keyExtractor={(item) => item.cached_data.place_id}
+                renderItem={({ item }) => {
+                    const alreadyCheckedIn = userCheckIns.includes(item.cached_data.place_id);
+                    return (
+                        <TouchableOpacity
+                            style={{
+                                padding: 15,
+                                borderBottomWidth: 1,
+                                borderBottomColor: '#ccc',
+                                opacity: alreadyCheckedIn ? 0.5 : 1,
+                            }}
+                            onPress={() => handlePlaceSelection(item)}
+                            disabled={alreadyCheckedIn}
+                        >
+                            <Text style={{ fontSize: 16 }}>{item.cached_data?.name || item.name}</Text>
+                            <Text style={{ color: 'gray' }}>{item.category}</Text>
+                            {alreadyCheckedIn && <Text style={{ color: 'green' }}>Checked In</Text>}
+                        </TouchableOpacity>
+                    );
+                }}
+                ListEmptyComponent={() => (
+                    <Text>No places found nearby. Try refreshing.</Text>
+                )}
+            />
+            <Button title="Refresh" onPress={fetchLocationAndPlaces} />
+        </View>
     );
-  }
-
-  if (locationError) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>{locationError}</Text>
-        <Button title="Try Again" onPress={fetchLocationAndPlaces} />
-      </View>
-    );
-  }
-
-  return (
-    <View style={{ flex: 1, padding: 20 }}>
-      <Text style={{ fontSize: 20, marginBottom: 10 }}>Select a Place to Check In</Text>
-      <FlatList
-        data={filteredPlaces}
-        keyExtractor={(item) => item.cached_data.place_id}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={{
-              padding: 15,
-              borderBottomWidth: 1,
-              borderBottomColor: '#ccc'
-            }}
-            onPress={() => handlePlaceSelection(item)}
-          >
-            <Text style={{ fontSize: 16 }}>{item.cached_data?.name || item.name}</Text>
-            <Text style={{ color: 'gray' }}>{item.category}</Text>
-          </TouchableOpacity>
-        )}
-        ListEmptyComponent={() => (
-          <Text>No places found nearby. Try refreshing.</Text>
-        )}
-      />
-      <Button title="Refresh" onPress={fetchLocationAndPlaces} />
-    </View>
-  );
 };
 
 export default CheckIn;
