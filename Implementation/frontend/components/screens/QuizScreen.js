@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Text,
   Pressable,
@@ -13,6 +13,8 @@ import axios from 'axios';
 import API_BASE_URL from '../../config';
 import { database } from '../../firebase';
 import styles from '../../styles/QuizScreenStyles';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 const questions = [
   {
@@ -80,6 +82,7 @@ function QuizScreen() {
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [travelStyle, setTravelStyle] = useState({ emoji: '', name: '', description: '' });
   const navigation = useNavigation();
+  
 
   const getUserId = async () => {
     try {
@@ -186,31 +189,35 @@ function QuizScreen() {
 
   const handleAnswerSelection = (index) => {
     const updatedAnswers = [...selectedAnswers];
-
-    const previousAnswer = updatedAnswers[currentQuestionIndex]; // Get the previously selected answer
-    updatedAnswers[currentQuestionIndex] = index; // Store the selected answer for the current question
+    const previousAnswer = updatedAnswers[currentQuestionIndex];
+    updatedAnswers[currentQuestionIndex] = index; 
     setSelectedAnswers(updatedAnswers);
 
     setScores(prevScores => {
-      const updatedScores = { ...prevScores };
+        const updatedScores = { ...prevScores };
 
-      // Remove previous answer's point
-      if (previousAnswer !== null) {
-        if (previousAnswer === 0) updatedScores.relaxation -= 1;
-        else if (previousAnswer === 1) updatedScores.culture -= 1;
-        else if (previousAnswer === 2) updatedScores.adventure -= 1;
-        else if (previousAnswer === 3) updatedScores.none -= 1;
-      }
+        // Remove previous answer's point
+        if (previousAnswer !== null) {
+            if (previousAnswer === 0) updatedScores.relaxation -= 1;
+            else if (previousAnswer === 1) updatedScores.culture -= 1;
+            else if (previousAnswer === 2) updatedScores.adventure -= 1;
+            else if (previousAnswer === 3) updatedScores.none -= 1;
+        }
 
-      // Add new answer's point
-      if (index === 0) updatedScores.relaxation += 1;
-      else if (index === 1) updatedScores.culture += 1;
-      else if (index === 2) updatedScores.adventure += 1;
-      else if (index === 3) updatedScores.none += 1;
+        // Add new answer's point
+        if (index === 0) updatedScores.relaxation += 1;
+        else if (index === 1) updatedScores.culture += 1;
+        else if (index === 2) updatedScores.adventure += 1;
+        else if (index === 3) updatedScores.none += 1;
 
-      return updatedScores;
+        return updatedScores;
     });
-  };
+
+    // 🔥 Bounce Effect Animation
+    animatedScales[currentQuestionIndex].value = withTiming(1.2, { duration: 100 }, () => {
+    animatedScales[currentQuestionIndex].value = withTiming(1, { duration: 100 });
+  });  
+};
 
   const handleRetakeQuiz = async () => {
     console.log("Retaking quiz...");
@@ -278,7 +285,22 @@ function QuizScreen() {
     setQuizCompleted(true);
   };
 
-  const progress = (currentQuestionIndex + 1) / questions.length;
+  const progress = useSharedValue(0); 
+  useEffect(() => {
+    progress.value = withTiming((currentQuestionIndex + 1) / questions.length, { duration: 500 });
+  }, [currentQuestionIndex]);
+
+
+  const animatedProgressStyle = useAnimatedStyle(() => {
+    return {
+        width: `${progress.value * 100}%`, // Convert progress to percentage width
+    };
+  });
+  const animatedScales = useRef(questions.map(() => useSharedValue(1))).current;
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: animatedScales[currentQuestionIndex].value }]
+}));
+
 
   return (
     <>
@@ -326,20 +348,17 @@ function QuizScreen() {
                 currentQuestionIndex === 0 && styles.hiddenButton
               ]}
               onPress={handlePreviousQuestion}
-              disabled={currentQuestionIndex === 0}>
-              <Text style={styles.buttonText}>{'<'}</Text>
+              disabled={currentQuestionIndex === 0}
+            >
+              <FontAwesome name="chevron-left" size={18} color="#1E3A8A" />
             </Pressable>
 
+
             {/* Progress Bar */}
-            <Progress.Bar
-              style={styles.progressBar}
-              progress={progress}
-              width={300} height={10}
-              color='#1E3A8A'
-              unfilledColor='#F2F2F2'
-              borderWidth={0}
-              borderRadius={5}
-            />
+            <View style={styles.progressContainer}>
+              <Animated.View style={[styles.progressBar, animatedProgressStyle]} />
+          </View>
+
 
             {/* Question */}
             <Text style={styles.questionTitle}>Question {currentQuestionIndex + 1}</Text>
@@ -347,44 +366,70 @@ function QuizScreen() {
 
             {/* Options */}
             <View style={styles.optionsContainer}>
-              {questions[currentQuestionIndex].options.map((option, index) => (
-                <Text key={index} style={styles.optionText}>
-                  {String.fromCharCode(65 + index)}) {option}
-                </Text>
-              ))}
+              {questions[currentQuestionIndex].options.map((option, index) => {
+                const isSelected = selectedAnswers[currentQuestionIndex] === index;
+                
+                return (
+                  <Pressable
+                    key={index}
+                    style={[
+                      styles.optionButton,
+                      isSelected && styles.selectedOptionButton
+                    ]}
+                    onPress={() => handleAnswerSelection(index)}
+                  >
+                    <Animated.View style={[animatedStyle, styles.optionContent]}>
+
+                      <Text style={[
+                          styles.optionText,
+                          isSelected && styles.selectedOptionText
+                      ]}>
+                        {String.fromCharCode(65 + index)}. {option} {/* ✅ Converts 0 -> A, 1 -> B, etc. */}
+                      </Text>
+
+                      {/* ✅ Show checkmark when selected */}
+                      {isSelected && (
+                        <FontAwesome 
+                          name="check" 
+                          size={16} 
+                          color="white" 
+                          style={styles.checkmarkIcon} 
+                        />
+                      )}
+                    </Animated.View>
+                  </Pressable>
+                );
+              })}
             </View>
 
-            {/* Answer Buttons */}
-            <View style={styles.grid}>
-              {["A", "B", "C", "D"].map((letter, index) => (
-                <Pressable
-                  key={index}
-                  style={[
-                    styles.button,
-                    selectedAnswers[currentQuestionIndex] === index && styles.selectedButton
-                  ]}
-                  onPress={() => handleAnswerSelection(index)}
-                >
-                  <Text
-                    style={[
-                      styles.buttonText,
-                      selectedAnswers[currentQuestionIndex] === index && styles.selectedButtonText
-                    ]}>
-                    {letter}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
 
             {/* Next Button */}
             <Pressable
-              style={[styles.buttonNext, selectedAnswers[currentQuestionIndex] === null && styles.disabledButton]}
+              style={[
+                styles.buttonNext,
+                selectedAnswers[currentQuestionIndex] === null && styles.disabledButton
+              ]}
               onPress={handleNextQuestion}
-              disabled={selectedAnswers[currentQuestionIndex] === null}>
-              <Text style={[styles.buttonNextText, selectedAnswers[currentQuestionIndex] === null && styles.disabledButtonText]}>
-                {currentQuestionIndex === questions.length - 1 ? "SUBMIT" : "NEXT"}
-              </Text>
+              disabled={selectedAnswers[currentQuestionIndex] === null}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text
+                  style={[
+                    styles.buttonNextText,
+                    selectedAnswers[currentQuestionIndex] === null && styles.disabledButtonText,
+                    { marginRight: 8 }
+                  ]}
+                >
+                  {currentQuestionIndex === questions.length - 1 ? "SUBMIT" : "NEXT"}
+                </Text>
+                <FontAwesome
+                  name={currentQuestionIndex === questions.length - 1 ? "check" : "chevron-right"}
+                  size={16}
+                  color={selectedAnswers[currentQuestionIndex] === null ? "#555" : "#fff"}
+                />
+              </View>
             </Pressable>
+
           </>
         )}
 

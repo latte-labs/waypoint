@@ -6,159 +6,162 @@ const QuizStyles = StyleSheet.create({
         justifyContent: 'flex-start',
         alignItems: 'center',
         paddingVertical: 20,
-        paddingHorizontal: 10,
-        marginTop: 0,
-        height: '100%',
+        paddingHorizontal: 15,
         backgroundColor: 'white',
     },
+
     questionTitle: {
         fontSize: 26,
-        paddingVertical: 10,
+        fontWeight: 'bold',
+        color: '#1E3A8A',
         alignSelf: 'flex-start',
         marginHorizontal: 28,
         marginTop: 20,
     },
+
     question: {
-        alignSelf: 'flex-start',
-        paddingVertical: 10, 
-        marginHorizontal: 30,
         fontSize: 18,
-    },
-    optionsContainer: {
+        color: 'black',
         alignSelf: 'flex-start',
         marginHorizontal: 30,
+        paddingVertical: 10, 
+    },
+
+    optionsContainer: {
+        alignSelf: 'center',
+        width: '100%',
         marginBottom: 20,
     },
-    optionText: {
-        fontSize: 18,
-        paddingVertical: 5,
-    },
-    grid: {
+
+    optionButton: {
+        backgroundColor: '#F2F2F2',
+        paddingVertical: 12,
+        paddingHorizontal: 15,
+        borderRadius: 25,
+        alignItems: 'center',
+        justifyContent: 'space-between',
         flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: '100%',
+        width: '90%',
+        alignSelf: 'center',
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: '#1E3A8A',
     },
-    selectedButton: {
+
+    selectedOptionButton: {
         backgroundColor: '#1E3A8A',
+        borderWidth: 2,
+        borderColor: '#17A2B8',
+        shadowColor: '#1E3A8A',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.4,
+        shadowRadius: 5,
     },
-    selectedButtonText: {
-        color: '#f2f2f2',
-    },
-    button: {
-        backgroundColor: '#F2F2F2',
-        paddingVertical: '10',
-        paddingHorizontal: '30',
-        borderRadius: 25,
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: 45,
-        marginHorizontal: 10,
-        marginVertical: 15,
-        minWidth: '40%',
-        borderWidth: 0.25,
-        borderColor: 'black',
-    },
-    buttonNav: {
-        backgroundColor: '#F2F2F2',
-        paddingVertical: '5',
-        paddingHorizontal: '15',
-        borderRadius: 25,
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: 35,
-        marginVertical: 15,
-        marginStart: 25,
-        minWidth: '20%',
-        alignSelf: 'flex-start',
-    },
-    buttonText: {
-        color: 'black',
+
+    optionText: {
         fontSize: 16,
+        color: 'black',
     },
+
+    selectedOptionText: {
+        color: 'white',
+        fontWeight: 'bold',
+    },
+
+    checkmarkIcon: {
+        marginLeft: 'auto',
+    },
+
+    buttonNav: {
+        backgroundColor: 'transparent',
+        paddingVertical: 8,
+        paddingHorizontal: 20,
+        borderRadius: 25,
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: 40,
+        minWidth: '25%',
+        alignSelf: 'flex-start',
+        borderWidth: 1,
+        borderColor: '#1E3A8A',
+    },
+
+    buttonText: {
+        color: '#1E3A8A',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+
     buttonNext: {
         backgroundColor: '#FF6F00',
-        paddingVertical: '10',
-        paddingHorizontal: '30',
+        paddingVertical: 12,
+        paddingHorizontal: 24,
         borderRadius: 25,
         alignItems: 'center',
         justifyContent: 'center',
         height: 50,
         margin: 15,
-        minWidth: '40%',
+        minWidth: '45%',
         alignSelf: 'flex-end',
         marginEnd: 30,
+        flexDirection: 'row',
     },
+
     buttonNextText: {
         color: '#F2F2F2',
         fontSize: 16,
-        fontWeight: 'bold'
+        fontWeight: 'bold',
     },
+
+    progressContainer: {
+        width: '85%',
+        height: 10,
+        backgroundColor: '#F2F2F2',
+        borderRadius: 5,
+        overflow: 'hidden',
+        alignSelf: 'center',
+        marginTop: 20,
+    },
+    
     progressBar: {
-        alignSelf: 'flex-start',
-        marginStart: 28,
-        marginTop: 10,
+        height: '100%',
+        backgroundColor: '#1E3A8A',
+        borderRadius: 5,
     },
-    hiddenButton: {
-       opacity: 0, 
-    },
+
     resultContainer: {
-        width: '75%',
-        flex: 1,
-        backgroundColor: '#fff',
-        padding: 25,
+        width: '85%',
+        backgroundColor: 'white',
+        padding: 20,
         borderRadius: 15,
         alignItems: 'center',
-        elevation: 5,
         shadowColor: "#000",
         shadowOpacity: 0.2,
         shadowRadius: 5,
         justifyContent: 'center',
-        marginTop: 100,
-        marginBottom:50,
+        marginTop: 50,
+        marginBottom: 50,
     },
-    closeButton: {
-        position: 'absolute',
-        top: 60, 
-        right: 55,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        padding: 5,
-        borderRadius: 20,
-        zIndex: 10,
-    },
-    closeButtonText: {
-        color: '#fff',
-        fontSize: 22,
-        fontWeight: 'bold',
-    },
-    quizBackground: {
-        backgroundColor: 'white', 
-    },
-    resultsBackground: {
-        backgroundColor: '#1E3A8A',
-    },
-    resultEmoji: {
-        fontSize: 100, 
-        textAlign: 'center',
-        marginBottom: 10,
-    },
+
     resultStyleName: {
         fontSize: 22,
         fontWeight: 'bold',
-        color: '#1E3A8A',  
+        color: '#1E3A8A',
+        textAlign: 'center',
     },
+
     resultText: {
-        fontSize: 22,
+        fontSize: 18,
         textAlign: 'center',
         lineHeight: 28,
         color: 'black', 
-        lineHeight: 40,
+        marginTop: 10,
     },
+
     retakeQuizButton: {
         backgroundColor: '#FF6F00',
-        paddingVertical: '10',
-        paddingHorizontal: '30',
+        paddingVertical: 12,
+        paddingHorizontal: 30,
         borderRadius: 25,
         alignItems: 'center',
         justifyContent: 'center',
@@ -166,17 +169,24 @@ const QuizStyles = StyleSheet.create({
         marginTop: 40,
         minWidth: '40%',
     },
+
     retakeQuizButtonText: {
         color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
+
     disabledButton: {
         backgroundColor: '#f2f2f2',
-        borderWidth: '0.25',
+        borderWidth: 1,
+        borderColor: '#ccc',
     },
+
     disabledButtonText: {
         color: 'black',
         fontWeight: 'regular',
-    }
-})
+    },
+
+});
 
 export default QuizStyles;
