@@ -14,7 +14,6 @@ import ItineraryDetailScreen from '../screens/itinerary/ItineraryDetailScreen';
 import ItineraryDayScreen from '../screens/itinerary/ItineraryDayScreen';
 import ItineraryFormScreen from '../screens/itinerary/ItineraryFormScreen';
 import InviteCollaboratorsScreen from '../screens/itinerary/InviteCollaboratorsScreen';
-import CheckIn from '../screens/CheckInScreen';
 import MapCheckInScreen from '../screens/MapCheckInScreen';
 import AchievementsScreen from '../screens/AchievementsScreen';
 
