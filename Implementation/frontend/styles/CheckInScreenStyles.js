@@ -49,6 +49,22 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         alignItems: 'center',
     },
+    refreshButton: {
+        position: 'absolute',
+        bottom: 120,
+        right: 20,
+        backgroundColor: '#D6E4FF', 
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        borderRadius: 30,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 3,
+        elevation: 5,
+    }
 });
 
 export default styles;

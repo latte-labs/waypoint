@@ -6,7 +6,7 @@ import {
     Alert,
     ActivityIndicator,
 } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, Circle } from 'react-native-maps';
 import Geolocation from 'react-native-geolocation-service';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
@@ -77,13 +77,18 @@ const MapCheckInScreen = () => {
 
     // On mount, get user location and fetch places
     useEffect(() => {
+        fetchUserLocationAndPlaces(); 
+    }, []);
+
+    const fetchUserLocationAndPlaces = () => {
+        setLoading(true);
         Geolocation.getCurrentPosition(
             (position) => {
                 const { latitude, longitude } = position.coords;
                 setUserLocation({ latitude, longitude });
                 setRegion({
-                    latitude: latitude,
-                    longitude: longitude,
+                    latitude,
+                    longitude,
                     latitudeDelta: 0.01,
                     longitudeDelta: 0.01,
                 });
@@ -96,7 +101,7 @@ const MapCheckInScreen = () => {
             },
             { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
         );
-    }, []);
+    };
 
     // Fetch nearby places from backend
     const fetchNearbyPlaces = async (latitude, longitude) => {
@@ -200,6 +205,7 @@ const MapCheckInScreen = () => {
     }, []);
 
     // Only render the map when both userLocation and places data are available
+    // If no location or no places, show loader
     if (!userLocation || places.length === 0) {
         return (
             <View style={styles.loaderContainer}>
@@ -216,6 +222,9 @@ const MapCheckInScreen = () => {
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,
     };
+
+    //The radius for the Circle (in meters)
+    const RADIUS_IN_METERS = 300;
 
     // Is the user already checked in at the selected place?
     const alreadyCheckedIn = selectedPlace
@@ -234,6 +243,14 @@ const MapCheckInScreen = () => {
                     console.log("Map is ready and should display markers now.");
                 }}
             >
+                {/* A Circle to represent user location */}
+                <Circle
+                    center={userLocation}
+                    radius={RADIUS_IN_METERS}
+                    fillColor="rgba(66, 66, 221, 0.2)"
+                    strokeColor="rgba(0, 0, 255, 0.3)"
+                    strokeWidth={2}
+                />
                 {/* Markers for each place */}
                 {places.map((p, index) => (
                     <Marker
@@ -245,7 +262,7 @@ const MapCheckInScreen = () => {
                         pinColor={selectedPlace && (selectedPlace.cached_data?.place_id || selectedPlace.id || selectedPlace.name) ===
                             (p.cached_data?.place_id || p.id || p.name)
                             ? 'red'
-                            : 'green'}
+                            : '#1E3A8A'}
                     />
                 ))}
             </MapView>
@@ -281,6 +298,13 @@ const MapCheckInScreen = () => {
                     )}
                 </View>
             )}
+            {/* A button to refresh user location & nearby places */}
+            <TouchableOpacity
+                style={styles.refreshButton} // you can define this style in your CheckInScreenStyles
+                onPress={fetchUserLocationAndPlaces}
+            >
+                <Text style={{ color: '#1E3A8A' }}>Refresh</Text>
+            </TouchableOpacity>
         </View>
     );
 }
