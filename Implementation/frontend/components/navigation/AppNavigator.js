@@ -16,6 +16,7 @@ import ItineraryFormScreen from '../screens/itinerary/ItineraryFormScreen';
 import InviteCollaboratorsScreen from '../screens/itinerary/InviteCollaboratorsScreen';
 import CheckIn from '../screens/CheckInScreen';
 import MapCheckInScreen from '../screens/MapCheckInScreen';
+import AchievementsScreen from '../screens/AchievementsScreen';
 
 
 
@@ -42,6 +43,7 @@ function AppNavigator() {
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="QuizScreen" component={QuizScreen} />
         <Stack.Screen name='CheckIn' component={MapCheckInScreen} />
+        <Stack.Screen name='Badges' component={AchievementsScreen} />
       </Stack.Navigator>
 
       {/* Persistent Bottom Navigation */}

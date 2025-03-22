@@ -51,6 +51,13 @@ const MoreMenu = ({ closeMenu }) => {
             </View>
             </TouchableOpacity>
 
+            <TouchableOpacity onPress={() => handleNavigate("Badges")} style={navigationStyles.moreMenuItem}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Icon name="sign-in-alt" size={20} color="#1E3A8A" style={{ marginRight: 12 }} />
+                <Text style={navigationStyles.moreMenuText}>Achievements</Text>
+            </View>
+            </TouchableOpacity>
+
             <Button title="Log Out" onPress={(handleLogout)} />
         </View>
     )
