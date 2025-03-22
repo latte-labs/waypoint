@@ -241,6 +241,7 @@ function QuizScreen() {
 
 
   const determineTravelStyle = async () => {
+    setIsLoadingResult(true);
     const { relaxation, culture, adventure, none } = scores;
     let resultStyle = '';
     let emoji = '';
@@ -282,7 +283,11 @@ function QuizScreen() {
     }
 
     setTravelStyle({ emoji, resultStyle });
-    setQuizCompleted(true);
+    setTimeout(() => {
+      setIsLoadingResult(false);
+      setQuizCompleted(true);
+    }, 2000); 
+
   };
 
   const progress = useSharedValue(0); 
@@ -301,11 +306,18 @@ function QuizScreen() {
     transform: [{ scale: animatedScales[currentQuestionIndex].value }]
 }));
 
+const [isLoadingResult, setIsLoadingResult] = useState(false);
+
 
   return (
     <>
       <SafeAreaView style={[styles.container, quizCompleted ? styles.resultsBackground : styles.quizBackground]}>
-        {quizCompleted ? (
+        {isLoadingResult ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>Calculating your travel style...</Text>
+              <Progress.CircleSnail color={['#1E3A8A', '#FF6F00']} />
+            </View>
+          ) : quizCompleted ? (
           <>
             {/* X Button */}
             <TouchableOpacity 

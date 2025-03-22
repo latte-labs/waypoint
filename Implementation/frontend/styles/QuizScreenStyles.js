@@ -186,7 +186,20 @@ const QuizStyles = StyleSheet.create({
         color: 'black',
         fontWeight: 'regular',
     },
-
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 30,
+      },
+      
+    loadingText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#1E3A8A',
+        marginBottom: 20,
+    },
+      
 });
 
 export default QuizStyles;
