@@ -5,7 +5,6 @@ import {
     TouchableOpacity,
     Alert,
     ActivityIndicator,
-    StyleSheet
 } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import Geolocation from 'react-native-geolocation-service';
@@ -105,7 +104,7 @@ const MapCheckInScreen = () => {
             const response = await axios.get(`${API_BASE_URL}/places/search`, {
                 params: {
                     location: `${latitude},${longitude}`,
-                    radius: 500, // small radius
+                    radius: 300, // small radius
                 },
             });
 
@@ -143,7 +142,7 @@ const MapCheckInScreen = () => {
                         nearest = p;
                     }
                 });
-                setSelectedPlace(nearest);
+                setSelectedPlace(nearest); // set it as the initial selection
             }
 
         } catch (error) {
@@ -178,7 +177,7 @@ const MapCheckInScreen = () => {
                     latitude: place.latitude,
                     longitude: place.longitude
                 },
-                place_id: place.cached_data.place_id,
+                place_id: place.cached_data?.place_id || place.id || place.name,
                 created_at: createdAt,
             };
 
@@ -186,7 +185,7 @@ const MapCheckInScreen = () => {
             await database().ref(`/game/${userId}/${place.category.toLowerCase()}/${checkinId}`).set(checkInData);
 
             // Update local state to disable further check-ins
-            setUserCheckIns(prev => [...prev, place.cached_data.place_id]);
+            setUserCheckIns(prev => [...prev, place.cached_data?.place_id || place.id || place.name]);
 
             Alert.alert(
                 "Check In Successful",
@@ -212,15 +211,15 @@ const MapCheckInScreen = () => {
 
     // Region for the map. Zoom in around the user's location if available
     const mapRegion = region || {
-        latitude: userLocation?.latitude || 49.2827,
-        longitude: userLocation?.longitude || -123.1207,
+        latitude: userLocation?.latitude,
+        longitude: userLocation?.longitude,
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,
     };
 
     // Is the user already checked in at the selected place?
     const alreadyCheckedIn = selectedPlace
-        ? userCheckIns.includes(selectedPlace.cached_data.place_id)
+        ? userCheckIns.includes(selectedPlace.cached_data?.place_id || selectedPlace.id || selectedPlace.name)
         : false;
 
     return (
@@ -235,24 +234,18 @@ const MapCheckInScreen = () => {
                     console.log("Map is ready and should display markers now.");
                 }}
             >
-                {/* Marker for the user */}
-                {userLocation && (
-                    <Marker
-                        coordinate={userLocation}
-                        title="You are here"
-                        pinColor="blue" // Distinguish user marker
-                    />
-                )}
-
                 {/* Markers for each place */}
-                {places.map((p) => (
+                {places.map((p, index) => (
                     <Marker
-                        key={p.cached_data.place_id}
+                        key={p.cached_data?.place_id || p.id || `${p.name}-${index}`}
                         coordinate={{ latitude: p.latitude, longitude: p.longitude }}
                         title={p.cached_data?.name || p.name}
                         // On press, set this place as the selected place
                         onPress={() => setSelectedPlace(p)}
-                        pinColor="green"
+                        pinColor={selectedPlace && (selectedPlace.cached_data?.place_id || selectedPlace.id || selectedPlace.name) ===
+                            (p.cached_data?.place_id || p.id || p.name)
+                            ? 'red'
+                            : 'green'}
                     />
                 ))}
             </MapView>
