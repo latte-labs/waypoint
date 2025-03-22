@@ -76,6 +76,8 @@ const questions = [
   },
 ];
 
+
+
 function QuizScreen() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const resultOpacity = useSharedValue(0);
@@ -88,8 +90,64 @@ function QuizScreen() {
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [travelStyle, setTravelStyle] = useState({ emoji: '', name: '', description: '' });
   const navigation = useNavigation();
+  const animatedScalesRef = useRef(
+    questions.map(() => Array(4).fill().map(() => useSharedValue(1)))
+  ).current;
   
-
+  const animatedStylesRef = questions.map((_, qIdx) =>
+    Array(4)
+      .fill()
+      .map((_, optIdx) =>
+        useAnimatedStyle(() => ({
+          transform: [{ scale: animatedScalesRef[qIdx][optIdx].value }],
+        }))
+      )
+  );
+  
+  
+  const loadQuizProgress = async () => {
+    try {
+      const userId = await getUserId();
+      if (!userId) return;
+  
+      const snapshot = await database().ref(`/Realtime_Quiz_Progress/${userId}`).once('value');
+      const data = snapshot.val();
+  
+      if (data && data.current_question && data.selected_answers && data.scores) {
+        setHasSavedProgress(true);
+        setShowResumePrompt(true); // Show confirmation before resuming
+      }
+    } catch (error) {
+      console.error("❌ Failed to load quiz progress:", error.message);
+    }
+  };
+  const resumeSavedQuiz = async () => {
+    const userId = await getUserId();
+    if (!userId) return;
+  
+    const snapshot = await database().ref(`/Realtime_Quiz_Progress/${userId}`).once('value');
+    const data = snapshot.val();
+  
+    if (data) {
+      setCurrentQuestionIndex(data.current_question - 1);
+      setSelectedAnswers(data.selected_answers);
+      setScores(data.scores);
+      setShowResumePrompt(false);
+    }
+  };
+  const startNewQuiz = async () => {
+    const userId = await getUserId();
+    if (!userId) return;
+  
+    await database().ref(`/Realtime_Quiz_Progress/${userId}`).remove();
+  
+    setCurrentQuestionIndex(0);
+    setSelectedAnswers(Array(questions.length).fill(null));
+    setScores({ relaxation: 0, culture: 0, adventure: 0, none: 0 });
+    setShowResumePrompt(false);
+  };
+  
+  
   const getUserId = async () => {
     try {
       const userId = await AsyncStorage.getItem('user_id');
@@ -108,8 +166,10 @@ function QuizScreen() {
       const progressPercentage = Math.round(((currentQuestionIndex + 1) / questions.length) * 100);
       await database().ref(`/Realtime_Quiz_Progress/${userId}`).set({
         progress: progressPercentage,
-        current_question: currentQuestionIndex + 1
-      });
+        current_question: currentQuestionIndex + 1,
+        selected_answers: selectedAnswers,
+        scores: scores,
+      });      
       console.log(`✅ Quiz progress updated for ${userId}: ${progressPercentage}% (Question ${currentQuestionIndex + 1})`);
     } catch (error) {
       console.error("❌ Error updating quiz progress in Firebase:", error);
@@ -220,10 +280,10 @@ function QuizScreen() {
     });
 
     // 🔥 Bounce Effect Animation
-    animatedScales[currentQuestionIndex].value = withTiming(1.2, { duration: 100 }, () => {
-    animatedScales[currentQuestionIndex].value = withTiming(1, { duration: 100 });
-  });  
-};
+    animatedScalesRef[currentQuestionIndex][index].value = withTiming(1.1, { duration: 100 }, () => {
+      animatedScalesRef[currentQuestionIndex][index].value = withTiming(1, { duration: 100 });
+    });
+  };
 
   const handleRetakeQuiz = async () => {
     console.log("Retaking quiz...");
@@ -299,6 +359,11 @@ function QuizScreen() {
   };
 
   const progress = useSharedValue(0); 
+
+  useEffect(() => {
+    loadQuizProgress(); 
+  }, []);
+
   useEffect(() => {
     progress.value = withTiming((currentQuestionIndex + 1) / questions.length, { duration: 500 });
   }, [currentQuestionIndex]);
@@ -309,18 +374,34 @@ function QuizScreen() {
         width: `${progress.value * 100}%`, // Convert progress to percentage width
     };
   });
-  const animatedScales = useRef(questions.map(() => useSharedValue(1))).current;
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: animatedScales[currentQuestionIndex].value }]
-}));
-
 const [isLoadingResult, setIsLoadingResult] = useState(false);
 const [hasFiredConfetti, setHasFiredConfetti] = useState(false);
+const [hasSavedProgress, setHasSavedProgress] = useState(false);
+const [showResumePrompt, setShowResumePrompt] = useState(false);
 
 
 
   return (
     <>
+      {showResumePrompt && (
+        <View style={styles.resumeOverlay}>
+          <View style={styles.resumeModal}>
+            <Text style={styles.resumeTitle}>Resume your previous quiz?</Text>
+            <Text style={styles.resumeMessage}>
+              We found your saved progress. Do you want to continue from where you left off?
+            </Text>
+            <View style={styles.resumeButtonRow}>
+            <TouchableOpacity onPress={startNewQuiz} style={styles.modalButtonSecondary}>
+              <Text style={styles.modalButtonSecondaryText}>Start New</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={resumeSavedQuiz} style={styles.modalButtonPrimary}>
+              <Text style={styles.modalButtonPrimaryText}>Resume</Text>
+            </TouchableOpacity>
+          </View>
+          </View>
+        </View>
+      )}
+
       <SafeAreaView style={[styles.container, quizCompleted ? styles.resultsBackground : styles.quizBackground]}>
       {isLoadingResult ? (
   <View style={styles.loadingContainer}>
@@ -397,40 +478,39 @@ const [hasFiredConfetti, setHasFiredConfetti] = useState(false);
 
             {/* Options */}
             <View style={styles.optionsContainer}>
-              {questions[currentQuestionIndex].options.map((option, index) => {
-                const isSelected = selectedAnswers[currentQuestionIndex] === index;
-                
-                return (
-                  <Pressable
-                    key={index}
-                    style={[
-                      styles.optionButton,
-                      isSelected && styles.selectedOptionButton
-                    ]}
-                    onPress={() => handleAnswerSelection(index)}
-                  >
-                    <Animated.View style={[animatedStyle, styles.optionContent]}>
+            {questions[currentQuestionIndex].options.map((option, index) => {
+              const isSelected = selectedAnswers[currentQuestionIndex] === index;
 
-                      <Text style={[
-                          styles.optionText,
-                          isSelected && styles.selectedOptionText
-                      ]}>
-                        {String.fromCharCode(65 + index)}. {option} {/* ✅ Converts 0 -> A, 1 -> B, etc. */}
-                      </Text>
+              animatedStylesRef[currentQuestionIndex][index]
 
-                      {/* ✅ Show checkmark when selected */}
-                      {isSelected && (
-                        <FontAwesome 
-                          name="check" 
-                          size={16} 
-                          color="white" 
-                          style={styles.checkmarkIcon} 
-                        />
-                      )}
-                    </Animated.View>
-                  </Pressable>
-                );
-              })}
+              return (
+                <Pressable
+                  key={index}
+                  style={[
+                    styles.optionButton,
+                    isSelected && styles.selectedOptionButton
+                  ]}
+                  onPress={() => handleAnswerSelection(index)}
+                >
+                  <Animated.View style={[animatedStylesRef[currentQuestionIndex][index], styles.optionContent]}>
+                    <Text style={[
+                      styles.optionText,
+                      isSelected && styles.selectedOptionText
+                    ]}>
+                      {String.fromCharCode(65 + index)}. {option}
+                    </Text>
+                    {isSelected && (
+                      <FontAwesome 
+                        name="check" 
+                        size={16} 
+                        color="white" 
+                        style={styles.checkmarkIcon} 
+                      />
+                    )}
+                  </Animated.View>
+                </Pressable>
+              );
+            })}
             </View>
 
 

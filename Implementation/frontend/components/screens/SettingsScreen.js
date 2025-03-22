@@ -97,8 +97,6 @@ const SettingsScreen = ({ navigation }) => {
                 userData.travel_style_id = travelStyleId;
                 await AsyncStorage.setItem('user', JSON.stringify(userData));
             }
-
-            Alert.alert("Success", "Your travel style has been updated!");
         } catch (error) {
             console.error("❌ Error updating travel style:", error.response?.data || error.message);
             Alert.alert("Error", "Failed to update travel style. Please try again.");

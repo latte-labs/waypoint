@@ -69,7 +69,9 @@ const QuizStyles = StyleSheet.create({
     },
 
     checkmarkIcon: {
-        marginLeft: 'auto',
+        marginLeft: 10,
+        marginRight: 5,
+        alignSelf: 'center',
     },
 
     buttonNav: {
@@ -210,6 +212,96 @@ const QuizStyles = StyleSheet.create({
         fontSize: 70,
         marginBottom: 10,
     },
+    resumeOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 100,
+      },
+      
+      resumeModal: {
+        backgroundColor: 'white',
+        padding: 24,
+        borderRadius: 20,
+        width: '85%',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOpacity: 0.2,
+        shadowRadius: 6,
+        elevation: 6,
+      },
+      
+      resumeTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#1E3A8A',
+        marginBottom: 12,
+        textAlign: 'center',
+      },
+      
+      resumeMessage: {
+        fontSize: 14,
+        color: 'black',
+        textAlign: 'center',
+        marginBottom: 20,
+      },
+      
+      resumeButtonRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        width: '100%',
+        gap: 12,
+      },
+      modalButtonPrimary: {
+        backgroundColor: '#FF6F00',
+        paddingVertical: 12,
+        paddingHorizontal: 25,
+        borderRadius: 25,
+        alignItems: 'center',
+        justifyContent: 'center',
+        flex: 1,
+      },
+      
+      modalButtonPrimaryText: {
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: 16,
+        textAlign: 'center',
+      },
+      
+      modalButtonSecondary: {
+        backgroundColor: 'white',
+        borderWidth: 1,
+        borderColor: '#1E3A8A',
+        paddingVertical: 12,
+        paddingHorizontal: 25,
+        borderRadius: 25,
+        alignItems: 'center',
+        justifyContent: 'center',
+        flex: 1,
+      },
+      
+      modalButtonSecondaryText: {
+        color: '#1E3A8A',
+        fontWeight: 'bold',
+        fontSize: 16,
+        textAlign: 'center',
+      },
+      optionContent: {
+        flexDirection: 'row',
+        alignItems: 'center',           // ✅ ensures vertical alignment
+        justifyContent: 'space-between',
+        width: '100%',
+        paddingLeft: 10,
+        paddingRight: 20,
+      },
+        
     
 });
 
