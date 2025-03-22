@@ -34,6 +34,7 @@ export const navigationStyles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         flexDirection: 'row',
+        gap: 6,
     },
     navContent: {
         flexDirection: "column", // Default layout (icon only)
@@ -46,10 +47,8 @@ export const navigationStyles = StyleSheet.create({
         justifyContent: "center",
     },
     navIcon: {
-        fontSize: 24,  // Emoji size
-        width: 30,
-        marginLeft: 0,
-        paddingLeft: 0,
+        fontSize: 20,  // Emoji size
+        marginRight: 6
     },
     navText: {
         fontSize: 16,

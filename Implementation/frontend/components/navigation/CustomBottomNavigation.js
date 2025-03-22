@@ -7,6 +7,8 @@ import { useFocusEffect } from "@react-navigation/native";
 import MoreMenu from "./MoreMenu";
 import { BlurView } from "@react-native-community/blur";
 import { StyleSheet } from "react-native";
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+
 
 const CustomBottomNavigation = () => {
     const navigation = useNavigation();
@@ -41,11 +43,11 @@ const CustomBottomNavigation = () => {
     if (hiddenScreens.includes(activeRouteName)) return null; // Hides the nav
 
     const menuItems = [
-        { name: "Home", icon: "🏠" },
-        { name: "Map", icon: "📍" },
-        { name: "Itinerary", icon: "🗺" },
-        { name: "More", icon: "≡" }
-    ];
+        { name: "Home", icon: "home" },
+        { name: "Map", icon: "map-marker" },
+        { name: "Itinerary", icon: "list-alt" },
+        { name: "More", icon: "bars" }
+      ];      
 
     return (
         <>
@@ -60,8 +62,8 @@ const CustomBottomNavigation = () => {
                                 onPress={() => setMoreMenuVisible(true)}
                             >
                                 <View style={navigationStyles.navContent}>
-                                    <Text style={navigationStyles.navIcon}>{item.icon}</Text>
-                                    {activeRouteName === item.name && (
+                                    <FontAwesome name={item.icon} size={20} color={isActive ? "#1E3A8A" : "#444"} style={navigationStyles.navIcon} />
+                                 {activeRouteName === item.name && (
                                         <Text style={navigationStyles.navText}>{item.name}</Text>
                                     )}
                                 </View>
@@ -84,7 +86,12 @@ const CustomBottomNavigation = () => {
 
                             >
                                 <View style={[navigationStyles.navContent, isActive && navigationStyles.navContentActive]}>
-                                    <Text style={navigationStyles.navIcon}>{item.icon}</Text>
+                                <FontAwesome
+                                    name={item.icon}
+                                    size={20}
+                                    color={isActive ? "#FFF" : "#444"}
+                                    style={navigationStyles.navIcon}
+                                    />
                                     {isActive && <Text style={navigationStyles.navText}>{item.name}</Text>}
                                 </View>
                             </TouchableOpacity>

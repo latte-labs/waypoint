@@ -10,6 +10,8 @@ import ProfileScreen from '../screens/ProfileScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import ItineraryListScreen from '../screens/itinerary/ItineraryListScreen';
 import { BlurView } from '@react-native-community/blur';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+
 
 // Dummy Placeholder Component for "More" tab
 const MorePlaceholder = () => <View style={{ flex: 1, backgroundColor: 'transparent' }} />;
@@ -64,12 +66,12 @@ function BottomNavigation() {
           screenOptions={({ route }) => ({
             tabBarIcon: ({ color, size }) => {
               const icons = {
-                Home: '🏠',
-                Map: '📍',
-                Itinerary: '🗺',
-                More: '≡',
+                Home: 'home',
+                Map: 'map-marker',
+                Itinerary: 'list-alt',
+                More: 'bars',
               };
-              return <Text style={{ fontSize: size, color, paddingBottom: 25 }}>{icons[route.name]}</Text>;
+              return <FontAwesome name={icons[route.name]} size={size} color={color} style={{ paddingBottom: 25 }} />;
             },
             tabBarActiveTintColor: '#FF6F00',
             tabBarInactiveTintColor: 'gray',
@@ -105,13 +107,15 @@ function BottomNavigation() {
         {menuVisible && !isMapScreen && (
           <Animated.View style={[styles.popupMenu, { height: menuHeight }]}>
             {[
-              { label: "👤 Profile", screen: "Profile" },
-              { label: "⚙️ Settings", screen: "Settings" },
-              { label: "🤖 Chatbot", screen: "Chatbot" },
-              { label: "⭐ Game", screen: "" },
-              { label: "🔔 Events", screen: "" },
-            ].map((item, index) => (
+              { icon: 'user', label: 'Profile', screen: 'Profile' },
+              { icon: 'cog', label: 'Settings', screen: 'Settings' },
+              { icon: 'comment', label: 'Chatbot', screen: 'Chatbot' },
+              { icon: 'star', label: 'Game', screen: '' },
+              { icon: 'bell', label: 'Events', screen: '' },
+            ]
+            .map((item, index) => (
               <TouchableOpacity key={index} style={styles.menuItem} onPress={() => navigateToScreen(item.screen)}>
+                <FontAwesome name={item.icon} size={18} color="#1E3A8A" style={{ marginRight: 10 }} />
                 <Text style={styles.menuText}>{item.label}</Text>
               </TouchableOpacity>
             ))}
