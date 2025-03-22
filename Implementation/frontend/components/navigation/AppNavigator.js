@@ -15,6 +15,7 @@ import ItineraryDayScreen from '../screens/itinerary/ItineraryDayScreen';
 import ItineraryFormScreen from '../screens/itinerary/ItineraryFormScreen';
 import InviteCollaboratorsScreen from '../screens/itinerary/InviteCollaboratorsScreen';
 import CheckIn from '../screens/CheckInScreen';
+import MapCheckInScreen from '../screens/MapCheckInScreen';
 
 
 
@@ -40,7 +41,7 @@ function AppNavigator() {
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="QuizScreen" component={QuizScreen} />
-        <Stack.Screen name='CheckIn' component={CheckIn} />
+        <Stack.Screen name='CheckIn' component={MapCheckInScreen} />
       </Stack.Navigator>
 
       {/* Persistent Bottom Navigation */}
