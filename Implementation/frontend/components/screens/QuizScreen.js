@@ -15,6 +15,7 @@ import { database } from '../../firebase';
 import styles from '../../styles/QuizScreenStyles';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import ConfettiCannon from 'react-native-confetti-cannon';
 
 const questions = [
   {
@@ -77,6 +78,11 @@ const questions = [
 
 function QuizScreen() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const resultOpacity = useSharedValue(0);
+  const resultFadeIn = useAnimatedStyle(() => ({
+    opacity: resultOpacity.value,
+  }));
+
   const [selectedAnswers, setSelectedAnswers] = useState(Array(questions.length).fill(null));
   const [scores, setScores] = useState({ relaxation: 0, culture: 0, adventure: 0, none: 0 });
   const [quizCompleted, setQuizCompleted] = useState(false);
@@ -285,7 +291,9 @@ function QuizScreen() {
     setTravelStyle({ emoji, resultStyle });
     setTimeout(() => {
       setIsLoadingResult(false);
+      setHasFiredConfetti(true);
       setQuizCompleted(true);
+      resultOpacity.value = withTiming(1, { duration: 600 });
     }, 2000); 
 
   };
@@ -307,50 +315,61 @@ function QuizScreen() {
 }));
 
 const [isLoadingResult, setIsLoadingResult] = useState(false);
+const [hasFiredConfetti, setHasFiredConfetti] = useState(false);
+
 
 
   return (
     <>
       <SafeAreaView style={[styles.container, quizCompleted ? styles.resultsBackground : styles.quizBackground]}>
-        {isLoadingResult ? (
-            <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>Calculating your travel style...</Text>
-              <Progress.CircleSnail color={['#1E3A8A', '#FF6F00']} />
-            </View>
-          ) : quizCompleted ? (
-          <>
-            {/* X Button */}
-            <TouchableOpacity 
+      {isLoadingResult ? (
+  <View style={styles.loadingContainer}>
+    <Text style={styles.loadingText}>Calculating your travel style...</Text>
+    <Progress.CircleSnail color={['#1E3A8A', '#FF6F00']} />
+  </View>
+      ) : quizCompleted ? (
+        <>
+          {/* ✅ Confetti Animation */}
+          {hasFiredConfetti && (
+            <ConfettiCannon
+              count={100}
+              origin={{ x: 200, y: 0 }}
+              fadeOut={true}
+              explosionSpeed={400}
+              fallSpeed={3000}
+            />
+          )}
+
+          {/* X Button */}
+          <TouchableOpacity 
             style={styles.closeButton} 
-            onPress={() => navigation.navigate('Main', { screen: 'Home' })}  // ✅ Navigates to Home inside BottomNavigation
-             >
+            onPress={() => navigation.navigate('Main', { screen: 'Home' })}
+          >
             <Text style={styles.closeButtonText}>✖</Text>
-            </TouchableOpacity>
+          </TouchableOpacity>
 
+          {/* Result Card */}
+          <Animated.View style={[styles.resultContainer, resultFadeIn]}>
 
-            {/* Result Card */}
-            <View style={styles.resultContainer}>
-              <Text style={styles.resultEmoji}>{travelStyle.emoji}</Text>
+          <Text style={styles.resultEmoji}>{travelStyle.emoji}</Text>
 
-              {travelStyle.resultStyle === "You didn’t align with any specific travel style." ? (
-                // ✅ If no specific style, display only this text (NO extra "You are a / Traveler!")
-                <Text style={styles.resultText}>
-                  {travelStyle.resultStyle}
-                </Text>
-              ) : (
-                // ✅ If a specific style is found, follow the correct format
-                <Text style={styles.resultText}>
-                  {"You are a\n"}
-                  <Text style={styles.resultStyleName}>{travelStyle.resultStyle}</Text>
-                  {"\nTraveler!"}
-                </Text>
-              )}
+          {travelStyle.resultStyle === "You didn’t align with any specific travel style." ? (
+            <Text style={styles.resultText}>
+              {travelStyle.resultStyle}
+            </Text>
+          ) : (
+            <>
+              <Text style={styles.resultText}>You are a</Text>
+              <Text style={styles.resultStyleName}>{travelStyle.resultStyle}</Text>
+              <Text style={styles.resultText}>Traveler!</Text>
+            </>
+          )}
 
-              <TouchableOpacity style={styles.retakeQuizButton} onPress={handleRetakeQuiz}>
-                <Text style={styles.retakeQuizButtonText}>RETAKE QUIZ</Text>
-              </TouchableOpacity>
-            </View>
-          </>
+          <TouchableOpacity style={styles.retakeQuizButton} onPress={handleRetakeQuiz}>
+            <Text style={styles.retakeQuizButtonText}>RETAKE QUIZ</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </>
         ) : (
           <>
             {/* Back Button */}

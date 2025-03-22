@@ -130,33 +130,40 @@ const QuizStyles = StyleSheet.create({
     },
 
     resultContainer: {
-        width: '85%',
-        backgroundColor: 'white',
-        padding: 20,
-        borderRadius: 15,
+        width: '90%',
+        backgroundColor: '#1E3A8A',
+        padding: 30,
+        borderRadius: 25,
         alignItems: 'center',
         shadowColor: "#000",
+        shadowOffset: { width: 0, height: 5 },
         shadowOpacity: 0.2,
-        shadowRadius: 5,
+        shadowRadius: 10,
+        elevation: 5,
         justifyContent: 'center',
-        marginTop: 50,
+        marginTop: 40,
         marginBottom: 50,
+        borderWidth: 1,
+        borderColor: '#E6E6E6',
     },
+    
 
     resultStyleName: {
-        fontSize: 22,
+        fontSize: 24,
         fontWeight: 'bold',
-        color: '#1E3A8A',
+        color: '#FFDD57',
         textAlign: 'center',
+        marginVertical: 5,
     },
-
+    
     resultText: {
         fontSize: 18,
         textAlign: 'center',
-        lineHeight: 28,
-        color: 'black', 
-        marginTop: 10,
+        lineHeight: 26,
+        color: 'white',
+        marginBottom: 10,
     },
+    
 
     retakeQuizButton: {
         backgroundColor: '#FF6F00',
@@ -199,7 +206,11 @@ const QuizStyles = StyleSheet.create({
         color: '#1E3A8A',
         marginBottom: 20,
     },
-      
+    resultEmoji: {
+        fontSize: 70,
+        marginBottom: 10,
+    },
+    
 });
 
 export default QuizStyles;
