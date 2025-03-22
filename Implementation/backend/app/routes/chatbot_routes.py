@@ -14,6 +14,10 @@ class ChatbotRequest(BaseModel):
     user_message: str
     travel_style: str
 
+class PackingRequest(BaseModel):
+    city: str
+    temperature: float
+    condition: str
 
 
 def get_system_prompt(travel_style):
@@ -52,3 +56,25 @@ async def chatbot_interaction(request: ChatbotRequest):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@chatbot_router.post("/packing")
+async def get_packing_tip(req: PackingRequest):
+    prompt = (
+        f"You are a helpful travel assistant. Based on this weather: "
+        f"{req.temperature}°C, {req.condition.lower()} in {req.city}, "
+        f"suggest what a traveler should pack. Keep it short and under 3 sentences."
+    )
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
+            max_tokens=80,
+        )
+
+        message = response.choices[0].message.content
+        return {"status": "success", "packing_tip": message}
+
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}

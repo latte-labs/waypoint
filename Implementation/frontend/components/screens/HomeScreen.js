@@ -8,6 +8,7 @@ import {
     TouchableOpacity,
     Alert,
     Dimensions,
+    Modal,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -20,8 +21,10 @@ import axios from 'axios';
 import API_BASE_URL from '../../config';
 import FeatureCarousel from './FeatureCarousel';
 import StartJourneyBanner from './StartJourneyBanner';
-
-
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import { GOOGLE_PLACES_API_KEY } from '@env';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import PackingSuggestionModal from './PackingSuggestionModal';
 
 const { width, height } = Dimensions.get('window');
 
@@ -45,6 +48,40 @@ function HomeScreen() {
     const [weather, setWeather] = useState(null);
     const [location, setLocation] = useState(null);
     const [hasLocationPermission, setHasLocationPermission] = useState(false);
+    const [showWeatherSearchModal, setShowWeatherSearchModal] = useState(false);
+
+
+    const [showPackingModal, setShowPackingModal] = useState(false);
+    const [packingTip, setPackingTip] = useState('');
+    const [loadingPackingTip, setLoadingPackingTip] = useState(false);
+
+    const handlePackingTip = async () => {
+        if (!weather?.temperature || !weather?.weather_name) return;
+
+        const city = weather?.weather_location_name || weather?.city_name || "your location";
+              
+        try {
+          setShowPackingModal(true);
+          setLoadingPackingTip(true);
+          const response = await axios.post(`${API_BASE_URL}/chatbot/packing`, {
+            city,
+            temperature: weather.temperature,
+            condition: weather.weather_name,
+          });
+                
+          if (response.data.status === 'success') {
+            setPackingTip(response.data.packing_tip);
+          } else {
+            setPackingTip("Oops! Couldn't generate a tip.");
+          }
+        } catch (err) {
+          console.error("Packing tip error:", err);
+          setPackingTip("Something went wrong. Please try again.");
+        } finally {
+          setLoadingPackingTip(false);
+        }
+      };
+      
 
     useFocusEffect(
         React.useCallback(() => {
@@ -52,22 +89,31 @@ function HomeScreen() {
                 try {
                     const storedUser = await AsyncStorage.getItem('user');
                     if (!storedUser) return;
-
+            
                     const user = JSON.parse(storedUser);
                     setUserId(String(user.id));
-
+            
                     const userRef = database().ref(`/users/${user.id}`);
-                    userRef.once('value', (snapshot) => {
-                        const firebaseTravelStyleId =
-                            snapshot.val()?.travel_style_id ?? user.travel_style_id;
-                        setShowQuizPrompt(firebaseTravelStyleId === 4);
-                        user.travel_style_id = firebaseTravelStyleId;
-                        AsyncStorage.setItem('user', JSON.stringify(user));
-                    });
+                    const snapshot = await userRef.once('value');
+            
+                    const firebaseTravelStyleId =
+                        snapshot.val()?.travel_style_id ?? user.travel_style_id;
+            
+                    setShowQuizPrompt(firebaseTravelStyleId === 4);
+                    user.travel_style_id = firebaseTravelStyleId;
+                    await AsyncStorage.setItem('user', JSON.stringify(user));
+            
+                    // ✅ Load saved weather
+                    const savedWeather = await AsyncStorage.getItem('last_searched_weather');
+                    if (savedWeather) {
+                        const { lat, lng } = JSON.parse(savedWeather);
+                        fetchWeather(lat, lng);
+                    }
+            
                 } catch (error) {
-                    console.error('❌ Error retrieving user data:', error);
+                    console.error('❌ Error retrieving user data or weather:', error);
                 }
-            };
+            };            
 
             fetchUserData();
         }, [])
@@ -139,27 +185,44 @@ function HomeScreen() {
 
                 <ScrollView 
                     style={{ flex: 1, backgroundColor: 'white' }} 
-                    contentContainerStyle={{ paddingBottom: 70 }} 
+                    contentContainerStyle={{
+                        paddingBottom: 70,
+                        paddingHorizontal: 16, // ✅ Add space on left and right
+                    }} 
                     keyboardShouldPersistTaps="handled"
                 >
+
                 {/* Weather */}
                 <View style={HomeScreenStyles.weatherContainer}>
                     <View style={HomeScreenStyles.weatherRow}>
-                        <Text style={HomeScreenStyles.cityText}>
-                            {weather?.weather_name || 'City Name'}
-                        </Text>
-                        <Text style={HomeScreenStyles.temperatureText}>
-                            {weather?.temperature ? `${weather.temperature}°` : '--°'}
-                        </Text>
+                        {/* Left side: icon, temperature, city */}
+                        <TouchableOpacity
+                        onPress={handlePackingTip}
+                        style={{ flexDirection: 'row', alignItems: 'center' }}
+                        activeOpacity={0.8}
+                        >
                         <Image
                             source={{
-                                uri: `https://openweathermap.org/img/wn/${weather?.weather_icon || '01d'
-                                    }@2x.png`,
+                            uri: `https://openweathermap.org/img/wn/${weather?.weather_icon || '01d'}@2x.png`,
                             }}
                             style={HomeScreenStyles.weatherIcon}
                         />
+                        <Text style={HomeScreenStyles.temperatureText}>
+                            {weather?.temperature ? `${weather.temperature}°C` : '--°C'}
+                        </Text>
+                        <Text style={HomeScreenStyles.cityText}>
+                            {weather?.weather_name || 'City Name'}
+                        </Text>
+                        </TouchableOpacity>
+
+                        {/* Right side: search icon */}
+                        <TouchableOpacity onPress={() => setShowWeatherSearchModal(true)}>
+                        <FontAwesome name="search" size={18} color="#1E3A8A" />
+                        </TouchableOpacity>
                     </View>
                 </View>
+
+                
 
 
 
@@ -201,6 +264,108 @@ function HomeScreen() {
                     ))}
                 </ScrollView>
             </ScrollView>
+            <Modal
+                visible={showWeatherSearchModal}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => setShowWeatherSearchModal(false)}
+            >
+                <View style={{
+                flex: 1,
+                backgroundColor: 'rgba(0,0,0,0.4)',
+                justifyContent: 'flex-end',
+                }}>
+                <View style={{
+                    backgroundColor: '#fff',
+                    padding: 20,
+                    borderTopLeftRadius: 20,
+                    borderTopRightRadius: 20,
+                    height: '60%',
+                }}>
+                    <Text style={{
+                    fontSize: 18,
+                    fontWeight: '600',
+                    marginBottom: 12,
+                    textAlign: 'center',
+                    }}>Search for a City</Text>
+
+                    <GooglePlacesAutocomplete
+                    placeholder="Type a city"
+                    onPress={async (data, details = null) => {
+                        const location = details?.geometry?.location;
+                        const cityName = details?.address_components?.find(c => c.types.includes('locality'))?.long_name || data.description;
+                      
+                        if (location) {
+                          fetchWeather(location.lat, location.lng);
+                          
+                          // ✅ Save to AsyncStorage
+                          await AsyncStorage.setItem(
+                            'last_searched_weather',
+                            JSON.stringify({
+                              city: cityName,
+                              lat: location.lat,
+                              lng: location.lng,
+                            })
+                          );
+                      
+                          setShowWeatherSearchModal(false);
+                        }
+                    }}
+                      
+                    query={{
+                        key: GOOGLE_PLACES_API_KEY,
+                        language: 'en',
+                        types: '(cities)',
+                    }}
+                    fetchDetails={true}
+                    styles={{
+                        textInputContainer: {
+                        backgroundColor: '#fff',
+                        borderRadius: 10,
+                        paddingHorizontal: 10,
+                        },
+                        textInput: {
+                        height: 50,
+                        fontSize: 16,
+                        borderColor: '#ddd',
+                        borderWidth: 1,
+                        borderRadius: 8,
+                        paddingHorizontal: 10,
+                        },
+                        listView: {
+                        backgroundColor: '#fff',
+                        borderRadius: 8,
+                        borderColor: '#ddd',
+                        borderWidth: 1,
+                        marginTop: 5,
+                        elevation: 3,
+                        zIndex: 9999,
+                        },
+                    }}
+                    />
+
+                    <TouchableOpacity
+                    onPress={() => setShowWeatherSearchModal(false)}
+                    style={{
+                        backgroundColor: '#1E3A8A',
+                        padding: 12,
+                        marginTop: 15,
+                        borderRadius: 10,
+                        alignItems: 'center'
+                    }}
+                    >
+                    <Text style={{ color: 'white', fontWeight: 'bold' }}>Close</Text>
+                    </TouchableOpacity>
+                </View>
+                </View>
+            </Modal>
+            <PackingSuggestionModal
+                visible={showPackingModal}
+                suggestion={packingTip}
+                loading={loadingPackingTip}
+                onClose={() => setShowPackingModal(false)}
+                />
+
         </SafeAreaWrapper>
     );
 }

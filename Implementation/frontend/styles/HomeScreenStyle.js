@@ -51,7 +51,7 @@ const HomeScreenStyles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         height: '90%', 
-        paddingLeft: 0,
+        paddingLeft: 10,
     },
 
     waypointText: {
@@ -68,38 +68,36 @@ const HomeScreenStyles = StyleSheet.create({
     //WEATHER
     weatherContainer: {
         backgroundColor: 'white',
-        borderRadius: 10,
-        padding: 10,
+        borderRadius: 40,
+        paddingHorizontal: 18,
         marginVertical: 10,
         alignSelf: 'center',
-        justifyContent: 'center',
-        width: '90%',
-        height: height * 0.08, // 15% of the screen height
-        borderWidth: 0.15,
-        borderColor: 'black',
+        width: '100%',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 5 },
-        shadowOpacity: 0.3,
-        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        elevation: 3,
+        minHeight: 50,
     },
+        
 
     weatherRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'flex-start',
+        justifyContent: 'space-between',
+        width: '100%',
     },
-
+    
     cityText: {
         paddingLeft: 10,
         color: 'black',
-        fontSize: 18,
-        fontWeight: 'regular',
-        marginRight: 70,
+        fontSize: 16,
     },
 
     temperatureText: {
         color: 'black',
-        fontSize: 28,
+        fontSize: 24,
         fontWeight: 'regular',
     },
 
