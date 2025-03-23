@@ -20,34 +20,49 @@ export default StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 15,
     },
-    card: {
-        backgroundColor: '#f2f2f2',
-        padding: 15,
-        borderRadius: 8,
-        marginBottom: 10,
+    columnWrapper: {
+        justifyContent: 'space-between',
+        marginBottom: 20,
     },
-    cardTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: 5,
+
+    // Each grid item
+    gridItem: {
+        flex: 1,
+        alignItems: 'center',
+        marginHorizontal: 5,
+        backgroundColor: 'white',
+        borderRadius: 15,
+        padding: 10,
+        borderBottomColor: "#ddd",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
     },
     badgeImage: {
-        width: 80,
-        height: 80,
+        width: 60,
+        height: 60,
         resizeMode: 'contain',
-        marginTop: 10,
+        marginBottom: 8,
     },
-    progressBar: {
-        color: "#1E3A8A",
-        marginTop: 10,
-        width: '100%',
-        marginTop: 10,
-        marginLeft: 0,
-        marginRight: 0,
+    gridItemTitle: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginBottom: 2,
     },
-    progressText: {
-        marginTop: 5,
+    gridItemCheckins: {
         fontSize: 12,
+        marginBottom: 5,
+        color: '#333',
+    },
+    gridProgressBar: {
+        width: '100%',   // fill the item width
+        marginTop: 5,
+    },
+    gridProgressText: {
+        fontSize: 11,
         color: '#666',
-    }
+        marginTop: 4,
+    },
+
 });
