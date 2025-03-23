@@ -9,13 +9,13 @@ import { Dimensions } from 'react-native';
 
 const trophyImages = {
     park: {
-        Bronze: require('../../assets/achievements/park/bronze_park.jpeg'),
+        Bronze: require('../../assets/achievements/park/bronze_park.png'),
         Silver: require('../../assets/achievements/park/silver_park.jpeg'),
         Gold: require('../../assets/achievements/park/gold_park.jpeg'),
     },
     bar: {
         Bronze: require('../../assets/achievements/bar/bronze_bar.jpeg'),
-        Silver: require('../../assets/achievements/bar/silver_bar.jpeg'),
+        Silver: require('../../assets/achievements/bar/silver_bar.png'),
         Gold: require('../../assets/achievements/bar/gold_bar.jpeg'),
     },
     museum: {
