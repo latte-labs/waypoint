@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { database } from '../../firebase';        // Make sure this matches your Firebase import
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import styles from '../../styles/AchievementScreenStyles'
+import SafeAreaWrapper from './SafeAreaWrapper';
 
 const ALL_CATEGORIES = ['park', 'bar', 'museum'];
 
@@ -93,51 +95,19 @@ const AchievementsScreen = () => {
     }
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Your Achievements</Text>
-            {achievements.map((item) => (
-                <View key={item.category} style={styles.card}>
-                    <Text style={styles.cardTitle}>{item.category.toUpperCase()}</Text>
-                    <Text>Check-Ins: {item.count}</Text>
-                    <Text>Badge: {item.badge}</Text>
-                </View>
-            ))}
-        </View>
+        <SafeAreaWrapper>
+            <View style={styles.container}>
+                <Text style={styles.title}>Your Achievements</Text>
+                {achievements.map((item) => (
+                    <View key={item.category} style={styles.card}>
+                        <Text style={styles.cardTitle}>{item.category.toUpperCase()}</Text>
+                        <Text>Check-Ins: {item.count}</Text>
+                        <Text>Badge: {item.badge}</Text>
+                    </View>
+                ))}
+            </View>
+        </SafeAreaWrapper>
     );
 };
 
 export default AchievementsScreen;
-
-// Sample styling; adapt as needed or move to AchievementsScreenStyles.js
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-    },
-    loaderContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    errorContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    title: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        marginBottom: 15,
-    },
-    card: {
-        backgroundColor: '#f2f2f2',
-        padding: 15,
-        borderRadius: 8,
-        marginBottom: 10,
-    },
-    cardTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: 5,
-    },
-});
