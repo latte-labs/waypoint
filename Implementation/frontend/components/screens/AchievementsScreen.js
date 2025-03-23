@@ -4,10 +4,25 @@ import { database } from '../../firebase';        // Make sure this matches your
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import styles from '../../styles/AchievementScreenStyles'
 import SafeAreaWrapper from './SafeAreaWrapper';
-import bronzeTrophy from '../../assets/achievements/bronze_park.jpeg';
-import silverTrophy from '../../assets/achievements/silver_park.jpeg';
-import goldTrophy from '../../assets/achievements/gold_park.jpeg';
 import * as Progress from 'react-native-progress';
+
+const trophyImages = {
+    park: {
+      Bronze: require('../../assets/achievements/park/bronze_park.jpeg'),
+      Silver: require('../../assets/achievements/park/silver_park.jpeg'),
+      Gold: require('../../assets/achievements/park/gold_park.jpeg'),
+    },
+    bar: {
+      Bronze: require('../../assets/achievements/bar/bronze_bar.jpeg'),
+      Silver: require('../../assets/achievements/bar/silver_bar.jpeg'),
+      Gold: require('../../assets/achievements/bar/gold_bar.jpeg'),
+    },
+    museum: {
+      Bronze: require('../../assets/achievements/museum/bronze_museum.jpeg'),
+      Silver: require('../../assets/achievements/museum/silver_museum.jpeg'),
+      Gold: require('../../assets/achievements/museum/gold_museum.jpeg'),
+    },
+  };
 
 const ALL_CATEGORIES = ['park', 'bar', 'museum'];
 
@@ -18,19 +33,12 @@ function getBadge(count) {
     return 'Bronze';
 }
 
-// To return the appropriate trophy image based on badge level
-function getBadgeImage(badge) {
-    switch (badge) {
-        case 'Gold':
-            return goldTrophy;
-        case 'Silver':
-            return silverTrophy;
-        case 'Bronze':
-            return bronzeTrophy;
-        default:
-            return null;
-    }
-}
+// To return trophy image based on category and badge
+function getBadgeImage(category, badge) {
+    return trophyImages[category] && trophyImages[category][badge]
+      ? trophyImages[category][badge]
+      : null;
+  }
 
 // Calculate progress to next achievement
 function getProgress(count) {
@@ -131,7 +139,7 @@ const AchievementsScreen = () => {
             <View style={styles.container}>
                 <Text style={styles.title}>Your Achievements</Text>
                 {achievements.map((item) => {
-                    const trophyImage = getBadgeImage(item.badge);
+                    const trophyImage = getBadgeImage(item.category, item.badge);
                     return (
                         <View key={item.category} style={styles.card}>
                             <Text style={styles.cardTitle}>{item.category.toUpperCase()}</Text>
