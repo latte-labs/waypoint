@@ -7,6 +7,7 @@ import SafeAreaWrapper from './SafeAreaWrapper';
 import bronzeTrophy from '../../assets/achievements/bronze_park.jpeg';
 import silverTrophy from '../../assets/achievements/silver_park.jpeg';
 import goldTrophy from '../../assets/achievements/gold_park.jpeg';
+import * as Progress from 'react-native-progress';
 
 const ALL_CATEGORIES = ['park', 'bar', 'museum'];
 
@@ -30,6 +31,21 @@ function getBadgeImage(badge) {
             return null;
     }
 }
+
+// Calculate progress to next achievement
+function getProgress(count) {
+    if (count < 5) return count / 5;
+    else if (count < 10) return (count - 5) / 5;
+    else if (count < 20) return (count - 10) / 10;
+    else return 1;
+  }
+
+  function getProgressText(count) {
+    if (count < 5) return `${count}/5`;
+    else if (count < 10) return `${count - 5}/5`;
+    else if (count < 20) return `${count - 10}/10`;
+    else return `Achieved`;
+  }
 
 const AchievementsScreen = () => {
     const [loading, setLoading] = useState(true);
@@ -129,6 +145,16 @@ const AchievementsScreen = () => {
                             ) : (
                                 <Text>No Badge Yet</Text>
                             )}
+                            {/*Progress bar */}
+                            <Progress.Bar
+                                progress={getProgress(item.count)}
+                                width={null}
+                                style={styles.progressBar}
+                            />
+                            <Text
+                                style={styles.progressText}>
+                                {getProgressText(item.count)}
+                            </Text>
                         </View>
                     );
                 })}

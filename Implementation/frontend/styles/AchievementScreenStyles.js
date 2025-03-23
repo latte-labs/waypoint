@@ -37,4 +37,17 @@ export default StyleSheet.create({
         resizeMode: 'contain',
         marginTop: 10,
     },
+    progressBar: {
+        color: "#1E3A8A",
+        marginTop: 10,
+        width: '100%',
+        marginTop: 10,
+        marginLeft: 0,
+        marginRight: 0,
+    },
+    progressText: {
+        marginTop: 5,
+        fontSize: 12,
+        color: '#666',
+    }
 });
