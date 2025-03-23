@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator, Image } from 'react-native';
 import { database } from '../../firebase';        // Make sure this matches your Firebase import
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import styles from '../../styles/AchievementScreenStyles'
 import SafeAreaWrapper from './SafeAreaWrapper';
+import bronzeTrophy from '../../assets/achievements/bronze_park.jpeg';
+import silverTrophy from '../../assets/achievements/silver_park.jpeg';
+import goldTrophy from '../../assets/achievements/gold_park.jpeg';
 
 const ALL_CATEGORIES = ['park', 'bar', 'museum'];
 
@@ -11,8 +14,21 @@ const ALL_CATEGORIES = ['park', 'bar', 'museum'];
 function getBadge(count) {
     if (count >= 20) return 'Gold';
     if (count >= 10) return 'Silver';
-    if (count >= 5) return 'Bronze';
-    return 'No Badge Yet';
+    return 'Bronze';
+}
+
+// To return the appropriate trophy image based on badge level
+function getBadgeImage(badge) {
+    switch (badge) {
+        case 'Gold':
+            return goldTrophy;
+        case 'Silver':
+            return silverTrophy;
+        case 'Bronze':
+            return bronzeTrophy;
+        default:
+            return null;
+    }
 }
 
 const AchievementsScreen = () => {
@@ -98,15 +114,26 @@ const AchievementsScreen = () => {
         <SafeAreaWrapper>
             <View style={styles.container}>
                 <Text style={styles.title}>Your Achievements</Text>
-                {achievements.map((item) => (
-                    <View key={item.category} style={styles.card}>
-                        <Text style={styles.cardTitle}>{item.category.toUpperCase()}</Text>
-                        <Text>Check-Ins: {item.count}</Text>
-                        <Text>Badge: {item.badge}</Text>
-                    </View>
-                ))}
+                {achievements.map((item) => {
+                    const trophyImage = getBadgeImage(item.badge);
+                    return (
+                        <View key={item.category} style={styles.card}>
+                            <Text style={styles.cardTitle}>{item.category.toUpperCase()}</Text>
+                            <Text>Check-Ins: {item.count}</Text>
+                            {trophyImage ? (
+                                <Image 
+                                source={trophyImage} 
+                                style={[
+                                    styles.badgeImage,
+                                    item.count <5 && {opacity: 0.3}]} />
+                            ) : (
+                                <Text>No Badge Yet</Text>
+                            )}
+                        </View>
+                    );
+                })}
             </View>
-        </SafeAreaWrapper>
+        </SafeAreaWrapper >
     );
 };
 

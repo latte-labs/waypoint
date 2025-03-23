@@ -31,4 +31,10 @@ export default StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 5,
     },
+    badgeImage: {
+        width: 80,
+        height: 80,
+        resizeMode: 'contain',
+        marginTop: 10,
+    },
 });
