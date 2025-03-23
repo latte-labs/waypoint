@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, Image, FlatList } from 'react-native';
+import { View, Text, ActivityIndicator, Image, FlatList, Modal, TouchableOpacity } from 'react-native';
 import { database } from '../../firebase';        // Make sure this matches your Firebase import
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import styles from '../../styles/AchievementScreenStyles'
 import SafeAreaWrapper from './SafeAreaWrapper';
 import * as Progress from 'react-native-progress';
+import { Dimensions } from 'react-native';
 
 const trophyImages = {
     park: {
@@ -59,6 +60,11 @@ const AchievementsScreen = () => {
     const [loading, setLoading] = useState(true);
     const [achievements, setAchievements] = useState([]);
     const [error, setError] = useState(null);
+    const screenWidth = Dimensions.get('window').width;
+
+    // modal
+    const [modalVisible, setModalVisible] = useState(false);
+    const [selectedAchievement, setSelectedAchievement] = useState(null);
 
     useEffect(() => {
         fetchAchievements();
@@ -126,19 +132,21 @@ const AchievementsScreen = () => {
         );
     }
 
-    if (achievements.length === 0) {
-        return (
-            <View style={styles.container}>
-                <Text>No achievements found. Try checking in somewhere!</Text>
-            </View>
-        );
-    }
+    const openModal = (achievement) => {
+        setSelectedAchievement(achievement);
+        setModalVisible(true);
+    };
+
+    const closeModal = () => {
+        setModalVisible(false);
+        setSelectedAchievement(null);
+    };
 
     // Renders each achievement as a grid item
     const renderAchievementItem = ({ item }) => {
         const trophyImage = getBadgeImage(item.category, item.badge);
         return (
-            <View style={styles.gridItem}>
+            <TouchableOpacity style={styles.gridItem} onPress={() => openModal(item)}>
                 <Image
                     source={trophyImage}
                     style={[
@@ -161,7 +169,7 @@ const AchievementsScreen = () => {
                 <Text style={styles.gridProgressText}>
                     {getProgressText(item.count)}
                 </Text>
-            </View>
+            </TouchableOpacity>
         );
     };
 
@@ -178,6 +186,73 @@ const AchievementsScreen = () => {
                     renderItem={renderAchievementItem}
                     columnWrapperStyle={styles.columnWrapper} // optional styling
                 />
+                {/* MODAL: displays when user taps a grid item */}
+                <Modal
+                    visible={modalVisible}
+                    animationType="slide"
+                    transparent={true}>
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContent}>
+                            {/* Close button */}
+                            <Text
+                                style={styles.modalCloseButton}
+                                onPress={closeModal}
+                            >
+                                X
+                            </Text>
+
+                            {selectedAchievement && (
+                                <>
+                                    {/* Show the current trophy */}
+                                    <Image
+                                        source={getBadgeImage(selectedAchievement.category, selectedAchievement.badge)}
+                                        style={styles.modalTrophyImage}
+                                    />
+                                    <Text style={styles.modalCategoryText}>
+                                        {selectedAchievement.category.toUpperCase()}
+                                    </Text>
+
+                                    {/* Progress bar & text */}
+                                    <View style={{ marginHorizontal: 20, width: screenWidth * 0.7 - 80, alignItems: 'center' }}>
+                                        <Progress.Bar
+                                            progress={getProgress(selectedAchievement.count)}
+                                            width={screenWidth * 0.7}
+                                            borderWidth={0}
+                                            borderRadius={0}
+                                            unfilledColor="#EEE"
+                                            color="#1E3A8A"
+                                            style={styles.modalProgressBar}
+                                        />
+                                    </View>
+                                    <Text style={styles.modalProgressText}>
+                                        {getProgressText(selectedAchievement.count)} to next tier
+                                    </Text>
+
+                                    {/* Description of how to get it */}
+                                    <Text style={styles.modalDescription}>
+                                        Check in at a {selectedAchievement.category} to earn this achievement. 5 = Bronze, 10 = Silver, 20 = Gold.
+                                    </Text>
+
+                                    {/* Display all available tiers */}
+                                    <View style={styles.modalTiersRow}>
+                                        <Image
+                                            source={getBadgeImage(selectedAchievement.category, 'Bronze')}
+                                            style={styles.modalTierIcon}
+                                        />
+                                        <Image
+                                            source={getBadgeImage(selectedAchievement.category, 'Silver')}
+                                            style={styles.modalTierIcon}
+                                        />
+                                        <Image
+                                            source={getBadgeImage(selectedAchievement.category, 'Gold')}
+                                            style={styles.modalTierIcon}
+                                        />
+                                    </View>
+                                </>
+                            )}
+                        </View>
+                    </View>
+                </Modal>
             </View>
         </SafeAreaWrapper>
     );

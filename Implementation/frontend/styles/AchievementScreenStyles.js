@@ -65,4 +65,64 @@ export default StyleSheet.create({
         marginTop: 4,
     },
 
+    /* MODAL STYLES */
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)', // semi-transparent overlay
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContent: {
+        width: '80%',
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 20,
+        alignItems: 'center',
+    },
+    modalCloseButton: {
+        alignSelf: 'flex-end',
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    modalTrophyImage: {
+        width: 120,
+        height: 120,
+        resizeMode: 'contain',
+        marginBottom: 10,
+    },
+    modalCategoryText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    modalProgressText: {
+        fontSize: 14,
+        color: '#666',
+        marginBottom: 10,
+    },
+    modalDescription: {
+        fontSize: 14,
+        color: '#333',
+        textAlign: 'center',
+        marginBottom: 15,
+        paddingHorizontal: 20,
+    },
+    modalTiersRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        width: '100%',
+        marginTop: 10,
+    },
+    modalTierIcon: {
+        width: 50,
+        height: 50,
+        resizeMode: 'contain',
+    },
+    modalProgressBar: {
+        width: '100%',
+        marginVertical: 10,
+        borderRadius: 10,
+        marginHorizontal: 20,
+      },
 });
