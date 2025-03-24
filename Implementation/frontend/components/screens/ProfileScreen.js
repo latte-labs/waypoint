@@ -200,37 +200,39 @@ const ProfileScreen = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.profileContainer}>
 
-        <TouchableOpacity onPress={handleProfileImagePress}>
-          {profileImage ? (
-            <Image
-              source={{ uri: profileImage }}
-              style={styles.profileImage}
-              resizeMode="cover"
-              onError={(e) => {
-                console.log("Image failed to load:", profileImage);
-                Alert.alert("Failed to load image", "URL might be wrong or access denied");
-              }}
-            />
-          ) : (
-            <View style={styles.placeholderImage}>
-              <Text>No Photo</Text>
-            </View>
-          )}
-          <Text style={styles.tapToChange}>Tap to change photo</Text> {/* 👈 NEW */}
-        </TouchableOpacity>
+        <View style={{ alignItems: 'center' }}>
+          <TouchableOpacity onPress={handleProfileImagePress}>
+            {profileImage ? (
+              <Image
+                source={{ uri: profileImage }}
+                style={styles.profileImage}
+                resizeMode="cover"
+                onError={(e) => {
+                  console.log("Image failed to load:", profileImage);
+                  Alert.alert("Failed to load image", "URL might be wrong or access denied");
+                }}
+              />
+            ) : (
+              <View style={styles.placeholderImage}>
+                <Text>No Photo</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          <Text style={styles.tapToChange}>Tap to change photo</Text>
+        </View>
+
+
           {uploading && (
             <ActivityIndicator size="small" color="#888" style={{ marginTop: 12 }} />
           )}
-
-
-
           <Text style={styles.name}>{user?.name || 'User Name'}</Text>
           <Text style={styles.email}>{user?.email}</Text>
           <Text style={styles.quizStatus}>
-            {user?.travelStyle
-              ? `Your travel style: ${user.travelStyle}`
+            {travelStyle?.name
+              ? `Your travel style: ${travelStyle.name}`
               : "You haven't taken the quiz yet."}
           </Text>
+
         </View>
 
         {/* Buttons */}
