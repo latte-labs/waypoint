@@ -23,7 +23,7 @@ import FeatureCarousel from './FeatureCarousel';
 import StartJourneyBanner from './StartJourneyBanner';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { GOOGLE_PLACES_API_KEY } from '@env';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import Icon from 'react-native-vector-icons/FontAwesome5';
 import PackingSuggestionModal from './PackingSuggestionModal';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
@@ -282,7 +282,7 @@ function HomeScreen() {
 
                         {/* Right side: search icon */}
                         <TouchableOpacity onPress={() => setShowWeatherSearchModal(true)}>
-                        <FontAwesome name="search" size={18} color="#1E3A8A" />
+                        <Icon name="search" size={18} color="#1E3A8A" />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -332,7 +332,8 @@ function HomeScreen() {
             <GestureDetector gesture={combinedGesture}>
             <Animated.View style={[HomeScreenStyles.floatingButton, animatedStyle]}>
                 <View style={HomeScreenStyles.innerButton}>
-                <FontAwesome name="rocket" size={24} color="#fff" />
+                {/* <FontAwesomeIcon icon="fa-solid fa-robot" /> */}
+                <Icon name="robot" size={24} color="#fff" />
                 </View>
             </Animated.View>
             </GestureDetector>
