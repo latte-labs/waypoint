@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Image,
     Text,
@@ -9,6 +9,7 @@ import {
     Alert,
     Dimensions,
     Modal,
+    Animated, PanResponder
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -30,6 +31,19 @@ const { width, height } = Dimensions.get('window');
 
 function HomeScreen() {
     const navigation = useNavigation();
+    const pan = useRef(new Animated.ValueXY({ x: 300, y: 500 })).current; // Start position
+
+    const panResponder = useRef(
+    PanResponder.create({
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], {
+        useNativeDriver: false,
+        }),
+        onPanResponderRelease: () => {
+        pan.flattenOffset();
+        },
+    })
+    ).current;
     const [searchQuery, setSearchQuery] = useState('');
     const [trips, setTrips] = useState([
         { id: '1', tripName: 'Hiking Trip in Vancouver', date: 'March 20, 2025' },
@@ -365,6 +379,17 @@ function HomeScreen() {
                 loading={loadingPackingTip}
                 onClose={() => setShowPackingModal(false)}
                 />
+            <Animated.View
+            style={[HomeScreenStyles.floatingButton, pan.getLayout()]}
+            {...panResponder.panHandlers}
+            >
+            <TouchableOpacity
+                onPress={() => navigation.navigate("Chatbot")}
+                style={HomeScreenStyles.innerButton}
+            >
+            <FontAwesome name="rocket" size={24} color="#fff" />
+            </TouchableOpacity>
+            </Animated.View>
 
         </SafeAreaWrapper>
     );

@@ -144,6 +144,28 @@ const HomeScreenStyles = StyleSheet.create({
         fontSize: 12,
         marginTop: 5,
     },
+    floatingButton: {
+        position: 'absolute',
+        zIndex: 10,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: '#263986',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 6,
+      },
+      innerButton: {
+        width: '100%',
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }
+      
 });
 
 export default HomeScreenStyles;
