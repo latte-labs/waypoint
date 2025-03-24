@@ -146,25 +146,25 @@ const HomeScreenStyles = StyleSheet.create({
     },
     floatingButton: {
         position: 'absolute',
-        zIndex: 10,
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        backgroundColor: '#263986',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: '#1E3A8A',
         justifyContent: 'center',
         alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-        elevation: 6,
+        zIndex: 999,
+        left: 0,
+        top: 0,
       },
       innerButton: {
         width: '100%',
         height: '100%',
         justifyContent: 'center',
         alignItems: 'center',
-      }
+        borderRadius: 30,
+      },
+      
+      
       
 });
 

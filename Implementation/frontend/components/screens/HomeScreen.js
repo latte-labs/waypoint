@@ -9,7 +9,6 @@ import {
     Alert,
     Dimensions,
     Modal,
-    Animated, PanResponder
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -26,24 +25,75 @@ import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplet
 import { GOOGLE_PLACES_API_KEY } from '@env';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import PackingSuggestionModal from './PackingSuggestionModal';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withDecay,
+  runOnJS
+} from 'react-native-reanimated';
+  
+
 
 const { width, height } = Dimensions.get('window');
+function clamp(val, min, max) {
+    return Math.min(Math.max(val, min), max);
+  }
+  
 
 function HomeScreen() {
     const navigation = useNavigation();
-    const pan = useRef(new Animated.ValueXY({ x: 300, y: 500 })).current; // Start position
-
-    const panResponder = useRef(
-    PanResponder.create({
-        onMoveShouldSetPanResponder: () => true,
-        onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], {
-        useNativeDriver: false,
-        }),
-        onPanResponderRelease: () => {
-        pan.flattenOffset();
-        },
-    })
-    ).current;
+    const goToChatbot = () => {
+        navigation.navigate('Chatbot');
+      };
+      
+      const FAB_SIZE = 60; // width/height of your floating button
+      const PADDING = 20;
+      const translationX = useSharedValue(width - FAB_SIZE - PADDING);
+      const translationY = useSharedValue(height - FAB_SIZE * 3);
+    const prevTranslationX = useSharedValue(300);
+      const prevTranslationY = useSharedValue(500);
+      
+      const animatedStyle = useAnimatedStyle(() => ({
+        transform: [
+          { translateX: translationX.value },
+          { translateY: translationY.value },
+        ],
+      }));
+      
+      const panGesture = Gesture.Pan()
+        .minDistance(1)
+        .onStart(() => {
+          prevTranslationX.value = translationX.value;
+          prevTranslationY.value = translationY.value;
+        })
+        .onUpdate((event) => {
+            const maxTranslateX = width - FAB_SIZE - PADDING;
+            const maxTranslateY = height - FAB_SIZE - PADDING;
+          
+            translationX.value = clamp(
+              prevTranslationX.value + event.translationX,
+              0,
+              maxTranslateX
+            );
+            translationY.value = clamp(
+              prevTranslationY.value + event.translationY,
+              0,
+              maxTranslateY
+            );
+          })
+          
+        .runOnJS(true);
+      
+      const tapGesture = Gesture.Tap().onEnd((_event, success) => {
+        if (success) {
+          runOnJS(goToChatbot)();
+        }
+      });
+      
+      const combinedGesture = Gesture.Simultaneous(panGesture, tapGesture);
+      
+      
     const [searchQuery, setSearchQuery] = useState('');
     const [trips, setTrips] = useState([
         { id: '1', tripName: 'Hiking Trip in Vancouver', date: 'March 20, 2025' },
@@ -185,7 +235,8 @@ function HomeScreen() {
     }
 
     return (
-        <SafeAreaWrapper>
+        
+            <SafeAreaWrapper>
                 {/* ✅ 1. HEADER SECTION (30% HEIGHT) */}
                 <View style={HomeScreenStyles.headerContainer}>
                     <View style={HomeScreenStyles.brandContainer}>
@@ -278,6 +329,14 @@ function HomeScreen() {
                     ))}
                 </ScrollView>
             </ScrollView>
+            <GestureDetector gesture={combinedGesture}>
+            <Animated.View style={[HomeScreenStyles.floatingButton, animatedStyle]}>
+                <View style={HomeScreenStyles.innerButton}>
+                <FontAwesome name="rocket" size={24} color="#fff" />
+                </View>
+            </Animated.View>
+            </GestureDetector>
+
             <Modal
                 visible={showWeatherSearchModal}
                 animationType="slide"
@@ -379,17 +438,10 @@ function HomeScreen() {
                 loading={loadingPackingTip}
                 onClose={() => setShowPackingModal(false)}
                 />
-            <Animated.View
-            style={[HomeScreenStyles.floatingButton, pan.getLayout()]}
-            {...panResponder.panHandlers}
-            >
-            <TouchableOpacity
-                onPress={() => navigation.navigate("Chatbot")}
-                style={HomeScreenStyles.innerButton}
-            >
-            <FontAwesome name="rocket" size={24} color="#fff" />
-            </TouchableOpacity>
-            </Animated.View>
+
+
+
+
 
         </SafeAreaWrapper>
     );
