@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from app.config.config import settings
 from app.db.db import SessionLocal
@@ -9,6 +9,8 @@ from dotenv import load_dotenv
 import uvicorn
 from app.models.itinerary_models import Itinerary
 import uuid
+import requests
+import json
 
 from app.routes import (
     user_routes, 
@@ -20,6 +22,7 @@ from app.routes import (
     chatbot_routes,
     travel_style_routes,
     weather_routes,
+    image,
 )   
 
 app = FastAPI()
@@ -52,6 +55,7 @@ app.include_router(user_favorite_routes.user_favorite_router, prefix="/user_favo
 app.include_router(chatbot_routes.chatbot_router, prefix="/chatbot", tags=["Chatbot"])
 app.include_router(travel_style_routes.travel_style_router, prefix="/travel-styles", tags=["Travel Style"])
 app.include_router(weather_routes.weather_router, prefix="/weather", tags=["Weather Details"])
+app.include_router(image.router, prefix="/images", tags=["images"])
 
 # Dependency to get a database session
 def get_db():
@@ -121,3 +125,30 @@ def generate_presigned_url(itinerary_id: str, db: Session = Depends(get_db)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating pre-signed URL: {str(e)}")
+
+@app.post("/upload-profile-photo/")
+async def upload_profile_photo(user_id: str = Form(...), file: UploadFile = File(...)):
+    filename = f"profile_photos/{user_id}/profile.jpg"
+    try:
+        s3_client.upload_fileobj(
+            file.file,
+            AWS_BUCKET_NAME,
+            filename,
+            ExtraArgs={
+                "ACL": "public-read",
+                "ContentType": file.content_type
+            }
+        )
+        image_url = f"https://{AWS_BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com/{filename}"
+
+        # Save to Firebase
+        firebase_url = f"{FIREBASE_DB_URL}/users/{user_id}/profilePhotoUrl.json"
+        response = requests.patch(firebase_url, data=json.dumps(image_url))
+        if response.status_code != 200:
+            raise Exception("Failed to update Firebase")
+
+        return {"url": image_url}
+
+    except Exception as e:
+        print("Upload error:", e)
+        raise HTTPException(status_code=500, detail="Upload failed")
