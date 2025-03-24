@@ -1,20 +1,23 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Button, Alert, StyleSheet, TouchableOpacity} from 'react-native';
 import axios from 'axios';
 import API_BASE_URL from '../../config';
 import { database } from '../../firebase'; 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+
 
   // ✅ Input validation
   const validateInputs = () => {
     let valid = true;
-    let newErrors = {};
+    let newErrors = { email: null, password: null };
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email.toLowerCase().match(emailRegex)) {
@@ -97,7 +100,20 @@ const handleLogin = async () => {
           navigation.replace('Main', { user });  
       }
   } catch (error) {
-      Alert.alert("Login Failed", error.response?.data?.detail || "Invalid credentials");
+    const detail = error.response?.data?.detail;
+    const newErrors = { email: null, password: null };
+
+    if (detail === "Email not found") {
+      newErrors.email = "Email not found. Try another email or sign up.";
+    } else if (detail === "Incorrect password") {
+      newErrors.password = "Incorrect password. Try again.";
+    } else {
+      if (!newErrors.email && !newErrors.password) {
+        Alert.alert("Login Failed", detail || "Invalid credentials");
+      }
+    }    
+    setErrors(newErrors);
+    
   } finally {
       setLoading(false);
   }
@@ -109,34 +125,104 @@ const handleLogin = async () => {
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          { borderColor: errors.email ? 'red' : '#ccc' } // 👈 Always applies a color
+        ]}        
         placeholder="Email"
         value={email}
-        onChangeText={(text) => setEmail(text.toLowerCase())}
+        onChangeText={(text) => {
+          setEmail(text.toLowerCase().trim());
+          setErrors((prev) => ({ ...prev, email: null }));
+        }}        
         keyboardType="email-address"
       />
+
       {errors.email ? <Text style={styles.error}>{errors.email}</Text> : null}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+      <View style={[styles.passwordContainer,{ borderColor: errors.password ? 'red' : '#ccc' }] }>
+        <TextInput style={styles.passwordInput}
+          placeholder="Password"
+          value={password}
+          onChangeText={(text) => {
+            setPassword(text);
+            setErrors((prev) => ({ ...prev, password: null }));
+          }}
+          secureTextEntry={!showPassword}
+        />
+        <TouchableOpacity onPress={() => setShowPassword((prev) => !prev)}>
+          <Icon
+            name={showPassword ? 'eye-slash' : 'eye'}
+            size={20}
+            color="#333"
+            style={styles.icon}
+          />
+        </TouchableOpacity>
+      </View>
+
+
       {errors.password ? <Text style={styles.error}>{errors.password}</Text> : null}
 
-      <Button title={loading ? 'Logging In...' : 'Login'} onPress={handleLogin} disabled={loading} />
+      <Button 
+        title={loading ? 'Logging In...' : 'Login'} 
+        onPress={handleLogin} 
+        disabled={loading || Object.values(errors).some((msg) => msg)} 
+      />
+
       <Button title="Don't have an account? Sign Up" onPress={() => navigation.navigate('Signup')} />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 20 },
-  input: { width: '80%', padding: 10, borderWidth: 1, marginBottom: 10, borderRadius: 5 },
-  error: { color: 'red', fontSize: 14, marginBottom: 5 },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#fff', // Optional for clarity
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  input: {
+    width: '80%',
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#ccc', 
+    borderRadius: 5,
+    marginBottom: 5,
+  },
+  error: {
+    color: 'red',
+    fontSize: 14,
+    marginBottom: 10,
+    alignSelf: 'flex-start', // ✅ aligns error message with input
+    marginLeft: '10%', // ✅ aligns with input left edge (80% width)
+  },
+  passwordContainer: {
+    width: '80%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingVertical: 2,
+    paddingRight: 10,
+    marginBottom: 5,
+  },
+  
+  
+  toggle: {
+    paddingHorizontal: 8,
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 10,
+  }
+  
+  
 });
 
 export default LoginScreen;
