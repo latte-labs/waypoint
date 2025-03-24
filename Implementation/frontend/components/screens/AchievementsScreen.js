@@ -154,21 +154,16 @@ const AchievementsScreen = () => {
                         item.count < 5 && { opacity: 0.3 }, // dull if below 5
                     ]}
                 />
-                <Text style={styles.gridItemTitle}>{item.category.toUpperCase()}</Text>
-                <Text style={styles.gridItemCheckins}>Check-Ins: {item.count}</Text>
 
                 <Progress.Bar
                     progress={getProgress(item.count)}
                     width={null}
+                    height={10}
                     borderWidth={0}
-                    borderRadius={0}
                     unfilledColor="#EEE"
                     color="#1E3A8A"
                     style={styles.gridProgressBar}
                 />
-                <Text style={styles.gridProgressText}>
-                    {getProgressText(item.count)}
-                </Text>
             </TouchableOpacity>
         );
     };
@@ -176,7 +171,11 @@ const AchievementsScreen = () => {
     return (
         <SafeAreaWrapper>
             <View style={styles.container}>
-                <Text style={styles.title}>Your Achievements</Text>
+                <View style={styles.titleContainer}>
+                    <Text style={styles.title}>Achievements</Text>
+                    <View style={styles.borderShadow} />
+                </View>
+
 
                 {/* FlatList with 3 columns for a grid layout */}
                 <FlatList

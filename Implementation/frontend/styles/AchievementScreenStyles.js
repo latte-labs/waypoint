@@ -15,11 +15,33 @@ export default StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    title: {
-        fontSize: 22,
-        fontWeight: 'bold',
+    titleContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
         marginBottom: 15,
-    },
+      },
+      title: {
+        fontSize: 18,
+        fontWeight: "200",
+        textAlign: 'center',
+        paddingBottom: 7,
+        backgroundColor: 'transparent',
+        marginBottom: 7,
+      },
+      borderShadow: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 0.75,
+        backgroundColor: 'grey',
+        shadowColor: '#000',
+        shadowOffset: { width: 3, height: 2 },
+        shadowOpacity: 0.5,
+        shadowRadius: 2,
+      },
+      
     columnWrapper: {
         justifyContent: 'space-between',
         marginBottom: 20,
@@ -33,36 +55,25 @@ export default StyleSheet.create({
         backgroundColor: 'white',
         borderRadius: 15,
         padding: 10,
-        borderBottomColor: "#ddd",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
+        // borderBottomColor: "#ddd",
+        // shadowColor: "#000",
+        // shadowOffset: { width: 0, height: 3 },
+        // shadowOpacity: 0.2,
+        // shadowRadius: 2,
     },
     badgeImage: {
         width: 60,
         height: 60,
         resizeMode: 'contain',
-        marginBottom: 8,
+        marginBottom: 4,
     },
-    gridItemTitle: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        marginBottom: 2,
-    },
-    gridItemCheckins: {
-        fontSize: 12,
-        marginBottom: 5,
-        color: '#333',
-    },
+
     gridProgressBar: {
-        width: '100%',   // fill the item width
-        marginTop: 5,
-    },
-    gridProgressText: {
-        fontSize: 11,
-        color: '#666',
-        marginTop: 4,
+        width: '100%',
+        marginVertical: 10,
+        borderRadius: 10,
+        marginHorizontal: 20,
+        height: 10,
     },
 
     /* MODAL STYLES */
@@ -124,5 +135,5 @@ export default StyleSheet.create({
         marginVertical: 10,
         borderRadius: 10,
         marginHorizontal: 20,
-      },
+    },
 });
