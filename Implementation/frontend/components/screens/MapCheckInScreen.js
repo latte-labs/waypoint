@@ -77,7 +77,7 @@ const MapCheckInScreen = () => {
 
     // On mount, get user location and fetch places
     useEffect(() => {
-        fetchUserLocationAndPlaces(); 
+        fetchUserLocationAndPlaces();
     }, []);
 
     const fetchUserLocationAndPlaces = () => {
@@ -118,10 +118,21 @@ const MapCheckInScreen = () => {
                 index === self.findIndex((p) => p.cached_data.place_id === place.cached_data.place_id)
             );
             // Filter by allowed categories
-            const filtered = deduplicated.filter(place =>
-                allowedCategories.includes(place.category.toLowerCase())
-            );
-
+            const filtered = deduplicated.filter(place => {
+                let match = false;
+                // Check if the top-level category matches one of the allowed categories
+                if (place.category) {
+                  match = allowedCategories.includes(place.category.toLowerCase());
+                }
+                // If not, check if cached_data.types exists and includes one of the allowed categories
+                if (!match && place.cached_data && place.cached_data.types) {
+                  match = place.cached_data.types.some(t =>
+                    allowedCategories.includes(t.toLowerCase())
+                  );
+                }
+                return match;
+              });
+              
             // Ensure each place has top-level latitude and longitude, falling back to cached_data geometry if needed
             const normalized = filtered.map(place => ({
                 ...place,

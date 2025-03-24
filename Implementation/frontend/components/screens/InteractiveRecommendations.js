@@ -181,7 +181,9 @@ const InteractiveRecommendations = () => {
                             <Text style={styles.cardTitle}>{item.name}</Text>
                             <Text>{item.category}</Text>
                             <Text>⭐ {item.rating || "N/A"}</Text>
-                            <Text>{item.cached_data.place_id}</Text>
+                            {/*<Text>{item.cached_data.place_id}</Text>*/}
+                            <Text>{item.cached_data.geometry.location.lat}</Text>
+                            <Text>{item.cached_data.geometry.location.lng}</Text>
                         </View>
                     </View>
                 );
