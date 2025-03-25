@@ -106,7 +106,7 @@ const MapCheckInScreen = () => {
     // Fetch nearby places from backend
     const fetchNearbyPlaces = async (latitude, longitude) => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/places/search`, {
+            const response = await axios.get(`${API_BASE_URL}/places/cached`, {
                 params: {
                     location: `${latitude},${longitude}`,
                     radius: 300, // small radius
