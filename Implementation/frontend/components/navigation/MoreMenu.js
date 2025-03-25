@@ -9,21 +9,27 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 const MoreMenu = ({ closeMenu }) => {
     const navigation = useNavigation();
     const [profileImage, setProfileImage] = useState(null);
+    const [profileName, setProfileName] = useState("Guest");
 
     useEffect(() => {
         // Retrieve the profile image from AsyncStorage on mount
-        const fetchProfileImage = async () => {
+        const fetchProfileData = async () => {
             try {
                 const storedImage = await AsyncStorage.getItem('profileImage');
                 if (storedImage) {
                     setProfileImage(storedImage);
+                }
+                const storedUser = await AsyncStorage.getItem('user');
+                if (storedUser) {
+                    const userData = JSON.parse(storedUser);
+                    setProfileName(userData.name || "Guest");
                 }
             } catch (error) {
                 console.error('Error retrieving profile image:', error);
             }
         };
 
-        fetchProfileImage();
+        fetchProfileData();
     }, []);
 
 
@@ -40,23 +46,20 @@ const MoreMenu = ({ closeMenu }) => {
 
     return (
         <View style={navigationStyles.moreContainer}>
-            {/* Display Profile Image */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', padding: 10 }}>
+            {/* Profile Card */}
+            <TouchableOpacity
+                style={navigationStyles.profileHeader}
+                onPress={() => handleNavigate("Profile")}
+            >
                 {profileImage ? (
                     <Image
                         source={{ uri: profileImage }}
-                        style={{ width: 100, height: 100, borderRadius: 50 }}
+                        style={navigationStyles.profileHeaderImage}
                     />
                 ) : (
-                    <Icon name="user" size={50} color="#ccc" style={{ marginRight: 10 }} />
+                    <Icon name="user-circle" size={60} color="#ccc" style={{ marginRight: 15 }} />
                 )}
-            </View>
-
-            <TouchableOpacity onPress={() => handleNavigate("Profile")} style={navigationStyles.moreMenuItem}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Icon name="user" size={20} color="#1E3A8A" style={{ marginRight: 12 }} />
-                    <Text style={navigationStyles.moreMenuText}>Profile</Text>
-                </View>
+                <Text style={navigationStyles.profileHeaderName}>{profileName}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => handleNavigate("Settings")} style={navigationStyles.moreMenuItem}>

@@ -84,10 +84,10 @@ export const navigationStyles = StyleSheet.create({
         borderWidth: 0.1,
         borderColor: "grey",
         shadowColor: "grey",
-        shadowOffset: {width: 0, height: 4},
+        shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.5,
         shadowRadius: 2,
-      },
+    },
 
     // MoreMenu Styles
     moreContainer: {
@@ -95,13 +95,38 @@ export const navigationStyles = StyleSheet.create({
         justifyContent: 'center',
         //borderWidth: 1,
     },
+    // New Profile Header Card
+    profileHeader: {
+        width: '100%',
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 15,
+        marginBottom: 20,
+        backgroundColor: '#EAF0FF',
+        borderRadius: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 3,
+    },
+    profileHeaderImage: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        marginRight: 15,
+    },
+    profileHeaderName: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#263986',
+    },
     moreMenuItem: {
         padding: 15,
-        //borderWidth: 1,
     },
     moreMenuText: {
         fontSize: 22,
     },
+
 
 
 });
