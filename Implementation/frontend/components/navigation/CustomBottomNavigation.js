@@ -39,7 +39,7 @@ const CustomBottomNavigation = () => {
     );
 
     // Screens where bottom nav should be hidden
-    const hiddenScreens = ['QuizScreen', 'LocationPermissions'];
+    const hiddenScreens = ['QuizScreen'];
     if (hiddenScreens.includes(activeRouteName)) return null; // Hides the nav
 
     const menuItems = [
