@@ -4,6 +4,7 @@ import { useNavigation } from "@react-navigation/native";
 import { navigationStyles } from "../../styles/NavigationStyles";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import styles from "../../styles/CheckInScreenStyles";
 
 
 const MoreMenu = ({ closeMenu }) => {
@@ -89,7 +90,7 @@ const MoreMenu = ({ closeMenu }) => {
                 </View>
             </TouchableOpacity>
 
-            <Button title="Log Out" onPress={(handleLogout)} />
+            <Button title="Log Out" onPress={(handleLogout)}/>
         </View>
     )
 }

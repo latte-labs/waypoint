@@ -24,8 +24,8 @@ const InteractiveRecommendationsStyle = StyleSheet.create({
     flexShrink: 1,  
 },
   filterButton: { padding: 8, marginVertical: 5, marginHorizontal: 5, backgroundColor: '#ddd', borderRadius: 12 },
-  selectedFilter: { backgroundColor: '#FF6F00' },
-  filterText: { fontSize: 14, color: '#333' },
+  selectedFilter: { backgroundColor: '#1E3A8A' },
+  filterText: { fontSize: 14, color: 'white' },
 
   /* Recommendations List Styles */
   listContainer: { width: '100%', paddingHorizontal: 10, height: height*0.27},
@@ -34,12 +34,12 @@ const InteractiveRecommendationsStyle = StyleSheet.create({
   cardContent: { flex: 1 },
   cardTitle: { fontSize: 16 },
   cardCategory: { fontSize: 14, color: 'gray' },
-  cardRating: { fontSize: 14, color: '#FF6F00' },
+  cardRating: { fontSize: 14, color: '#1E3A8A' },
 
   /* Zoom & Fullscreen Controls */
   zoomControls: { position: 'absolute', bottom: 80, right: 20, flexDirection: 'column', alignItems: 'center' },
   zoomButton: {
-    backgroundColor: '#FF6F00',
+    backgroundColor: '#1E3A8A',
     paddingVertical: 8,
     paddingHorizontal: 16,
     marginVertical: 6,
@@ -47,7 +47,7 @@ const InteractiveRecommendationsStyle = StyleSheet.create({
     alignItems: 'center',
   },
   fullscreenButton: {
-    backgroundColor: '#FF6F00',
+    backgroundColor: '#1E3A8A',
     paddingVertical: 8,
     paddingHorizontal: 16,
     marginBottom: 6,

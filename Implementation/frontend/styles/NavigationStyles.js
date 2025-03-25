@@ -132,5 +132,4 @@ export const navigationStyles = StyleSheet.create({
         marginBottom: 20,
       },
 
-
 });
