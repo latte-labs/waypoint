@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, FlatList, Image, ScrollView, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, Image, ScrollView, Dimensions, Alert, TouchableHighlight } from 'react-native';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import axios from 'axios';
 import API_BASE_URL from '../../config';
@@ -8,6 +8,8 @@ import { GOOGLE_PLACES_API_KEY } from '@env';
 import { useNavigation } from '@react-navigation/native';
 import styles from '../../styles/InteractiveRecommendationsStyle';
 import SafeAreaWrapper from './SafeAreaWrapper';
+import Icon from 'react-native-vector-icons/FontAwesome';
+
 
 const { width, height } = Dimensions.get('window');
 
@@ -25,6 +27,10 @@ const InteractiveRecommendations = () => {
     });
     const [loading, setLoading] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const flatListRef = useRef(null);
+    const markerRefs = useRef([]);
+
+
 
     useEffect(() => {
         fetchPlaces();
@@ -33,7 +39,7 @@ const InteractiveRecommendations = () => {
     const fetchPlaces = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/places/search`, {
+            const response = await axios.get(`${API_BASE_URL}/places/cached`, {
                 params: {
                     location: `${region.latitude},${region.longitude}`,
                     radius: 5000,
@@ -69,7 +75,32 @@ const InteractiveRecommendations = () => {
     const uniqueCategories = [
         ...new Set(mapPlaces.map((place) => place.category))
     ];
+    const filteredPlaces = selectedCategory
+        ? mapPlaces.filter(place => place.category === selectedCategory)
+        : mapPlaces;
 
+
+    const handleMarkerPress = (index) => {
+        if (flatListRef.current) {
+            flatListRef.current.scrollToIndex({ index, animated: true });
+        }
+    };
+    const focusMapOnPlace = (place, index) => {
+        if (mapRef.current) {
+            mapRef.current.animateToRegion({
+                latitude: place.latitude,
+                longitude: place.longitude,
+            }, 500);
+        }
+    
+        // Show Callout
+        if (markerRefs.current[index]) {
+            markerRefs.current[index].showCallout();
+        }
+    };
+    
+    
+        
     return (
         <SafeAreaWrapper>
             <View style={styles.container}>
@@ -85,16 +116,20 @@ const InteractiveRecommendations = () => {
             
             {!isFullscreen && (
                 <View style={styles.filterContainer}>
-                    {['relaxation', 'adventure', 'cultural', 'foodie'].map((style) => (
-                        <TouchableOpacity
-                            key={style}
-                            style={[styles.filterButton, travelStyle === style && styles.selectedFilter]}
-                            onPress={() => setTravelStyle(style)}
-                        >
-                            <Text style={styles.filterText}>{style}</Text>
-                        </TouchableOpacity>
-                    ))}
+                    {['relaxation', 'adventure', 'cultural', 'foodie'].map((style) => {
+                        const label = style.charAt(0).toUpperCase() + style.slice(1);
+                        return (
+                            <TouchableOpacity
+                                key={style}
+                                style={[styles.filterButton, travelStyle === style && styles.selectedFilter]}
+                                onPress={() => setTravelStyle(style)}
+                            >
+                                <Text style={styles.filterText}>{label}</Text>
+                            </TouchableOpacity>
+                        );
+                    })}
                 </View>
+
             )}
 
             {/* Map Section */}
@@ -105,8 +140,14 @@ const InteractiveRecommendations = () => {
                     region={region}
                     onRegionChangeComplete={handleRegionChange}
                 >
-                    {mapPlaces.map((place, index) => (
-                        <Marker key={index} coordinate={{ latitude: place.latitude, longitude: place.longitude }} title={place.name}>
+                    {filteredPlaces.map((place, index) => (
+                        <Marker
+                            key={index}
+                            coordinate={{ latitude: place.latitude, longitude: place.longitude }}
+                            ref={(ref) => markerRefs.current[index] = ref}
+                            title={place.name}
+                            onPress={() => handleMarkerPress(index)}
+                        >
                             <Callout>
                                 <View>
                                     <Text style={{ fontWeight: 'bold' }}>{place.name}</Text>
@@ -115,6 +156,7 @@ const InteractiveRecommendations = () => {
                             </Callout>
                         </Marker>
                     ))}
+
                 </MapView>
             </View>
 
@@ -145,54 +187,68 @@ const InteractiveRecommendations = () => {
                     horizontal 
                     showsHorizontalScrollIndicator={false} 
                     contentContainerStyle={styles.filterScrollContainer}>
-                    {['All', ...uniqueCategories].map((category) => (
-                        <TouchableOpacity
-                            key={category}
-                            style={[styles.filterButton, selectedCategory === category && styles.selectedFilter]}
-                            onPress={() => setSelectedCategory(category === "All" ? null : category)}
-                        >
-                            <Text style={styles.filterText}>{category}</Text>
-                        </TouchableOpacity>
-                    ))}
+                    
+                    {['All', ...uniqueCategories].map((category) => {
+                        const label = category
+                            .split('_')
+                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                            .join(' ');
+                
+                        const isSelected = selectedCategory === category || (category === 'All' && selectedCategory === null);
+                
+                        return (
+                            <TouchableOpacity
+                                key={category}
+                                style={[styles.filterButton, isSelected && styles.selectedFilter]}
+                                onPress={() => setSelectedCategory(category === "All" ? null : category)}
+                            >
+                                <Text style={styles.filterText}>{label}</Text>
+                            </TouchableOpacity>
+                        );
+                    })}
                 </ScrollView>
-            )}
+            
 
+            )}
             {/* Recommended Places List */}
             {!isFullscreen && (
-    <View style={styles.listContainer}>
-        <FlatList
-            data={selectedCategory ? mapPlaces.filter(place => place.category === selectedCategory) : mapPlaces}
-            keyExtractor={(item) => item.cached_data.place_id || `${item.name}-${item.latitude}-${item.longitude}`}
-            renderItem={({ item }) => {
-                let imageUrl;
+            <View style={styles.listContainer}>
+                <FlatList
+                    ref={flatListRef}
+                    data={filteredPlaces}
+                    keyExtractor={(item, index) =>
+                        `${item.name?.replace(/\s+/g, '')}-${item.latitude.toFixed(5)}-${item.longitude.toFixed(5)}-${index}`
+                      }                      
+                    renderItem={({ item, index }) => {
+                        const imageUrl = require('../../assets/images/placeholder_placelist.png');
 
-                if (item.cached_data?.photos?.[0]?.photo_reference) {
-                    imageUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${item.cached_data.photos[0].photo_reference}&key=${GOOGLE_PLACES_API_KEY}`;
-                } else if (item.cached_data?.icon) {
-                    imageUrl = item.cached_data.icon;  // Fallback to Google Maps icon
-                } else {
-                    imageUrl = 'https://via.placeholder.com/400';  // Fallback if no photo exists
-                }
+                        return (
+                            <TouchableOpacity onPress={() => focusMapOnPlace(item, index)} activeOpacity={0.8}>
+                                <View style={styles.card}>
+                                    <Image source={imageUrl} style={styles.image} />
+                                    
+                                    {/* Add to Itinerary Button */}
+                                    <TouchableOpacity
+                                        style={styles.addButton}
+                                        onPress={() => Alert.alert("Coming Soon", "Adding to Itinerary Feature will be available soon")}
+                                    >
+                                        <Icon name="plus-circle" size={24} color="#007AFF" />
+                                    </TouchableOpacity>
 
-                return (
-                    <View style={styles.card}>
-                        <Image source={{ uri: imageUrl }} style={styles.image} />
-                        <View style={styles.cardContent}>
-                            <Text style={styles.cardTitle}>{item.name}</Text>
-                            <Text>{item.category}</Text>
-                            <Text>⭐ {item.rating || "N/A"}</Text>
-                            {/*<Text>{item.cached_data.place_id}</Text>*/}
-                            <Text>{item.cached_data.geometry.location.lat}</Text>
-                            <Text>{item.cached_data.geometry.location.lng}</Text>
-                        </View>
-                    </View>
-                );
-            }}
-        />
-    </View>
-)}
+                                    <View style={styles.cardContent}>
+                                        <Text style={styles.cardTitle}>{item.name}</Text>
+                                        <Text>{item.category}</Text>
+                                        <Text>⭐ {item.rating || "N/A"}</Text>
+                                    </View>
+                                </View>
+                            </TouchableOpacity>
 
-        </View>
+                        );
+                    }}
+                />
+            </View>
+            )}
+       </View>
         </SafeAreaWrapper>
     );
 };

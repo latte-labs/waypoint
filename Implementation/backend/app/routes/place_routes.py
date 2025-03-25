@@ -12,63 +12,142 @@ GOOGLE_PLACES_API_KEY = settings.GOOGLE_PLACES_API_KEY  # ✅ Secure API Key Acc
 
 # ✅ Travel Style Mapping (Subcategories)
 TRAVEL_STYLE_MAPPING = {
-    "relaxation": ["spa", "park", "cafe", "beach", "botanical_garden", "library", "hotel"],
-    "adventure": ["amusement_park", "zoo", "aquarium", "campground", "casino", "hiking"],
-    "cultural": ["museum", "art_gallery", "historical_site", "landmark", "church"],
+    "relaxation": ["park", "beach"],
+    "adventure": ["amusement_park", "zoo", "aquarium"],
+    "cultural": ["museum", "art_gallery", "historical_place", "monument"],
     "foodie": ["restaurant", "bakery", "bar", "cafe", "coffee_shop"]
 }
 
 @place_router.get("/search")
 def search_places(
     location: str = Query(...),
-    radius: int = Query(5000),
+    radius: int = Query(100),  # ✅ Set default radius to 100 meters
     travel_style: str = Query(None),
     db: Session = Depends(get_db)
 ):
     try:
         lat, lon = map(float, location.split(","))
-        print(f"📍 Location: {lat}, {lon}")  # Debugging
+        print(f"📍 Location: {lat}, {lon}")
 
         if not travel_style:
-            travel_style = "relaxation"  # Default travel style
+            travel_style = "relaxation"
         
-        print(f"🎯 Travel Style: {travel_style}")  # Debugging
+        print(f"🎯 Travel Style: {travel_style}")
 
         place_types = TRAVEL_STYLE_MAPPING[travel_style.lower()]
         places = []
 
-        for place_type in place_types:
-            url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
-            params = {
-                "location": location,
-                "radius": radius,
-                "type": place_type,
-                "key": GOOGLE_PLACES_API_KEY
+        # ✅ One single API request with all includedTypes
+        url = "https://places.googleapis.com/v1/places:searchNearby"
+        headers = {
+            "Content-Type": "application/json",
+            "X-Goog-Api-Key": GOOGLE_PLACES_API_KEY,
+            "X-Goog-FieldMask": "places.displayName,places.location,places.rating,places.types"
+        }
+        body = {
+            "locationRestriction": {
+                "circle": {
+                    "center": {
+                        "latitude": lat,
+                        "longitude": lon
+                    },
+                    "radius": radius
+                }
+            },
+            "includedTypes": place_types,
+            "maxResultCount": 20  # PLACES API DEFAULT MAX LIMIT
+        }
+
+        # print(f"📡 API Body: {body}")  # Optional debugging
+        response = requests.post(url, headers=headers, json=body)
+
+        if response.status_code != 200:
+            print(f"❌ API Error: {response.status_code} - {response.text}")
+            raise HTTPException(status_code=500, detail=f"Google API Error: {response.text}")
+
+        data = response.json()
+
+        for result in data.get("places", []):
+            name = result.get("displayName", {}).get("text", "Unknown")
+            latitude = result["location"]["latitude"]
+            longitude = result["location"]["longitude"]
+            rating = result.get("rating")
+            types = result.get("types", [])
+            category = types[0] if types else "unknown"  # ✅ Use first type as category
+
+            place_data = {
+                "name": name,
+                "category": category,
+                "latitude": latitude,
+                "longitude": longitude,
+                "rating": rating,
+                "source_api": "google_places_v3",
+                "cached_data": result
             }
 
-            print(f"🔍 API Request: {url}?{params}")  # Debugging
+            # ✅ Save to DB
+            place_record = Place(
+                name=place_data["name"],
+                category=place_data["category"],
+                latitude=place_data["latitude"],
+                longitude=place_data["longitude"],
+                rating=place_data["rating"],
+                source_api=place_data["source_api"],
+                cached_data=place_data["cached_data"],
+                last_updated=datetime.utcnow()
+            )
+            db.add(place_record)
 
-            response = requests.get(url, params=params)
+            # ✅ Return value to frontend
+            places.append(place_data)
 
-            if response.status_code != 200:
-                print(f"❌ API Error: {response.status_code} - {response.text}")  # Debugging
-                raise HTTPException(status_code=500, detail=f"Google API Error: {response.text}")
+        # ✅ Commit after the loop
+        db.commit()
 
-            data = response.json()
-
-            for result in data.get("results", []):
-                places.append({
-                    "name": result.get("name", "Unknown"),
-                    "category": place_type,
-                    "latitude": result["geometry"]["location"]["lat"],
-                    "longitude": result["geometry"]["location"]["lng"],
-                    "rating": result.get("rating"),
-                    "source_api": "google_places",
-                    "cached_data": result
-                })
 
         return places
 
     except Exception as e:
-        print(f"❌ Internal Error: {e}")  # Debugging
+        print(f"❌ Internal Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@place_router.get("/cached")
+def get_cached_places(
+    location: str = Query(...),
+    radius: int = Query(10000),
+    travel_style: str = Query(None),
+    db: Session = Depends(get_db)
+):
+    try:
+        lat, lon = map(float, location.split(","))
+
+        db_places = db.query(Place).all()
+        filtered = []
+
+        for place in db_places:
+            # Basic radius filter (approximate)
+            distance = ((place.latitude - lat) ** 2 + (place.longitude - lon) ** 2) ** 0.5
+            within_radius = distance <= radius / 111_000  # Convert meters to degrees
+
+            # ✅ Filter by travel style mapped types
+            matches_style = True
+            if travel_style and travel_style.lower() in TRAVEL_STYLE_MAPPING:
+                matches_style = place.category in TRAVEL_STYLE_MAPPING[travel_style.lower()]
+
+            if within_radius and matches_style:
+                filtered.append({
+                    "name": place.name,
+                    "category": place.category,
+                    "latitude": place.latitude,
+                    "longitude": place.longitude,
+                    "rating": place.rating,
+                    "source_api": place.source_api,
+                    "cached_data": place.cached_data
+                })
+
+        return filtered
+
+    except Exception as e:
+        print(f"❌ Internal Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+

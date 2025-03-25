@@ -28,7 +28,7 @@ const InteractiveRecommendationsStyle = StyleSheet.create({
   filterText: { fontSize: 14, color: '#333' },
 
   /* Recommendations List Styles */
-  listContainer: { width: '100%', paddingHorizontal: 10, height: height*0.29},
+  listContainer: { width: '100%', paddingHorizontal: 10, height: height*0.27},
   card: { flexDirection: 'row', backgroundColor: '#f9f9f9', padding: 12, marginVertical: 6, borderRadius: 8, alignItems: 'center' },
   image: { width: 80, height: 80, borderRadius: 8, marginRight: 12 },
   cardContent: { flex: 1 },
@@ -78,6 +78,13 @@ const InteractiveRecommendationsStyle = StyleSheet.create({
       fontWeight: 'bold',
       textAlign: 'center',
   },
+  addButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 10,
+}
+
 
 });
 
