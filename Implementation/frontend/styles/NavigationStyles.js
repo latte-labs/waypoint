@@ -75,7 +75,7 @@ export const navigationStyles = StyleSheet.create({
         top: 120,
         bottom: 120,
         right: 0,
-        width: "60%",
+        width: "70%",
         backgroundColor: "white",
         borderTopLeftRadius: 20,
         borderBottomLeftRadius: 20,
@@ -101,13 +101,14 @@ export const navigationStyles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         padding: 15,
-        marginBottom: 20,
-        backgroundColor: '#EAF0FF',
-        borderRadius: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 3,
+        backgroundColor: 'rgb(243, 243, 243)',
+        borderRadius: 40,
+        borderWidth: 0.1,
+        borderColor: "grey",
+        shadowColor: "grey",
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.5,
+        shadowRadius: 2,
     },
     profileHeaderImage: {
         width: 60,
@@ -126,7 +127,9 @@ export const navigationStyles = StyleSheet.create({
     moreMenuText: {
         fontSize: 22,
     },
-
+    profileHeaderShadow: {
+        marginBottom: 20,
+      },
 
 
 });

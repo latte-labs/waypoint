@@ -47,19 +47,18 @@ const MoreMenu = ({ closeMenu }) => {
     return (
         <View style={navigationStyles.moreContainer}>
             {/* Profile Card */}
-            <TouchableOpacity
-                style={navigationStyles.profileHeader}
-                onPress={() => handleNavigate("Profile")}
-            >
-                {profileImage ? (
-                    <Image
-                        source={{ uri: profileImage }}
-                        style={navigationStyles.profileHeaderImage}
-                    />
-                ) : (
-                    <Icon name="user-circle" size={60} color="#ccc" style={{ marginRight: 15 }} />
-                )}
-                <Text style={navigationStyles.profileHeaderName}>{profileName}</Text>
+            <TouchableOpacity onPress={() => handleNavigate("Profile")}>
+                    <View style={navigationStyles.profileHeader}>
+                        {profileImage ? (
+                            <Image
+                                source={{ uri: profileImage }}
+                                style={navigationStyles.profileHeaderImage}
+                            />
+                        ) : (
+                            <Icon name="user-circle" size={60} color="#ccc" style={{ marginRight: 15 }} />
+                        )}
+                        <Text style={navigationStyles.profileHeaderName}>{profileName}</Text>
+                    </View>
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => handleNavigate("Settings")} style={navigationStyles.moreMenuItem}>
