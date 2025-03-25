@@ -100,7 +100,7 @@ export const navigationStyles = StyleSheet.create({
         width: '100%',
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 15,
+        padding: 10,
         backgroundColor: 'rgb(243, 243, 243)',
         borderRadius: 40,
         borderWidth: 0.1,
@@ -109,6 +109,7 @@ export const navigationStyles = StyleSheet.create({
         shadowOffset: { width: 0, height: -2 },
         shadowOpacity: 0.5,
         shadowRadius: 2,
+        marginBottom: 15,
     },
     profileHeaderImage: {
         width: 60,
@@ -119,7 +120,7 @@ export const navigationStyles = StyleSheet.create({
     profileHeaderName: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#263986',
+        color: '#1E3A8A',
     },
     moreMenuItem: {
         padding: 15,

@@ -47,7 +47,7 @@ const MoreMenu = ({ closeMenu }) => {
     return (
         <View style={navigationStyles.moreContainer}>
             {/* Profile Card */}
-            <TouchableOpacity onPress={() => handleNavigate("Profile")}>
+            <TouchableOpacity onPress={() => handleNavigate("Profile")} style={{width: '90%'}}>
                     <View style={navigationStyles.profileHeader}>
                         {profileImage ? (
                             <Image
