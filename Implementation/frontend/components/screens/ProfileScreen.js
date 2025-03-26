@@ -1,11 +1,13 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, Button, Image, StyleSheet, SafeAreaView, ActivityIndicator, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import React, { useEffect, useState, useCallback, useLayoutEffect } from 'react';
+import { View, Text, Button, Image, StyleSheet, SafeAreaView, ActivityIndicator, TouchableOpacity, Alert, ScrollView, TextInput } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native';
 import API_BASE_URL from '../../config';
 import ImagePicker from 'react-native-image-crop-picker';
 import { getDatabase, ref, update, onValue, get } from '@react-native-firebase/database';
+import FontAwesome from 'react-native-vector-icons/FontAwesome'
+
 
 const ProfileScreen = ({ navigation }) => {
   const [user, setUser] = useState(null);
@@ -13,40 +15,76 @@ const ProfileScreen = ({ navigation }) => {
   const [travelStyle, setTravelStyle] = useState(null);
   const [profileImage, setProfileImage] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [profileData, setProfileData] = useState({
+    username: '',
+    bio: '',
+    location: '',
+    languages: '',
+    favoriteDestinations: '',
+    travelStyle: '', // reuse from existing logic
+  });
+
 
   useFocusEffect(
     useCallback(() => {
       if (!user?.id) return;
   
       const db = getDatabase();
-      const imageRef = ref(db, `users/${user.id}/profilePhotoUrl`);
+      const userRef = ref(db, `users/${user.id}`);
   
-      const unsubscribe = onValue(imageRef, async (snapshot) => {
-        const imageUrl = snapshot.val();
+      const unsubscribe = onValue(userRef, async (snapshot) => {
+        const userData = snapshot.val();
   
-        if (imageUrl) {
-          console.log("✅ Firebase Returned URL:", imageUrl);
-          const cacheBustedUrl = `${imageUrl}?ts=${Date.now()}`;
-          setProfileImage(cacheBustedUrl);
-          await AsyncStorage.setItem('profileImage', cacheBustedUrl);
+        if (userData) {
+          // ✅ Load Profile Image
+          if (userData.profilePhotoUrl) {
+            console.log("✅ Firebase Returned URL:", userData.profilePhotoUrl);
+            const cacheBustedUrl = `${userData.profilePhotoUrl}?ts=${Date.now()}`;
+            setProfileImage(cacheBustedUrl);
+            await AsyncStorage.setItem('profileImage', cacheBustedUrl);
           } else {
-          const fallback = await AsyncStorage.getItem('profileImage');
-          if (fallback) {
-            console.log("ℹ️ Using fallback image from AsyncStorage");
-            setProfileImage(fallback);
-          } else {
-            setProfileImage(null);
-            console.log("🚫 No image found in Firebase or cache");
+            const fallback = await AsyncStorage.getItem('profileImage');
+            if (fallback) {
+              console.log("ℹ️ Using fallback image from AsyncStorage");
+              setProfileImage(fallback);
+            } else {
+              setProfileImage(null);
+              console.log("🚫 No image found in Firebase or cache");
+            }
           }
+  
+          // ✅ Load Profile Fields
+          const {
+            username = '',
+            bio = '',
+            location = '',
+            languages = '',
+            favoriteDestinations = '',
+          } = userData;
+  
+          const profileFromDB = {
+            username,
+            bio,
+            location,
+            languages,
+            favoriteDestinations,
+            travelStyle: profileData.travelStyle // keep existing logic
+          };
+  
+          setProfileData(profileFromDB);
+          await AsyncStorage.setItem('@profile_data', JSON.stringify(profileFromDB));
+        } else {
+          console.warn("⚠️ No user data found in Firebase.");
         }
       });
   
       return () => {
-        // ❗ Clean up to avoid memory leaks and stale listeners
-        imageRef && unsubscribe();
+        userRef && unsubscribe();
       };
     }, [user?.id])
   );
+  
         
   const handleProfileImagePress = async () => {
     try {
@@ -177,6 +215,15 @@ const ProfileScreen = ({ navigation }) => {
     }
   };
 
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={() => (isEditing ? saveProfile() : setIsEditing(true))} style={{ marginRight: 15 }}>
+          <FontAwesome name={isEditing ? 'save' : 'edit'} size={20} color="#000" />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, isEditing, profileData]);
   // ✅ Show loading indicator while fetching data
   if (loading) {
     return (
@@ -185,6 +232,34 @@ const ProfileScreen = ({ navigation }) => {
       </SafeAreaView>
     );
   }
+
+
+  const saveProfile = async () => {
+    if (!user?.id) {
+      Alert.alert("Error", "User ID not found");
+      return;
+    }
+  
+    try {
+      const db = getDatabase();
+      const updates = {
+        [`users/${user.id}/username`]: profileData.username,
+        [`users/${user.id}/bio`]: profileData.bio,
+        [`users/${user.id}/location`]: profileData.location,
+        [`users/${user.id}/languages`]: profileData.languages,
+        [`users/${user.id}/favoriteDestinations`]: profileData.favoriteDestinations,
+      };
+  
+      await update(ref(db), updates);
+      await AsyncStorage.setItem('@profile_data', JSON.stringify(profileData));
+      setIsEditing(false);
+      Alert.alert("Success", "Profile saved.");
+    } catch (error) {
+      console.error("❌ Error saving profile to Firebase:", error);
+      Alert.alert("Save Failed", "Could not update your profile. Please try again.");
+    }
+  };
+  
 
   return (
     <SafeAreaView style={styles.safeContainer}>
@@ -225,9 +300,74 @@ const ProfileScreen = ({ navigation }) => {
           </Text>
 
         </View>
+        <View style={{ marginTop: 30, paddingHorizontal: 20, width: '100%' }}>
+  {/* Username */}
+  <Text style={{ fontWeight: 'bold' }}>Username / Display Name</Text>
+  {isEditing ? (
+    <TextInput
+      style={styles.input}
+      placeholder="Add username / display name"
+      value={profileData.username}
+      onChangeText={(text) => setProfileData({ ...profileData, username: text })}
+    />
+  ) : (
+    <Text style={styles.textValue}>{profileData.username || 'Add username / display name'}</Text>
+  )}
 
-        {/* Buttons */}
-        <Button title="Edit Profile" onPress={() => alert('Edit Profile Feature Coming Soon!')} />
+  {/* Bio */}
+  <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Bio / Travel Philosophy</Text>
+  {isEditing ? (
+    <TextInput
+      style={[styles.input, { height: 80 }]}
+      multiline
+      placeholder="Tell us about yourself"
+      value={profileData.bio}
+      onChangeText={(text) => setProfileData({ ...profileData, bio: text })}
+    />
+  ) : (
+    <Text style={styles.textValue}>{profileData.bio || 'Tell us about yourself'}</Text>
+  )}
+
+  {/* Location */}
+  <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Home Country / City</Text>
+  {isEditing ? (
+    <TextInput
+      style={styles.input}
+      placeholder="Tell us where you're from"
+      value={profileData.location}
+      onChangeText={(text) => setProfileData({ ...profileData, location: text })}
+    />
+  ) : (
+    <Text style={styles.textValue}>{profileData.location || "Tell us where you're from"}</Text>
+  )}
+
+  {/* Languages */}
+  <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Languages Spoken</Text>
+  {isEditing ? (
+    <TextInput
+      style={styles.input}
+      placeholder="What languages do you speak?"
+      value={profileData.languages}
+      onChangeText={(text) => setProfileData({ ...profileData, languages: text })}
+    />
+  ) : (
+    <Text style={styles.textValue}>{profileData.languages || 'What languages do you speak?'}</Text>
+  )}
+
+  {/* Favorite Destinations */}
+  <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Top 3 Favorite Destinations</Text>
+  {isEditing ? (
+    <TextInput
+      style={styles.input}
+      placeholder="Tell us what is your fav destinations"
+      value={profileData.favoriteDestinations}
+      onChangeText={(text) => setProfileData({ ...profileData, favoriteDestinations: text })}
+    />
+  ) : (
+    <Text style={styles.textValue}>{profileData.favoriteDestinations || 'Tell us what is your fav destinations'}</Text>
+  )}
+</View>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -305,11 +445,19 @@ const styles = StyleSheet.create({
     color: 'gray',
     marginTop: 8,
     textAlign: 'center',
-  }
-  
-  
-  
-  
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 8,
+    borderRadius: 8,
+    marginTop: 4,
+  },
+  textValue: {
+    fontSize: 15,
+    color: '#555',
+    marginTop: 4,
+  },  
 });
 
 export default ProfileScreen;
