@@ -41,9 +41,14 @@ const MoreMenu = ({ closeMenu }) => {
 
     // ✅ Handle Logout
     const handleLogout = async () => {
-        await AsyncStorage.removeItem('user'); // Clear stored user data
-        navigation.replace('Login'); // Redirect to Login
+        try {
+            await AsyncStorage.multiRemove(['user', 'last_searched_weather', 'profileImage']);
+            navigation.replace('Login');
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
     };
+    
 
     return (
         <View style={navigationStyles.moreContainer}>

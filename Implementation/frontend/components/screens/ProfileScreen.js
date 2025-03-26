@@ -4,9 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native';
 import API_BASE_URL from '../../config';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import ImagePicker from 'react-native-image-crop-picker';
-import { database } from '../../firebase';
 import { getDatabase, ref, update, onValue, get } from '@react-native-firebase/database';
 
 const ProfileScreen = ({ navigation }) => {
@@ -179,13 +177,6 @@ const ProfileScreen = ({ navigation }) => {
     }
   };
 
-  // ✅ Handle Logout
-  const handleLogout = async () => {
-    await AsyncStorage.removeItem('user'); // Clear stored user data
-    navigation.replace('Login'); // Redirect to Login
-  };
-  
-
   // ✅ Show loading indicator while fetching data
   if (loading) {
     return (
@@ -237,7 +228,6 @@ const ProfileScreen = ({ navigation }) => {
 
         {/* Buttons */}
         <Button title="Edit Profile" onPress={() => alert('Edit Profile Feature Coming Soon!')} />
-        <Button title="Log Out" onPress={handleLogout} />
       </ScrollView>
     </SafeAreaView>
   );
