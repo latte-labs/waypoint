@@ -13,7 +13,6 @@ import {
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { database } from '../../firebase';
-import Geolocation from 'react-native-geolocation-service';
 import SafeAreaWrapper from './SafeAreaWrapper';
 import HomeScreenStyles from '../../styles/HomeScreenStyle';
 import LocationPermissions from './permissions/LocationPermissions';
@@ -21,8 +20,6 @@ import axios from 'axios';
 import API_BASE_URL from '../../config';
 import FeatureCarousel from './FeatureCarousel';
 import StartJourneyBanner from './StartJourneyBanner';
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import { GOOGLE_PLACES_API_KEY } from '@env';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import PackingSuggestionModal from './PackingSuggestionModal';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -32,8 +29,7 @@ import Animated, {
   withDecay,
   runOnJS
 } from 'react-native-reanimated';
-  
-
+import WeatherSearchModal from './WeatherSearchModal';
 
 const { width, height } = Dimensions.get('window');
 function clamp(val, min, max) {
@@ -107,6 +103,10 @@ function HomeScreen() {
     ]);
     const [showQuizPrompt, setShowQuizPrompt] = useState(false);
     const [userId, setUserId] = useState(null);
+    
+    const [autocompleteInput, setAutocompleteInput] = useState('');
+    const [autocompleteResults, setAutocompleteResults] = useState([]);
+
 
     // WEATHER
     const [weather, setWeather] = useState(null);
@@ -233,7 +233,6 @@ function HomeScreen() {
     if (!hasLocationPermission) {
         return <LocationPermissions onLocationGranted={handleLocationGranted} />;
     }
-
     return (
         
             <SafeAreaWrapper>
@@ -328,6 +327,7 @@ function HomeScreen() {
                         </TouchableOpacity>
                     ))}
                 </ScrollView>
+
             </ScrollView>
             <GestureDetector gesture={combinedGesture}>
             <Animated.View style={[HomeScreenStyles.floatingButton, animatedStyle]}>
@@ -343,102 +343,29 @@ function HomeScreen() {
                 animationType="slide"
                 transparent={true}
                 onRequestClose={() => setShowWeatherSearchModal(false)}
-            >
-                <View style={{
-                flex: 1,
-                backgroundColor: 'rgba(0,0,0,0.4)',
-                justifyContent: 'flex-end',
-                }}>
-                <View style={{
-                    backgroundColor: '#fff',
-                    padding: 20,
-                    borderTopLeftRadius: 20,
-                    borderTopRightRadius: 20,
-                    height: '60%',
-                }}>
-                    <Text style={{
-                    fontSize: 18,
-                    fontWeight: '600',
-                    marginBottom: 12,
-                    textAlign: 'center',
-                    }}>Search for a City</Text>
-
-                    <GooglePlacesAutocomplete
-                    placeholder="Type a city"
-                    onPress={async (data, details = null) => {
-                        const location = details?.geometry?.location;
-                        const cityName = details?.address_components?.find(c => c.types.includes('locality'))?.long_name || data.description;
-                      
-                        if (location) {
-                          fetchWeather(location.lat, location.lng);
-                          
-                          // ✅ Save to AsyncStorage
-                          await AsyncStorage.setItem(
-                            'last_searched_weather',
-                            JSON.stringify({
-                              city: cityName,
-                              lat: location.lat,
-                              lng: location.lng,
-                            })
-                          );
-                      
-                          setShowWeatherSearchModal(false);
-                        }
+                >
+                <WeatherSearchModal
+                    visible={showWeatherSearchModal}
+                    onClose={() => setShowWeatherSearchModal(false)}
+                    onSelectCity={async ({ city, lat, lng }) => {
+                    await AsyncStorage.setItem(
+                        'last_searched_weather',
+                        JSON.stringify({ city, lat, lng })
+                    );
+                    fetchWeather(lat, lng);
                     }}
-                      
-                    query={{
-                        key: GOOGLE_PLACES_API_KEY,
-                        language: 'en',
-                        types: '(cities)',
-                    }}
-                    fetchDetails={true}
-                    styles={{
-                        textInputContainer: {
-                        backgroundColor: '#fff',
-                        borderRadius: 10,
-                        paddingHorizontal: 10,
-                        },
-                        textInput: {
-                        height: 50,
-                        fontSize: 16,
-                        borderColor: '#ddd',
-                        borderWidth: 1,
-                        borderRadius: 8,
-                        paddingHorizontal: 10,
-                        },
-                        listView: {
-                        backgroundColor: '#fff',
-                        borderRadius: 8,
-                        borderColor: '#ddd',
-                        borderWidth: 1,
-                        marginTop: 5,
-                        elevation: 3,
-                        zIndex: 9999,
-                        },
-                    }}
-                    />
-
-                    <TouchableOpacity
-                    onPress={() => setShowWeatherSearchModal(false)}
-                    style={{
-                        backgroundColor: '#1E3A8A',
-                        padding: 12,
-                        marginTop: 15,
-                        borderRadius: 10,
-                        alignItems: 'center'
-                    }}
-                    >
-                    <Text style={{ color: 'white', fontWeight: 'bold' }}>Close</Text>
-                    </TouchableOpacity>
-                </View>
-                </View>
+                />
             </Modal>
+
+
+            
             <PackingSuggestionModal
                 visible={showPackingModal}
                 suggestion={packingTip}
                 loading={loadingPackingTip}
                 onClose={() => setShowPackingModal(false)}
                 />
+                
 
 
 
