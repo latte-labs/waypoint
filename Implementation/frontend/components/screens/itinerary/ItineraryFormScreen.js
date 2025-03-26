@@ -18,6 +18,8 @@ import SafeAreaWrapper from '../SafeAreaWrapper';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { GOOGLE_PLACES_API_KEY } from '@env';
 import 'react-native-get-random-values';
+import DestinationSearchModal from './DestinationSearchModal';
+
 
 const ItineraryFormScreen = () => {
   const navigation = useNavigation();
@@ -26,7 +28,6 @@ const ItineraryFormScreen = () => {
 
   // State
   const [name, setName] = useState('');
-  const [destination, setDestination] = useState('');
   const [budget, setBudget] = useState('');
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -35,7 +36,9 @@ const ItineraryFormScreen = () => {
   const [loading, setLoading] = useState(false);
 
   // For destination overlay
+  const [destination, setDestination] = useState('');
   const [showDestinationModal, setShowDestinationModal] = useState(false);
+
 
   // Fetch itinerary details if editing
   useEffect(() => {
@@ -135,13 +138,16 @@ const ItineraryFormScreen = () => {
       const requestData = {
         id: itineraryId,
         name,
-        destination,
+        destination: typeof destination === 'object'
+          ? `${destination.city}, ${destination.country}`
+          : destination,
         start_date: new Date(startDate).toISOString(),
         end_date: new Date(endDate).toISOString(),
         created_by: userId,
         budget: budget ? parseFloat(budget) : 0,
         last_updated_by: userId,
       };
+      
 
       let response;
       const config = {
@@ -193,9 +199,9 @@ const ItineraryFormScreen = () => {
         <View style={styles.destinationContainer}>
             {/* Clickable Area to Open Modal (90%) */}
             <Pressable style={styles.destinationInput} onPress={() => setShowDestinationModal(true)}>
-                <Text style={destination ? styles.inputText : styles.placeholderText}>
-                    {destination || "Enter Destination"}
-                </Text>
+              <Text style={destination ? styles.inputText : styles.placeholderText}>
+                {destination ? `${destination.city}, ${destination.country}` : "Enter Destination"}
+              </Text>
             </Pressable>
 
             {/* "X" Button for Clearing Input (10%) */}
@@ -246,70 +252,15 @@ const ItineraryFormScreen = () => {
       </View>
 
         {/* Destination Modal (Bottom Overlay) */}
-        <Modal
-    visible={showDestinationModal}
-    animationType="slide"
-    transparent={true}
-    onRequestClose={() => setShowDestinationModal(false)}
->
-    <View style={styles.modalBackground}>
-        {/* KeyboardAvoidingView ensures the input doesn't get covered by the keyboard */}
-        <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Search Destination</Text>
+        <DestinationSearchModal
+  visible={showDestinationModal}
+  onClose={() => setShowDestinationModal(false)}
+  onSelectPlace={(selectedPlace) => {
+    setDestination(selectedPlace);
+    setShowDestinationModal(false);
+  }}
+/>
 
-            <GooglePlacesAutocomplete
-                placeholder="Type a place"
-                onPress={(data, details = null) => {
-                    if (details) {
-                        setDestination(details.formatted_address);
-                    } else {
-                        setDestination(data.description);
-                    }
-                    setShowDestinationModal(false);
-                }}
-                query={{
-                    key: GOOGLE_PLACES_API_KEY,
-                    language: 'en',
-                    types: '(regions)',
-                }}
-                fetchDetails={true}
-                styles={{
-                    textInputContainer: {
-                        width: '100%',
-                        backgroundColor: '#fff',
-                        borderRadius: 8,
-                        borderColor: '#ddd',
-                        // borderWidth: 1,
-                        paddingHorizontal: 10,
-                    },
-                    textInput: {
-                        height: 50,
-                        fontSize: 16,
-                        color: '#333',
-                        borderRadius: 8,
-                        borderColor: '#ddd',
-                        borderWidth: 1,
-                        paddingHorizontal: 10,
-                    },
-                    listView: {
-                        backgroundColor: '#fff',
-                        borderRadius: 8,
-                        borderColor: '#ddd',
-                        borderWidth: 1,
-                        marginTop: 5,
-                        elevation: 3,
-                        zIndex: 9999,
-                    },
-                }}
-            />
-
-            {/* Close Button */}
-            <TouchableOpacity style={styles.closeButton} onPress={() => setShowDestinationModal(false)}>
-                <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
-        </View>
-    </View>
-</Modal>
 
     </SafeAreaWrapper>
   );
