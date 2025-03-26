@@ -6,6 +6,8 @@ from app.models.place_model import Place
 from app.schemas.place_schema import PlaceResponse
 from datetime import datetime, timezone
 from app.config.config import settings  # Secure API Key Access
+from typing import List
+from fastapi.responses import JSONResponse
 
 place_router = APIRouter()
 GOOGLE_PLACES_API_KEY = settings.GOOGLE_PLACES_API_KEY  # ✅ Secure API Key Access
@@ -151,3 +153,50 @@ def get_cached_places(
         print(f"❌ Internal Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@place_router.get("/cached/filtered")
+def get_filtered_places(
+    location: str = Query(..., description="Latitude,Longitude as a comma-separated string"),
+    radius: int = Query(10000, description="Search radius in meters"),
+    db: Session = Depends(get_db)
+):
+    try: 
+        lat, lon = map(float, location.split(","))
+        db_places = db.query(Place).all()
+        allowed_categories = {"park", "bar", "museum"}
+        filtered = []
+
+        for place in db_places:
+            # Basic approximate radius filter (converting meters to degrees ~111,000 m/degree)
+            distance = ((place.latitude - lat) ** 2 + (place.longitude - lon) ** 2) ** 0.5
+            within_radius = distance <= radius / 111000
+
+            if within_radius:
+                # First, check top-level category
+                cat = place.category.lower() if place.category else ""
+                if cat in allowed_categories:
+                    filtered.append({
+                        "name": place.name,
+                        "category": place.category,
+                        "latitude": place.latitude,
+                        "longitude": place.longitude,
+                        "rating": place.rating,
+                        "source_api": place.source_api,
+                        "cached_data": place.cached_data
+                    })
+                # Otherwise, check if any of the cached_data.types match allowed categories
+                # elif place.cached_data and "types" in place.cached_data:
+                #     types_lower = [t.lower() for t in place.cached_data.get("types", [])]
+                #     if any(t in allowed_categories for t in types_lower):
+                #         filtered.append({
+                #             "name": place.name,
+                #             "category": place.category,
+                #             "latitude": place.latitude,
+                #             "longitude": place.longitude,
+                #             "rating": place.rating,
+                #             "source_api": place.source_api,
+                #             "cached_data": place.cached_data
+                #         })
+        return filtered
+    except Exception as e:
+        print(f"Internal Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
