@@ -22,7 +22,10 @@ const ProfileScreen = ({ navigation }) => {
     location: '',
     languages: '',
     favoriteDestinations: '',
-    travelStyle: '', // reuse from existing logic
+    travelStyle: '',
+    dreamDestination: '',
+    travelApp: '',
+    instagram: '',
   });
 
 
@@ -61,16 +64,23 @@ const ProfileScreen = ({ navigation }) => {
             location = '',
             languages = '',
             favoriteDestinations = '',
+            dreamDestination = '',
+            travelApp = '',
+            instagram = '',
           } = userData;
-  
+          
           const profileFromDB = {
             username,
             bio,
             location,
             languages,
             favoriteDestinations,
-            travelStyle: profileData.travelStyle // keep existing logic
+            dreamDestination,
+            travelApp,
+            instagram,
+            travelStyle: profileData.travelStyle,
           };
+          
   
           setProfileData(profileFromDB);
           await AsyncStorage.setItem('@profile_data', JSON.stringify(profileFromDB));
@@ -218,12 +228,25 @@ const ProfileScreen = ({ navigation }) => {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <TouchableOpacity onPress={() => (isEditing ? saveProfile() : setIsEditing(true))} style={{ marginRight: 15 }}>
-          <FontAwesome name={isEditing ? 'save' : 'edit'} size={20} color="#000" />
-        </TouchableOpacity>
+        isEditing ? (
+          <View style={{ flexDirection: 'row', gap: 20, marginRight: 15 }}>
+            <TouchableOpacity onPress={saveProfile}>
+              <FontAwesome name="save" size={20} color="green" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={cancelEdit}>
+              <FontAwesome name="times" size={20} color="red" />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity onPress={() => setIsEditing(true)} style={{ marginRight: 15 }}>
+            <FontAwesome name="edit" size={20} color="#1E3A8A" />
+          </TouchableOpacity>
+        )
       ),
     });
   }, [navigation, isEditing, profileData]);
+  
+
   // ✅ Show loading indicator while fetching data
   if (loading) {
     return (
@@ -232,7 +255,21 @@ const ProfileScreen = ({ navigation }) => {
       </SafeAreaView>
     );
   }
-
+  
+  const cancelEdit = async () => {
+    setIsEditing(false);
+  
+    try {
+      const stored = await AsyncStorage.getItem('@profile_data');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setProfileData(parsed);
+      }
+    } catch (err) {
+      console.warn("⚠️ Could not load backup profile data on cancel.");
+    }
+  };
+  
 
   const saveProfile = async () => {
     if (!user?.id) {
@@ -248,12 +285,15 @@ const ProfileScreen = ({ navigation }) => {
         [`users/${user.id}/location`]: profileData.location,
         [`users/${user.id}/languages`]: profileData.languages,
         [`users/${user.id}/favoriteDestinations`]: profileData.favoriteDestinations,
+        [`users/${user.id}/dreamDestination`]: profileData.dreamDestination,
+        [`users/${user.id}/travelApp`]: profileData.travelApp,
+        [`users/${user.id}/instagram`]: profileData.instagram,
       };
+      
   
       await update(ref(db), updates);
       await AsyncStorage.setItem('@profile_data', JSON.stringify(profileData));
       setIsEditing(false);
-      Alert.alert("Success", "Profile saved.");
     } catch (error) {
       console.error("❌ Error saving profile to Firebase:", error);
       Alert.alert("Save Failed", "Could not update your profile. Please try again.");
@@ -300,73 +340,118 @@ const ProfileScreen = ({ navigation }) => {
           </Text>
 
         </View>
-        <View style={{ marginTop: 30, paddingHorizontal: 20, width: '100%' }}>
-  {/* Username */}
-  <Text style={{ fontWeight: 'bold' }}>Username / Display Name</Text>
-  {isEditing ? (
-    <TextInput
-      style={styles.input}
-      placeholder="Add username / display name"
-      value={profileData.username}
-      onChangeText={(text) => setProfileData({ ...profileData, username: text })}
-    />
-  ) : (
-    <Text style={styles.textValue}>{profileData.username || 'Add username / display name'}</Text>
-  )}
+        <View style={styles.cardContainer}>
+          <Text style={styles.cardHeader}>About</Text>
 
-  {/* Bio */}
-  <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Bio / Travel Philosophy</Text>
-  {isEditing ? (
-    <TextInput
-      style={[styles.input, { height: 80 }]}
-      multiline
-      placeholder="Tell us about yourself"
-      value={profileData.bio}
-      onChangeText={(text) => setProfileData({ ...profileData, bio: text })}
-    />
-  ) : (
-    <Text style={styles.textValue}>{profileData.bio || 'Tell us about yourself'}</Text>
-  )}
+          {/* Username */}
+          <Text style={{ fontWeight: 'bold' }}>Username / Display Name</Text>
+          {isEditing ? (
+            <TextInput
+              style={styles.input}
+              placeholder="Add username / display name"
+              value={profileData.username}
+              onChangeText={(text) => setProfileData({ ...profileData, username: text })}
+            />
+          ) : (
+            <Text style={styles.textValue}>{profileData.username || 'Add username / display name'}</Text>
+          )}
 
-  {/* Location */}
-  <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Home Country / City</Text>
-  {isEditing ? (
-    <TextInput
-      style={styles.input}
-      placeholder="Tell us where you're from"
-      value={profileData.location}
-      onChangeText={(text) => setProfileData({ ...profileData, location: text })}
-    />
-  ) : (
-    <Text style={styles.textValue}>{profileData.location || "Tell us where you're from"}</Text>
-  )}
+          {/* Bio */}
+          <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Bio / Travel Philosophy</Text>
+          {isEditing ? (
+            <TextInput
+              style={[styles.input, { height: 80 }]}
+              multiline
+              placeholder="Tell us about yourself"
+              value={profileData.bio}
+              onChangeText={(text) => setProfileData({ ...profileData, bio: text })}
+            />
+          ) : (
+            <Text style={styles.textValue}>{profileData.bio || 'Tell us about yourself'}</Text>
+          )}
 
-  {/* Languages */}
-  <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Languages Spoken</Text>
-  {isEditing ? (
-    <TextInput
-      style={styles.input}
-      placeholder="What languages do you speak?"
-      value={profileData.languages}
-      onChangeText={(text) => setProfileData({ ...profileData, languages: text })}
-    />
-  ) : (
-    <Text style={styles.textValue}>{profileData.languages || 'What languages do you speak?'}</Text>
-  )}
+          {/* Location */}
+          <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Home Country / City</Text>
+          {isEditing ? (
+            <TextInput
+              style={styles.input}
+              placeholder="Tell us where you're from"
+              value={profileData.location}
+              onChangeText={(text) => setProfileData({ ...profileData, location: text })}
+            />
+          ) : (
+            <Text style={styles.textValue}>{profileData.location || "Tell us where you're from"}</Text>
+          )}
 
-  {/* Favorite Destinations */}
-  <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Top 3 Favorite Destinations</Text>
-  {isEditing ? (
-    <TextInput
-      style={styles.input}
-      placeholder="Tell us what is your fav destinations"
-      value={profileData.favoriteDestinations}
-      onChangeText={(text) => setProfileData({ ...profileData, favoriteDestinations: text })}
-    />
-  ) : (
-    <Text style={styles.textValue}>{profileData.favoriteDestinations || 'Tell us what is your fav destinations'}</Text>
-  )}
-</View>
+          {/* Languages */}
+          <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Languages Spoken</Text>
+          {isEditing ? (
+            <TextInput
+              style={styles.input}
+              placeholder="What languages do you speak?"
+              value={profileData.languages}
+              onChangeText={(text) => setProfileData({ ...profileData, languages: text })}
+            />
+          ) : (
+            <Text style={styles.textValue}>{profileData.languages || 'What languages do you speak?'}</Text>
+          )}
+
+          {/* Favorite Destinations */}
+          <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Top 3 Favorite Destinations</Text>
+          {isEditing ? (
+            <TextInput
+              style={styles.input}
+              placeholder="Tell us what is your fav destinations"
+              value={profileData.favoriteDestinations}
+              onChangeText={(text) => setProfileData({ ...profileData, favoriteDestinations: text })}
+            />
+          ) : (
+            <Text style={styles.textValue}>{profileData.favoriteDestinations || 'Tell us what is your fav destinations'}</Text>
+          )}
+        </View>
+
+        <View style={styles.cardContainer}>
+          <Text style={styles.cardHeader}>Fun Facts</Text>
+
+          {/* Dream Destination */}
+          <Text style={{ fontWeight: 'bold' }}>Dream Destination</Text>
+          {isEditing ? (
+            <TextInput
+              style={styles.input}
+              placeholder="Where do you dream to go?"
+              value={profileData.dreamDestination}
+              onChangeText={(text) => setProfileData({ ...profileData, dreamDestination: text })}
+            />
+          ) : (
+            <Text style={styles.textValue}>{profileData.dreamDestination || 'Where do you dream to go?'}</Text>
+          )}
+
+          {/* Travel App */}
+          <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Favorite Travel App</Text>
+          {isEditing ? (
+            <TextInput
+              style={styles.input}
+              placeholder="Share your favorite travel app"
+              value={profileData.travelApp}
+              onChangeText={(text) => setProfileData({ ...profileData, travelApp: text })}
+            />
+          ) : (
+            <Text style={styles.textValue}>{profileData.travelApp || 'Share your favorite travel app'}</Text>
+          )}
+
+          {/* Instagram */}
+          <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Instagram Handle</Text>
+          {isEditing ? (
+            <TextInput
+              style={styles.input}
+              placeholder="@yourhandle"
+              value={profileData.instagram}
+              onChangeText={(text) => setProfileData({ ...profileData, instagram: text })}
+            />
+          ) : (
+            <Text style={styles.textValue}>{profileData.instagram || '@yourhandle'}</Text>
+          )}
+        </View>
 
       </ScrollView>
     </SafeAreaView>
@@ -458,6 +543,24 @@ const styles = StyleSheet.create({
     color: '#555',
     marginTop: 4,
   },  
+  cardContainer: {
+    backgroundColor: '#fff',
+    padding: 16,
+    marginHorizontal: 20,
+    marginVertical: 10,
+    borderRadius: 12,
+    elevation: 3, // Android shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  cardHeader: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 10,
+  }
+  
 });
 
 export default ProfileScreen;
