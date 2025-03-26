@@ -358,10 +358,6 @@ const ItineraryListScreen = () => {
     return (
         <SafeAreaWrapper>
             <View style={styles.container}>
-                <Text style={styles.activeTabTitle}>
-                    {index === 0 ? 'Personal Itineraries' : 'Shared Itineraries'}
-                </Text>
-
                 {loading ? (
                     <ActivityIndicator size="large" color="#007bff" />
                 ) : (
@@ -372,16 +368,25 @@ const ItineraryListScreen = () => {
                         initialLayout={{ width: Dimensions.get('window').width }}
                         renderTabBar={props => (
                             <TabBar
-                                {...props}
-                                indicatorStyle={styles.indicatorStyle}
-                                style={styles.tabBar}
-                                renderLabel={({ route, focused }) => (
-                                    <Text style={[styles.tabLabel, focused && styles.activeTabLabel]}>
-                                        {route.title}
-                                    </Text>
-                                )}
+                              {...props}
+                              indicatorStyle={{
+                                height: 4,
+                                backgroundColor: '#1d3a8a',
+                                borderRadius: 2,
+                              }}
+                              style={{
+                                backgroundColor: 'white',
+                                elevation: 0,
+                              }}
+                              labelStyle={{
+                                fontSize: 16,
+                                fontWeight: 'bold',
+                                textTransform: 'capitalize',
+                              }}
+                              activeColor="black"
+                              inactiveColor="gray"
                             />
-                        )}
+                        )}                          
                     />
                 )}
 
@@ -398,9 +403,6 @@ const ItineraryListScreen = () => {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#fff' },
     title: { fontSize: 22, fontWeight: 'bold', textAlign: 'center', marginVertical: 20 },
-    tabBar: { backgroundColor: '#1d3a8a', elevation: 3 },
-    tabLabel: { color: '#1d3a8a', fontWeight: 'bold' },
-    listContainer: { paddingVertical: 10 },
     itineraryCard: {
         padding: 15,
         marginVertical: 10,
@@ -458,11 +460,6 @@ const styles = StyleSheet.create({
     activeTabLabel: {
         color: '#007bff',  // ✅ Blue color for active tab
         fontWeight: 'bold',  // ✅ Bold text for active tab
-    },
-    indicatorStyle: {
-        backgroundColor: '#1d3a8a', // ✅ Blue underline indicator
-        height: 4, // ✅ Thicker for better visibility
-        borderRadius: 2, // ✅ Slightly rounded for a smooth look
     },
     activeTabTitle: {
         fontSize: 18,
