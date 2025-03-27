@@ -42,6 +42,18 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
   },
+  checkInButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  disabledButton: {
+    backgroundColor: 'grey',
+    opacity: 0.6,
+  },
+  disabledButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
   refreshButton: {
     position: 'absolute',
     bottom: 120,
@@ -57,6 +69,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 3,
     elevation: 5,
+  },
+  refreshButtonText: {
+    color: '#1E3A8A',
+    fontWeight: 'bold',
   },
 });
 

@@ -40,6 +40,7 @@ const MapCheckInScreen = () => {
   const [userCheckIns, setUserCheckIns] = useState([]);
   const [region, setRegion] = useState(null);
   const mapRef = useRef(null);
+  const CIRCLE_RADIUS = 300;
 
   // Retrieve user check-ins from Firebase on mount
   useEffect(() => {
@@ -179,6 +180,12 @@ const MapCheckInScreen = () => {
     longitudeDelta: userLocation ? 0.01 : 0.05,
   };
 
+  // Check if selected place is within 300m of user's location
+  const inRange = selectedPlace
+    ? getDistance(userLocation.latitude, userLocation.longitude, selectedPlace.latitude, selectedPlace.longitude) <= CIRCLE_RADIUS
+    : false;
+
+
   // Determine if the user has already checked in at the selected place
   const alreadyCheckedIn = selectedPlace
     ? userCheckIns.includes(selectedPlace.cached_data?.place_id || selectedPlace.id || selectedPlace.name)
@@ -239,7 +246,11 @@ const MapCheckInScreen = () => {
           <Text style={styles.placeCategory}>{selectedPlace.category}</Text>
           {alreadyCheckedIn ? (
             <Text style={{ color: 'green', marginTop: 10 }}>Already checked in</Text>
-          ) : (
+          ) : !inRange ? (
+            <TouchableOpacity style={[styles.checkInButton, styles.disabledButton]} disabled={true}>
+              <Text style={styles.disabledButtonText}>Out of Range</Text>
+            </TouchableOpacity>
+          ):(
             <TouchableOpacity
               style={styles.checkInButton}
               onPress={() => {
@@ -253,7 +264,7 @@ const MapCheckInScreen = () => {
                 );
               }}
             >
-              <Text style={{ color: '#fff' }}>Check In</Text>
+              <Text style={styles.checkInButtonText}>Check In</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -264,7 +275,7 @@ const MapCheckInScreen = () => {
         style={styles.refreshButton}
         onPress={fetchUserLocationAndPlaces}
       >
-        <Text style={{ color: '#1E3A8A' }}>Refresh</Text>
+        <Text style={styles.refreshButtonText}>Refresh</Text>
       </TouchableOpacity>
     </View>
   );
