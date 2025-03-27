@@ -98,6 +98,16 @@ def search_places(
                 cached_data=place_data["cached_data"],
                 last_updated=datetime.utcnow()
             )
+            existing_place = db.query(Place).filter(
+                Place.name == place_data["name"],
+                Place.latitude == place_data["latitude"],
+                Place.longitude == place_data["longitude"]
+            ).first()
+
+            if existing_place:
+                print(f"⚠️ Skipping duplicate place: {place_data['name']}")
+                continue
+
             db.add(place_record)
 
             # ✅ Return value to frontend
