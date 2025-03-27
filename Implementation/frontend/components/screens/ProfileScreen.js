@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useLayoutEffect } from 'react';
-import { View, Text, Button, Image, StyleSheet, SafeAreaView, ActivityIndicator, TouchableOpacity, Alert, ScrollView, TextInput } from 'react-native';
+import { View, Text, Button, Image, StyleSheet, SafeAreaView, ActivityIndicator, TouchableOpacity, Alert, ScrollView, TextInput, StatusBar } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native';
@@ -7,7 +7,8 @@ import API_BASE_URL from '../../config';
 import ImagePicker from 'react-native-image-crop-picker';
 import { getDatabase, ref, update, onValue, get } from '@react-native-firebase/database';
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
-
+import DropDownPicker from 'react-native-dropdown-picker';
+import CustomDropdown from './CustomDropdown';
 
 const ProfileScreen = ({ navigation }) => {
   const [user, setUser] = useState(null);
@@ -26,7 +27,20 @@ const ProfileScreen = ({ navigation }) => {
     dreamDestination: '',
     travelApp: '',
     instagram: '',
+    packingStyle: '',
+    travelCompanion: '',
+    budgetRange: '',
+    planningHabit: '',
+    tripRole: '',
   });
+  const [openPacking, setOpenPacking] = useState(false);
+  const [openCompanion, setOpenCompanion] = useState(false);
+  const [openBudget, setOpenBudget] = useState(false);
+  const [openPlanning, setOpenPlanning] = useState(false);
+  const [openRole, setOpenRole] = useState(false);
+  const zIndexBase = 5000;
+
+  
 
 
   useFocusEffect(
@@ -67,6 +81,11 @@ const ProfileScreen = ({ navigation }) => {
             dreamDestination = '',
             travelApp = '',
             instagram = '',
+            packingStyle = '',
+            travelCompanion = '',
+            budgetRange = '',
+            planningHabit = '',
+            tripRole = '',
           } = userData;
           
           const profileFromDB = {
@@ -78,8 +97,14 @@ const ProfileScreen = ({ navigation }) => {
             dreamDestination,
             travelApp,
             instagram,
+            packingStyle,
+            travelCompanion,
+            budgetRange,
+            planningHabit,
+            tripRole,
             travelStyle: profileData.travelStyle,
           };
+          
           
   
           setProfileData(profileFromDB);
@@ -227,7 +252,18 @@ const ProfileScreen = ({ navigation }) => {
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerRight: () => (
+      title: 'My Profile',
+      headerStyle: {
+        backgroundColor: '#263986',
+        shadowColor: 'transparent', // ✅ iOS shadow
+        elevation: 0, // ✅ Android shadow
+        borderBottomWidth: 0, // ✅ Extra precaution
+      },
+      headerTintColor: '#fff',
+      headerTitleStyle: {
+        fontWeight: '600',
+      },
+      headerRight: () =>
         isEditing ? (
           <View style={{ flexDirection: 'row', gap: 20, marginRight: 15 }}>
             <TouchableOpacity onPress={saveProfile}>
@@ -237,14 +273,11 @@ const ProfileScreen = ({ navigation }) => {
               <FontAwesome name="times" size={20} color="red" />
             </TouchableOpacity>
           </View>
-        ) : (
-          <TouchableOpacity onPress={() => setIsEditing(true)} style={{ marginRight: 15 }}>
-            <FontAwesome name="edit" size={20} color="#1E3A8A" />
-          </TouchableOpacity>
-        )
-      ),
+        ) : null,
     });
   }, [navigation, isEditing, profileData]);
+  
+  
   
 
   // ✅ Show loading indicator while fetching data
@@ -288,7 +321,13 @@ const ProfileScreen = ({ navigation }) => {
         [`users/${user.id}/dreamDestination`]: profileData.dreamDestination,
         [`users/${user.id}/travelApp`]: profileData.travelApp,
         [`users/${user.id}/instagram`]: profileData.instagram,
+        [`users/${user.id}/packingStyle`]: profileData.packingStyle,
+        [`users/${user.id}/travelCompanion`]: profileData.travelCompanion,
+        [`users/${user.id}/budgetRange`]: profileData.budgetRange,
+        [`users/${user.id}/planningHabit`]: profileData.planningHabit,
+        [`users/${user.id}/tripRole`]: profileData.tripRole,
       };
+      
       
   
       await update(ref(db), updates);
@@ -303,43 +342,70 @@ const ProfileScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.safeContainer}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.profileContainer}>
+      <ScrollView contentContainerStyle={styles.container}
+        nestedScrollEnabled={true}
+        keyboardShouldPersistTaps="handled"
+      >
+        
 
-        <View style={{ alignItems: 'center' }}>
-          <TouchableOpacity onPress={handleProfileImagePress}>
+        <View style={styles.headerContainer}>
+          <TouchableOpacity onPress={handleProfileImagePress} style={styles.profileImageWrapper}>
             {profileImage ? (
               <Image
                 source={{ uri: profileImage }}
                 style={styles.profileImage}
                 resizeMode="cover"
-                onError={(e) => {
-                  console.log("Image failed to load:", profileImage);
-                  Alert.alert("Failed to load image", "URL might be wrong or access denied");
-                }}
               />
             ) : (
-              <View style={styles.placeholderImage}>
+              <View style={[styles.profileImage, styles.placeholderImage]}>
                 <Text>No Photo</Text>
               </View>
             )}
           </TouchableOpacity>
-          <Text style={styles.tapToChange}>Tap to change photo</Text>
         </View>
+
+        <View style={styles.profileContainer}>
+        {isEditing ? (
+          <View style={styles.editActionRow}>
+            <TouchableOpacity style={styles.saveButton} onPress={saveProfile}>
+              <Text style={styles.editProfileText}>Save Profile</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cancelButton} onPress={cancelEdit}>
+              <FontAwesome name="times" size={18} color="white" />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity style={styles.editProfileButton} onPress={() => setIsEditing(true)}>
+            <Text style={styles.editProfileText}>Edit Profile</Text>
+          </TouchableOpacity>
+        )}
+
 
 
           {uploading && (
             <ActivityIndicator size="small" color="#888" style={{ marginTop: 12 }} />
           )}
+
           <Text style={styles.name}>{user?.name || 'User Name'}</Text>
-          <Text style={styles.email}>{user?.email}</Text>
+          <View style={styles.emailRow}>
+            <FontAwesome
+              name="envelope"
+              size={14}
+              color="gray"
+              style={styles.emailIcon}
+            />
+            <Text style={styles.emailText}>{user?.email}</Text>
+          </View>
+
+
           <Text style={styles.quizStatus}>
             {travelStyle?.name
               ? `Your travel style: ${travelStyle.name}`
               : "You haven't taken the quiz yet."}
           </Text>
-
         </View>
+
+        
         <View style={styles.cardContainer}>
           <Text style={styles.cardHeader}>About</Text>
 
@@ -453,22 +519,139 @@ const ProfileScreen = ({ navigation }) => {
           )}
         </View>
 
+        <View style={styles.cardContainer}>
+          <Text style={styles.cardHeader}>Travel Behavior</Text>
+
+          {isEditing ? (
+            <CustomDropdown
+              label="Packing Style"
+              value={profileData.packingStyle}
+              options={['Light', 'Medium', 'Heavy']}
+              onChange={(val) => setProfileData({ ...profileData, packingStyle: val })}
+            />
+          ) : (
+            <>
+              <Text style={{ fontWeight: 'bold' }}>Packing Style</Text>
+              <Text style={styles.textValue}>{profileData.packingStyle || 'Not set'}</Text>
+            </>
+          )}
+
+          {isEditing ? (
+            <CustomDropdown
+              label="Travel Companion"
+              value={profileData.travelCompanion}
+              options={['Solo', 'Partner', 'Family', 'Friends', 'Group']}
+              onChange={(val) => setProfileData({ ...profileData, travelCompanion: val })}
+            />
+          ) : (
+            <>
+              <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Travel Companion</Text>
+              <Text style={styles.textValue}>{profileData.travelCompanion || 'Not set'}</Text>
+            </>
+          )}
+
+          {isEditing ? (
+            <CustomDropdown
+              label="Budget Range"
+              value={profileData.budgetRange}
+              options={['Budget', 'Mid-range', 'Luxury']}
+              onChange={(val) => setProfileData({ ...profileData, budgetRange: val })}
+            />
+          ) : (
+            <>
+              <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Budget Range</Text>
+              <Text style={styles.textValue}>{profileData.budgetRange || 'Not set'}</Text>
+            </>
+          )}
+        </View>
+
+        <View style={styles.cardContainer}>
+          <Text style={styles.cardHeader}>Planning Habits</Text>
+
+          {isEditing ? (
+            <CustomDropdown
+              label="Planning Habit"
+              value={profileData.planningHabit}
+              options={['Spontaneous', 'Semi-Planned', 'Itinerary-Focused']}
+              onChange={(val) => setProfileData({ ...profileData, planningHabit: val })}
+            />
+          ) : (
+            <>
+              <Text style={{ fontWeight: 'bold' }}>Planning Habit</Text>
+              <Text style={styles.textValue}>{profileData.planningHabit || 'Not set'}</Text>
+            </>
+          )}
+
+          {isEditing ? (
+            <CustomDropdown
+              label="Trip Role"
+              value={profileData.tripRole}
+              options={['Planner', 'Follower']}
+              onChange={(val) => setProfileData({ ...profileData, tripRole: val })}
+            />
+          ) : (
+            <>
+              <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Trip Role</Text>
+              <Text style={styles.textValue}>{profileData.tripRole || 'Not set'}</Text>
+            </>
+          )}
+        </View>
+
+
+
+
+
       </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeContainer: { flex: 1, backgroundColor: '#fff' },
+  safeContainer: { flex: 1 },
   container: { flexGrow: 1, backgroundColor: '#fff' },
   travelStyleContainer: { alignItems: 'center', marginVertical: 10 },
   travelStyleName: { fontSize: 16, fontWeight: '600', color: '#FF6F00' },
   travelStyleDescription: { fontSize: 14, color: '#555', textAlign: 'center', paddingHorizontal: 20 },
   noTravelStyle: { fontSize: 14, fontStyle: 'italic', color: '#888', marginBottom: 10 },
+  headerContainer: {
+    backgroundColor: '#263986',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 60,
+    paddingBottom: 70,
+    alignItems: 'center',
+    position: 'relative',
+    zIndex: 1,
+  },
+  
+  
+  profileImageWrapper: {
+    position: 'absolute',
+    top: 70,
+    zIndex: 2,
+    borderRadius: 70,
+    borderWidth: 4,
+    borderColor: 'white',
+    backgroundColor: '#fff',
+  },
+  
+  editProfileButton: {
+    marginTop: 80,
+    backgroundColor: '#1E1E1E',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  
+  editProfileText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  
+  
   profileContainer: {
     alignItems: 'center',
-    paddingTop: 40,
-    marginTop: 40,
+    paddingVertical: 20,
+    // marginTop: 40,
   },
   
   avatar: {
@@ -476,7 +659,7 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     borderWidth: 2,
-    borderColor: '#999',
+    borderColor: 'white',
   },
   
   avatarPlaceholder: {
@@ -494,13 +677,23 @@ const styles = StyleSheet.create({
     marginTop: 16,
     textAlign: 'center',
   },
+  emailRow: {
+    flexDirection: 'row',
+    alignItems: 'center', // vertical alignment
+    justifyContent: 'center', // horizontal center (optional if centered on screen)
+    marginTop: 4,
+  },
   
-  email: {
+  emailIcon: {
+    marginRight: 6,
+  },
+  
+  emailText: {
     fontSize: 14,
     color: 'gray',
-    marginTop: 4,
-    textAlign: 'center',
+    lineHeight: 16, // makes the text vertically centered
   },
+  
   
   quizStatus: {
     fontSize: 13,
@@ -514,7 +707,7 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 60,
     borderWidth: 2,
-    borderColor: '#263986',
+    borderColor: 'white',
   },
   
   placeholderImage: {
@@ -559,7 +752,40 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 10,
-  }
+  },
+  dropdown: {
+    marginTop: 4,
+    borderColor: '#ccc',
+  },
+  editActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 80,
+    gap: 12,
+  },
+  
+  saveButton: {
+    backgroundColor: '#1E1E1E',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  
+  cancelButton: {
+    backgroundColor: 'red',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  
+  cancelText: {
+    color: '#333',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  
+  
   
 });
 
