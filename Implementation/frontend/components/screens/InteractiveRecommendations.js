@@ -55,12 +55,7 @@ const InteractiveRecommendations = () => {
     };
 
     const handleRegionChange = (newRegion) => {
-        setRegion({
-            latitude: newRegion.latitude,
-            longitude: newRegion.longitude,
-            latitudeDelta: region.latitudeDelta,
-            longitudeDelta: region.longitudeDelta,
-        });
+        setRegion(newRegion);
     };
 
     const handleZoom = (zoomIn) => {
