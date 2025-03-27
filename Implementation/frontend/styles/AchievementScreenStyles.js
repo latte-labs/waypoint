@@ -131,9 +131,7 @@ export default StyleSheet.create({
         resizeMode: 'contain',
     },
     modalProgressBar: {
-        width: '100%',
         marginVertical: 10,
         borderRadius: 10,
-        marginHorizontal: 20,
     },
 });

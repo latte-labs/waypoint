@@ -61,6 +61,7 @@ const AchievementsScreen = () => {
     const [achievements, setAchievements] = useState([]);
     const [error, setError] = useState(null);
     const screenWidth = Dimensions.get('window').width;
+    const progressBarWidth = screenWidth * 0.7 - 40;
 
     // modal
     const [modalVisible, setModalVisible] = useState(false);
@@ -212,10 +213,10 @@ const AchievementsScreen = () => {
                                     </Text>
 
                                     {/* Progress bar & text */}
-                                    <View style={{ marginHorizontal: 20, width: screenWidth * 0.7 - 80, alignItems: 'center' }}>
+                                    <View style={{ marginHorizontal: 20, width: [progressBarWidth], alignItems: 'center' }}>
                                         <Progress.Bar
                                             progress={getProgress(selectedAchievement.count)}
-                                            width={screenWidth * 0.7}
+                                            width={progressBarWidth}
                                             borderWidth={0}
                                             borderRadius={0}
                                             unfilledColor="#EEE"
