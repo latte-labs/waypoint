@@ -7,7 +7,6 @@ import API_BASE_URL from '../../config';
 import ImagePicker from 'react-native-image-crop-picker';
 import { getDatabase, ref, update, onValue, get } from '@react-native-firebase/database';
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
-import DropDownPicker from 'react-native-dropdown-picker';
 import CustomDropdown from './CustomDropdown';
 
 const ProfileScreen = ({ navigation }) => {
@@ -33,15 +32,6 @@ const ProfileScreen = ({ navigation }) => {
     planningHabit: '',
     tripRole: '',
   });
-  const [openPacking, setOpenPacking] = useState(false);
-  const [openCompanion, setOpenCompanion] = useState(false);
-  const [openBudget, setOpenBudget] = useState(false);
-  const [openPlanning, setOpenPlanning] = useState(false);
-  const [openRole, setOpenRole] = useState(false);
-  const zIndexBase = 5000;
-
-  
-
 
   useFocusEffect(
     useCallback(() => {
@@ -267,7 +257,7 @@ const ProfileScreen = ({ navigation }) => {
         isEditing ? (
           <View style={{ flexDirection: 'row', gap: 20, marginRight: 15 }}>
             <TouchableOpacity onPress={saveProfile}>
-              <FontAwesome name="save" size={20} color="green" />
+              <FontAwesome name="save" size={20} color="white" />
             </TouchableOpacity>
             <TouchableOpacity onPress={cancelEdit}>
               <FontAwesome name="times" size={20} color="red" />
@@ -621,18 +611,19 @@ const styles = StyleSheet.create({
     position: 'relative',
     zIndex: 1,
   },
-  
-  
   profileImageWrapper: {
     position: 'absolute',
     top: 70,
     zIndex: 2,
     borderRadius: 70,
-    borderWidth: 4,
-    borderColor: 'white',
+    borderWidth: 2,
+    borderColor: '#f9f9f9',
     backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
   },
-  
   editProfileButton: {
     marginTop: 80,
     backgroundColor: '#1E1E1E',
@@ -725,34 +716,42 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 8,
-    borderRadius: 8,
-    marginTop: 4,
-  },
-  textValue: {
-    fontSize: 15,
-    color: '#555',
-    marginTop: 4,
-  },  
-  cardContainer: {
     backgroundColor: '#fff',
-    padding: 16,
-    marginHorizontal: 20,
-    marginVertical: 10,
-    borderRadius: 12,
-    elevation: 3, // Android shadow
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderColor: '#ddd',
+    borderWidth: 1,
+    marginTop: 6,
+    fontSize: 14,
+  },  
+  textValue: {
+    fontSize: 14,
+    color: '#444',
+    marginTop: 6,
+    lineHeight: 20,
+  },
+  
+  cardContainer: {
+    backgroundColor: '#f9f9f9',
+    padding: 18,
+    marginHorizontal: 16,
+    marginVertical: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#eee',
+    elevation: 1,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+  },  
   cardHeader: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    marginBottom: 10,
-  },
+    color: '#333',
+    marginBottom: 12,
+  },  
   dropdown: {
     marginTop: 4,
     borderColor: '#ccc',

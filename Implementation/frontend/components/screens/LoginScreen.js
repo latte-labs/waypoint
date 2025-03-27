@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert, StyleSheet, TouchableOpacity} from 'react-native';
+import { View, Text, TextInput, Button, Alert, StyleSheet, TouchableOpacity, ImageBackground, KeyboardAvoidingView, Platform} from 'react-native';
 import axios from 'axios';
 import API_BASE_URL from '../../config';
 import { database } from '../../firebase'; 
@@ -122,105 +122,165 @@ const handleLogin = async () => {
 
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
-      <TextInput
-        style={[
-          styles.input,
-          { borderColor: errors.email ? 'red' : '#ccc' } // 👈 Always applies a color
-        ]}        
-        placeholder="Email"
-        value={email}
-        onChangeText={(text) => {
-          setEmail(text.toLowerCase().trim());
-          setErrors((prev) => ({ ...prev, email: null }));
-        }}        
-        keyboardType="email-address"
-      />
-
-      {errors.email ? <Text style={styles.error}>{errors.email}</Text> : null}
-
-      <View style={[styles.passwordContainer,{ borderColor: errors.password ? 'red' : '#ccc' }] }>
-        <TextInput style={styles.passwordInput}
-          placeholder="Password"
-          value={password}
+    <ImageBackground
+    source={require('../../assets/images/login-image.jpg')} // ✅ your background image
+    style={styles.background}
+    resizeMode="cover"
+    >
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <View style={styles.card}>
+      <View style={[
+        styles.inputContainer,
+        { borderColor: errors.email ? 'red' : '#ccc' }
+      ]}>
+        <TextInput
+          style={styles.passwordInput} // 👈 use the same style as passwordInput
+          placeholder="Email"
+          value={email}
           onChangeText={(text) => {
-            setPassword(text);
-            setErrors((prev) => ({ ...prev, password: null }));
+            setEmail(text.toLowerCase().trim());
+            setErrors((prev) => ({ ...prev, email: null }));
           }}
-          secureTextEntry={!showPassword}
+          keyboardType="email-address"
         />
-        <TouchableOpacity onPress={() => setShowPassword((prev) => !prev)}>
-          <Icon
-            name={showPassword ? 'eye-slash' : 'eye'}
-            size={20}
-            color="#333"
-            style={styles.icon}
-          />
-        </TouchableOpacity>
       </View>
 
 
-      {errors.password ? <Text style={styles.error}>{errors.password}</Text> : null}
+          {errors.email ? <Text style={styles.error}>{errors.email}</Text> : null}
 
-      <Button 
-        title={loading ? 'Logging In...' : 'Login'} 
-        onPress={handleLogin} 
-        disabled={loading || Object.values(errors).some((msg) => msg)} 
-      />
+          <View style={[styles.passwordContainer,{ borderColor: errors.password ? 'red' : '#ccc' }] }>
+            <TextInput style={styles.passwordInput}
+              placeholder="Password"
+              value={password}
+              onChangeText={(text) => {
+                setPassword(text);
+                setErrors((prev) => ({ ...prev, password: null }));
+              }}
+              secureTextEntry={!showPassword}
+            />
+            <TouchableOpacity onPress={() => setShowPassword((prev) => !prev)}>
+              <Icon
+                name={showPassword ? 'eye-slash' : 'eye'}
+                size={14}
+                color="#333"
+                style={styles.icon}
+              />
+            </TouchableOpacity>
+          </View>
 
-      <Button title="Don't have an account? Sign Up" onPress={() => navigation.navigate('Signup')} />
-    </View>
+
+          {errors.password ? <Text style={styles.error}>{errors.password}</Text> : null}
+
+          <TouchableOpacity
+            style={styles.loginButton}
+            onPress={handleLogin}
+            disabled={loading || Object.values(errors).some((msg) => msg)}
+          >
+            <Text style={styles.loginButtonText}>
+              {loading ? 'Logging In...' : 'Login'}
+            </Text>
+          </TouchableOpacity>
+
+
+          <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+            <Text style={styles.signupText}>Don't have an account? Sign Up</Text>
+          </TouchableOpacity>
+
+      </View>
+      </KeyboardAvoidingView>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#fff', // Optional for clarity
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  input: {
-    width: '80%',
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#ccc', 
-    borderRadius: 5,
-    marginBottom: 5,
-  },
-  error: {
-    color: 'red',
-    fontSize: 14,
-    marginBottom: 10,
-    alignSelf: 'flex-start', // ✅ aligns error message with input
-    marginLeft: '10%', // ✅ aligns with input left edge (80% width)
-  },
-  passwordContainer: {
-    width: '80%',
+  inputContainer: {
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderRadius: 5,
-    paddingVertical: 2,
-    paddingRight: 10,
-    marginBottom: 5,
+    borderColor: '#ccc',
+    borderRadius: 10,
+    paddingRight: 12,
+    marginBottom: 10,
+    backgroundColor: '#f9f9f9',
+  },  
+  input: {
+    width: '100%',
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 10,
+    marginBottom: 10,
+    backgroundColor: '#f9f9f9',
   },
-  
+  passwordContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 10,
+    paddingRight: 10,
+    marginBottom: 10,
+    backgroundColor: '#f9f9f9',
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 12,
+  },
+  error: {
+    color: 'red',
+    fontSize: 13,
+    marginBottom: 6,
+    alignSelf: 'flex-start',
+  },
   
   toggle: {
     paddingHorizontal: 8,
   },
-  passwordInput: {
+  background: {
     flex: 1,
-    padding: 10,
-  }
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  card: {
+    width: '85%',
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    padding: 24,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  loginButton: {
+    backgroundColor: '#263986',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 50, // ⬅️ pill shape
+    marginTop: 10,
+  },
+  
+  loginButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  
+  signupText: {
+    color: '#263986',
+    fontSize: 14,
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  
+  
   
   
 });
