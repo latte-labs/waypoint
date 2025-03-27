@@ -48,23 +48,23 @@ const MoreMenu = ({ closeMenu }) => {
             console.error('Logout error:', error);
         }
     };
-    
+
 
     return (
         <View style={navigationStyles.moreContainer}>
             {/* Profile Card */}
-            <TouchableOpacity onPress={() => handleNavigate("Profile")} style={{width: '90%'}}>
-                    <View style={navigationStyles.profileHeader}>
-                        {profileImage ? (
-                            <Image
-                                source={{ uri: profileImage }}
-                                style={navigationStyles.profileHeaderImage}
-                            />
-                        ) : (
-                            <Icon name="user-circle" size={60} color="#ccc" style={{ marginRight: 15 }} />
-                        )}
-                        <Text style={navigationStyles.profileHeaderName}>{profileName}</Text>
-                    </View>
+            <TouchableOpacity onPress={() => handleNavigate("Profile")} style={{ width: '90%' }}>
+                <View style={navigationStyles.profileHeader}>
+                    {profileImage ? (
+                        <Image
+                            source={{ uri: profileImage }}
+                            style={navigationStyles.profileHeaderImage}
+                        />
+                    ) : (
+                        <Icon name="user-circle" size={60} color="#ccc" style={{ marginRight: 15 }} />
+                    )}
+                    <Text style={navigationStyles.profileHeaderName}>{profileName}</Text>
+                </View>
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => handleNavigate("Settings")} style={navigationStyles.moreMenuItem}>
@@ -95,7 +95,9 @@ const MoreMenu = ({ closeMenu }) => {
                 </View>
             </TouchableOpacity>
 
-            <Button title="Log Out" onPress={(handleLogout)}/>
+            <View style={{ marginTop: 40 }}>
+                <Button title="Log Out" onPress={handleLogout} />
+            </View>
         </View>
     )
 }

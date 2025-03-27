@@ -16,7 +16,9 @@ const HomeScreenStyles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingBottom: 10
+        paddingBottom: 10,
+        marginTop: 30,
+        marginLeft: 20,
     },
 
     takeQuizContainer: {
@@ -27,6 +29,7 @@ const HomeScreenStyles = StyleSheet.create({
         borderRadius: 12,
         height: '80%',
         width: '100%',
+        marginLeft: 20,
     },
 
     takeQuizText: {
@@ -72,12 +75,11 @@ const HomeScreenStyles = StyleSheet.create({
         paddingHorizontal: 18,
         marginVertical: 10,
         alignSelf: 'center',
-        width: '100%',
+        width: '95%',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.15,
         shadowRadius: 4,
-        elevation: 3,
         minHeight: 50,
     },
         
@@ -111,6 +113,7 @@ const HomeScreenStyles = StyleSheet.create({
     titleContainer: {
         height: height * 0.05,
         justifyContent: 'center',
+        marginLeft: 15,
     },
 
     titleText: {
@@ -163,9 +166,6 @@ const HomeScreenStyles = StyleSheet.create({
         alignItems: 'center',
         borderRadius: 30,
       },
-      
-      
-      
 });
 
 export default HomeScreenStyles;

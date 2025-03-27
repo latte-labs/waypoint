@@ -124,6 +124,8 @@ export const navigationStyles = StyleSheet.create({
     },
     moreMenuItem: {
         padding: 15,
+        alignSelf: 'flex-start',
+        marginStart: 15,
     },
     moreMenuText: {
         fontSize: 22,

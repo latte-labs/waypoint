@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F2F2F2',
   },
   image: {
-    width: '100%',
+    width: '95%',
     height: 120,
   },
   textContainer: {

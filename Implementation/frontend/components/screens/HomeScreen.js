@@ -24,72 +24,73 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 import PackingSuggestionModal from './PackingSuggestionModal';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withDecay,
-  runOnJS
+    useSharedValue,
+    useAnimatedStyle,
+    withDecay,
+    runOnJS
 } from 'react-native-reanimated';
 import WeatherSearchModal from './WeatherSearchModal';
+import { navigationStyles } from '../../styles/NavigationStyles';
 
 const { width, height } = Dimensions.get('window');
 function clamp(val, min, max) {
     return Math.min(Math.max(val, min), max);
-  }
-  
+}
+
 
 function HomeScreen() {
     const navigation = useNavigation();
     const goToChatbot = () => {
         navigation.navigate('Chatbot');
-      };
-      
-      const FAB_SIZE = 60; // width/height of your floating button
-      const PADDING = 20;
-      const translationX = useSharedValue(width - FAB_SIZE - PADDING);
-      const translationY = useSharedValue(height - FAB_SIZE * 3);
+    };
+
+    const FAB_SIZE = 60; // width/height of your floating button
+    const PADDING = 20;
+    const translationX = useSharedValue(width - FAB_SIZE - PADDING);
+    const translationY = useSharedValue(height - FAB_SIZE * 3);
     const prevTranslationX = useSharedValue(300);
-      const prevTranslationY = useSharedValue(500);
-      
-      const animatedStyle = useAnimatedStyle(() => ({
+    const prevTranslationY = useSharedValue(500);
+
+    const animatedStyle = useAnimatedStyle(() => ({
         transform: [
-          { translateX: translationX.value },
-          { translateY: translationY.value },
+            { translateX: translationX.value },
+            { translateY: translationY.value },
         ],
-      }));
-      
-      const panGesture = Gesture.Pan()
+    }));
+
+    const panGesture = Gesture.Pan()
         .minDistance(1)
         .onStart(() => {
-          prevTranslationX.value = translationX.value;
-          prevTranslationY.value = translationY.value;
+            prevTranslationX.value = translationX.value;
+            prevTranslationY.value = translationY.value;
         })
         .onUpdate((event) => {
             const maxTranslateX = width - FAB_SIZE - PADDING;
             const maxTranslateY = height - FAB_SIZE - PADDING;
-          
+
             translationX.value = clamp(
-              prevTranslationX.value + event.translationX,
-              0,
-              maxTranslateX
+                prevTranslationX.value + event.translationX,
+                0,
+                maxTranslateX
             );
             translationY.value = clamp(
-              prevTranslationY.value + event.translationY,
-              0,
-              maxTranslateY
+                prevTranslationY.value + event.translationY,
+                0,
+                maxTranslateY
             );
-          })
-          
+        })
+
         .runOnJS(true);
-      
-      const tapGesture = Gesture.Tap().onEnd((_event, success) => {
+
+    const tapGesture = Gesture.Tap().onEnd((_event, success) => {
         if (success) {
-          runOnJS(goToChatbot)();
+            runOnJS(goToChatbot)();
         }
-      });
-      
-      const combinedGesture = Gesture.Simultaneous(panGesture, tapGesture);
-      
-      
+    });
+
+    const combinedGesture = Gesture.Simultaneous(panGesture, tapGesture);
+
+
     const [searchQuery, setSearchQuery] = useState('');
     const [trips, setTrips] = useState([
         { id: '1', tripName: 'Hiking Trip in Vancouver', date: 'March 20, 2025' },
@@ -103,7 +104,7 @@ function HomeScreen() {
     ]);
     const [showQuizPrompt, setShowQuizPrompt] = useState(false);
     const [userId, setUserId] = useState(null);
-    
+
     const [autocompleteInput, setAutocompleteInput] = useState('');
     const [autocompleteResults, setAutocompleteResults] = useState([]);
 
@@ -123,29 +124,29 @@ function HomeScreen() {
         if (!weather?.temperature || !weather?.weather_name) return;
 
         const city = weather?.weather_location_name || weather?.city_name || "your location";
-              
+
         try {
-          setShowPackingModal(true);
-          setLoadingPackingTip(true);
-          const response = await axios.post(`${API_BASE_URL}/chatbot/packing`, {
-            city,
-            temperature: weather.temperature,
-            condition: weather.weather_name,
-          });
-                
-          if (response.data.status === 'success') {
-            setPackingTip(response.data.packing_tip);
-          } else {
-            setPackingTip("Oops! Couldn't generate a tip.");
-          }
+            setShowPackingModal(true);
+            setLoadingPackingTip(true);
+            const response = await axios.post(`${API_BASE_URL}/chatbot/packing`, {
+                city,
+                temperature: weather.temperature,
+                condition: weather.weather_name,
+            });
+
+            if (response.data.status === 'success') {
+                setPackingTip(response.data.packing_tip);
+            } else {
+                setPackingTip("Oops! Couldn't generate a tip.");
+            }
         } catch (err) {
-          console.error("Packing tip error:", err);
-          setPackingTip("Something went wrong. Please try again.");
+            console.error("Packing tip error:", err);
+            setPackingTip("Something went wrong. Please try again.");
         } finally {
-          setLoadingPackingTip(false);
+            setLoadingPackingTip(false);
         }
-      };
-      
+    };
+
 
     useFocusEffect(
         React.useCallback(() => {
@@ -153,31 +154,31 @@ function HomeScreen() {
                 try {
                     const storedUser = await AsyncStorage.getItem('user');
                     if (!storedUser) return;
-            
+
                     const user = JSON.parse(storedUser);
                     setUserId(String(user.id));
-            
+
                     const userRef = database().ref(`/users/${user.id}`);
                     const snapshot = await userRef.once('value');
-            
+
                     const firebaseTravelStyleId =
                         snapshot.val()?.travel_style_id ?? user.travel_style_id;
-            
+
                     setShowQuizPrompt(firebaseTravelStyleId === 4);
                     user.travel_style_id = firebaseTravelStyleId;
                     await AsyncStorage.setItem('user', JSON.stringify(user));
-            
+
                     // ✅ Load saved weather
                     const savedWeather = await AsyncStorage.getItem('last_searched_weather');
                     if (savedWeather) {
                         const { lat, lng } = JSON.parse(savedWeather);
                         fetchWeather(lat, lng);
                     }
-            
+
                 } catch (error) {
                     console.error('❌ Error retrieving user data or weather:', error);
                 }
-            };            
+            };
 
             fetchUserData();
         }, [])
@@ -212,7 +213,7 @@ function HomeScreen() {
         setLocation(coords); // This will trigger useEffect, which will fetch weather
         setHasLocationPermission(true);
     };
-    
+
     // ✅ Fetch weather when HomeScreen mounts & location exists
     useEffect(() => {
         if (location) {
@@ -234,64 +235,63 @@ function HomeScreen() {
         return <LocationPermissions onLocationGranted={handleLocationGranted} />;
     }
     return (
-        
-            <SafeAreaWrapper>
-                {/* ✅ 1. HEADER SECTION (30% HEIGHT) */}
-                <View style={HomeScreenStyles.headerContainer}>
-                    <View style={HomeScreenStyles.brandContainer}>
-                        <Image
-                            source={require('../../assets/images/logo.png')}
-                            style={HomeScreenStyles.logo}
-                        />
-                        <Text style={HomeScreenStyles.waypointText}>WayPoint</Text>
-                    </View>
-                </View>
 
-                <ScrollView 
-                    style={{ flex: 1, backgroundColor: 'white' }} 
-                    contentContainerStyle={{
-                        paddingBottom: 70,
-                        paddingHorizontal: 16, // ✅ Add space on left and right
-                    }} 
-                    keyboardShouldPersistTaps="handled"
-                >
+        <SafeAreaWrapper>
+            {/* ✅ 1. HEADER SECTION (30% HEIGHT) */}
+            <View style={HomeScreenStyles.headerContainer}>
+                <View style={HomeScreenStyles.brandContainer}>
+                    <Image
+                        source={require('../../assets/images/logo.png')}
+                        style={HomeScreenStyles.logo}
+                    />
+                    <Text style={HomeScreenStyles.waypointText}>WayPoint</Text>
+                </View>
+            </View>
+
+            <ScrollView
+                style={{ flex: 1, backgroundColor: 'white' }}
+                contentContainerStyle={{
+                    paddingBottom: 70,
+                    paddingHorizontal: 16, // ✅ Add space on left and right
+                }}
+                keyboardShouldPersistTaps="handled"
+            >
 
                 {/* Weather */}
                 <View style={HomeScreenStyles.weatherContainer}>
                     <View style={HomeScreenStyles.weatherRow}>
                         {/* Left side: icon, temperature, city */}
                         <TouchableOpacity
-                        onPress={handlePackingTip}
-                        style={{ flexDirection: 'row', alignItems: 'center' }}
-                        activeOpacity={0.8}
+                            onPress={handlePackingTip}
+                            style={{ flexDirection: 'row', alignItems: 'center' }}
+                            activeOpacity={0.8}
                         >
-                        <Image
-                            source={{
-                            uri: `https://openweathermap.org/img/wn/${weather?.weather_icon || '01d'}@2x.png`,
-                            }}
-                            style={HomeScreenStyles.weatherIcon}
-                        />
-                        <Text style={HomeScreenStyles.temperatureText}>
-                            {weather?.temperature ? `${weather.temperature}°C` : '--°C'}
-                        </Text>
-                        <Text style={HomeScreenStyles.cityText}>
-                            {weather?.weather_name || 'City Name'}
-                        </Text>
+                            <Image
+                                source={{
+                                    uri: `https://openweathermap.org/img/wn/${weather?.weather_icon || '01d'}@2x.png`,
+                                }}
+                                style={HomeScreenStyles.weatherIcon}
+                            />
+                            <Text style={HomeScreenStyles.temperatureText}>
+                                {weather?.temperature ? `${weather.temperature}°C` : '--°C'}
+                            </Text>
+                            <Text style={HomeScreenStyles.cityText}>
+                                {weather?.weather_name || 'City Name'}
+                            </Text>
                         </TouchableOpacity>
 
                         {/* Right side: search icon */}
                         <TouchableOpacity onPress={() => setShowWeatherSearchModal(true)}>
-                        <Icon name="search" size={18} color="#1E3A8A" />
+                            <Icon name="search" size={18} color="#1E3A8A" />
                         </TouchableOpacity>
                     </View>
                 </View>
 
-                
-
-
 
                 {/* ✅ Feature Highlights Carousel */}
-                <FeatureCarousel />
+                <View style={{marginLeft: 10}}>
+                    <FeatureCarousel />
+                </View>
 
                 {showQuizPrompt ? (
                     <StartJourneyBanner
@@ -299,7 +299,7 @@ function HomeScreen() {
                         subtitle="Take our travel style quiz to unlock personalized destinations."
                         buttonText="Start Quiz"
                         // image={require('../../assets/images/start-banner.jpg')} 
-                        onPress={handleQuizStart} 
+                        onPress={handleQuizStart}
                     />
                 ) : null}
 
@@ -330,12 +330,12 @@ function HomeScreen() {
 
             </ScrollView>
             <GestureDetector gesture={combinedGesture}>
-            <Animated.View style={[HomeScreenStyles.floatingButton, animatedStyle]}>
-                <View style={HomeScreenStyles.innerButton}>
-                {/* <FontAwesomeIcon icon="fa-solid fa-robot" /> */}
-                <Icon name="robot" size={24} color="#fff" />
-                </View>
-            </Animated.View>
+                <Animated.View style={[HomeScreenStyles.floatingButton, animatedStyle]}>
+                    <View style={HomeScreenStyles.innerButton}>
+                        {/* <FontAwesomeIcon icon="fa-solid fa-robot" /> */}
+                        <Icon name="robot" size={24} color="#fff" />
+                    </View>
+                </Animated.View>
             </GestureDetector>
 
             <Modal
@@ -343,29 +343,29 @@ function HomeScreen() {
                 animationType="slide"
                 transparent={true}
                 onRequestClose={() => setShowWeatherSearchModal(false)}
-                >
+            >
                 <WeatherSearchModal
                     visible={showWeatherSearchModal}
                     onClose={() => setShowWeatherSearchModal(false)}
                     onSelectCity={async ({ city, lat, lng }) => {
-                    await AsyncStorage.setItem(
-                        'last_searched_weather',
-                        JSON.stringify({ city, lat, lng })
-                    );
-                    fetchWeather(lat, lng);
+                        await AsyncStorage.setItem(
+                            'last_searched_weather',
+                            JSON.stringify({ city, lat, lng })
+                        );
+                        fetchWeather(lat, lng);
                     }}
                 />
             </Modal>
 
 
-            
+
             <PackingSuggestionModal
                 visible={showPackingModal}
                 suggestion={packingTip}
                 loading={loadingPackingTip}
                 onClose={() => setShowPackingModal(false)}
-                />
-                
+            />
+
 
 
 
