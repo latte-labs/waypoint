@@ -92,11 +92,6 @@ function HomeScreen() {
 
 
     const [searchQuery, setSearchQuery] = useState('');
-    const [trips, setTrips] = useState([
-        { id: '1', tripName: 'Hiking Trip in Vancouver', date: 'March 20, 2025' },
-        { id: '2', tripName: 'Staycation on Bowen Island', date: 'April 16, 2025' },
-        { id: '3', tripName: 'Cafe Hopping', date: 'April 25, 2025' },
-    ]);
     const [favorites, setFavorites] = useState([
         { id: '1', placeName: 'Banff National Park', location: 'Alberta, Canada' },
         { id: '2', placeName: 'Santorini', location: 'Greece' },
@@ -184,6 +179,33 @@ function HomeScreen() {
         }, [])
     );
 
+    const [itineraries, setItineraries] = useState([]);
+    const [loadingItineraries, setLoadingItineraries] = useState(false);
+    // Fetch user info and itineraries on mount
+    useEffect(() => {
+        const fetchUserAndItineraries = async () => {
+            try {
+                const storedUser = await AsyncStorage.getItem('user');
+                if (storedUser) {
+                    const userData = JSON.parse(storedUser);
+                    setUserId(userData.id);
+                    // endpoint for fetching itineraries
+                    const response = await axios.get(`${API_BASE_URL}/itineraries/users/${userData.id}/itineraries`);
+                    if (response.status === 200) {
+                        setItineraries(response.data);
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching itineraries:", error);
+            } finally {
+                setLoadingItineraries(false);
+            }
+        };
+
+        setLoadingItineraries(true);
+        fetchUserAndItineraries();
+    }, []);
+
     // WEATHER
     const fetchWeather = async (latitude, longitude) => {
         try {
@@ -234,6 +256,45 @@ function HomeScreen() {
     if (!hasLocationPermission) {
         return <LocationPermissions onLocationGranted={handleLocationGranted} />;
     }
+
+    // ITINERARIES
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            month: 'short', day: '2-digit', year: 'numeric'
+        });
+    };
+
+    // Render a card for each itinerary
+    const renderItineraryCard = (itinerary) => {
+        // Use itinerary.extra_data.image_url if available, otherwise the placeholder image
+        const imageSource = itinerary.extra_data?.image_url
+            ? { uri: itinerary.extra_data.image_url }
+            : require('../../assets/images/travelling_placeholder.jpg');
+
+        return (
+            <TouchableOpacity
+                key={itinerary.id}
+                style={HomeScreenStyles.tripCard}
+                onPress={() => {
+                    // Navigate to itinerary detail screen
+                    navigation.navigate('ItineraryDetail', { itineraryId: itinerary.id });
+                }}
+            >
+                <Image
+                    source={imageSource}
+                    style={HomeScreenStyles.tripImage}
+                />
+                <View style={HomeScreenStyles.tripOverlay} />
+                {/* Overlay container for text */}
+                <View style={{ justifyContent: 'center', alignItems: 'center', zIndex: 1 }}>
+                    <Text style={HomeScreenStyles.tripTitle}>{itinerary.name}</Text>
+                    <Text style={HomeScreenStyles.tripDate}>{formatDate(itinerary.start_date)}</Text>
+                </View>
+            </TouchableOpacity>
+        );
+    };
+
     return (
 
         <SafeAreaWrapper>
@@ -289,7 +350,7 @@ function HomeScreen() {
 
 
                 {/* ✅ Feature Highlights Carousel */}
-                <View style={{marginLeft: 7}}>
+                <View style={{ marginLeft: 7 }}>
                     <FeatureCarousel />
                 </View>
 
@@ -316,16 +377,20 @@ function HomeScreen() {
                     contentContainerStyle={{ flexDirection: 'row', alignItems: 'center' }}
                     style={HomeScreenStyles.tripScrollView}
                 >
-                    {trips.map((trip) => (
-                        <TouchableOpacity
-                            key={trip.id}
-                            onPress={handleTripClick}
-                            style={HomeScreenStyles.tripCard}
+                    {loadingItineraries ? (
+                        <Text>Loading itineraries...</Text>
+                    ) : itineraries.length > 0 ? (
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={true}
+                            contentContainerStyle={{ flexDirection: 'row', alignItems: 'center' }}
+                            style={HomeScreenStyles.tripScrollView}
                         >
-                            <Text style={HomeScreenStyles.tripTitle}>{trip.tripName}</Text>
-                            <Text style={HomeScreenStyles.tripDate}>{trip.date}</Text>
-                        </TouchableOpacity>
-                    ))}
+                            {itineraries.map(renderItineraryCard)}
+                        </ScrollView>
+                    ) : (
+                        <Text style={{ textAlign: 'center', marginVertical: 20 }}>You have no itineraries yet.</Text>
+                    )}
                 </ScrollView>
 
             </ScrollView>

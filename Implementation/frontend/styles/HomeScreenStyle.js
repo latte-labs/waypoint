@@ -126,27 +126,50 @@ const HomeScreenStyles = StyleSheet.create({
         height: height * 0.3,
         marginLeft: 7,
     },
-
+    tripScrollView: {
+        height: height * 0.3,
+        marginLeft: 5,
+      },
     tripCard: {
-        backgroundColor: '#f2f2f2',
         borderRadius: 15,
         borderWidth: 0.25,
-        padding: 15,
+        padding: 0,
         alignItems: 'center',
         justifyContent: 'center',
-        width: 250,
+        width: 350,
         height: '80%',
         marginRight: 15,
+        overflow: 'hidden',
     },
 
     tripTitle: {
+        color: 'white',
         fontSize: 18,
         fontWeight: 'bold',
+        paddingHorizontal: 10,
     },
 
     tripDate: {
+        color: 'white',
+        fontWeight: 'bold',
         fontSize: 12,
         marginTop: 5,
+    },
+    tripImage: {
+        width: '100%',
+        height: '100%',
+        position: 'absolute', //position image behind text
+        top:0,
+        left: 0,
+        resizeMode: 'cover',
+      },
+    tripOverlay: {
+        position: 'absolute',
+        top:0,
+        left:0,
+        right:0,
+        bottom:0,
+        backgroundColor: 'rgba(0,0,0,0.4)'
     },
     floatingButton: {
         position: 'absolute',
