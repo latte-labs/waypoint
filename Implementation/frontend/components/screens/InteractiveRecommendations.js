@@ -146,7 +146,7 @@ const InteractiveRecommendations = () => {
                             <Callout>
                                 <View>
                                     <Text style={{ fontWeight: 'bold' }}>{place.name}</Text>
-                                    <Text>{place.category}</Text>
+                                    <Text>{capitalize(place.category)}</Text>
                                 </View>
                             </Callout>
                         </Marker>

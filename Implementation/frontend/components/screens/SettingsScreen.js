@@ -181,10 +181,6 @@ const SettingsScreen = ({ navigation }) => {
                     <Text style={styles.label}>Enable Notifications:</Text>
                     <Switch value={notificationsEnabled} onValueChange={() => setNotificationsEnabled(!notificationsEnabled)} />
                 </View>
-
-                {/* Navigation Buttons */}
-                <Button title="Go Back to Profile" onPress={() => navigation.navigate('Profile')} />
-                <Button title="Log Out" onPress={() => navigation.replace('Login')} />
             </KeyboardAvoidingView>
         </SafeAreaView>
     );
@@ -194,7 +190,7 @@ const styles = StyleSheet.create({
     safeContainer: { flex: 1, backgroundColor: '#fff', paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 50 },
     keyboardContainer: { flex: 1, paddingHorizontal: 20, justifyContent: 'center' },
     title: { fontSize: 22, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
-    label: { fontSize: 16, fontWeight: 'bold', marginTop: 10 },
+    label: { fontSize: 16, fontWeight: 'bold', marginTop: 10 , marginRight: 20},
     row: { flexDirection: 'row', alignItems: 'center', marginVertical: 10 },
     dropdownWrapper: { width: '100%', marginBottom: 20 },
     dropdownContainer: { width: '100%' },
