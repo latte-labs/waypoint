@@ -75,7 +75,7 @@ const HomeScreenStyles = StyleSheet.create({
         paddingHorizontal: 18,
         marginVertical: 10,
         alignSelf: 'center',
-        width: '95%',
+        width: '98%',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.15,
@@ -113,7 +113,7 @@ const HomeScreenStyles = StyleSheet.create({
     titleContainer: {
         height: height * 0.05,
         justifyContent: 'center',
-        marginLeft: 15,
+        marginLeft: 7,
     },
 
     titleText: {
@@ -124,6 +124,7 @@ const HomeScreenStyles = StyleSheet.create({
     // ✅ TRIPS LIST (30% HEIGHT)
     tripScrollView: {
         height: height * 0.3,
+        marginLeft: 7,
     },
 
     tripCard: {

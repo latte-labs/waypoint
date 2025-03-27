@@ -99,7 +99,7 @@ const InteractiveRecommendations = () => {
         }
     };
     
-    
+    const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
         
     return (
         <SafeAreaWrapper>
@@ -237,7 +237,7 @@ const InteractiveRecommendations = () => {
 
                                     <View style={styles.cardContent}>
                                         <Text style={styles.cardTitle}>{item.name}</Text>
-                                        <Text>{item.category}</Text>
+                                        <Text>{capitalize(item.category)}</Text>
                                         <Text>⭐ {item.rating || "N/A"}</Text>
                                     </View>
                                 </View>

@@ -200,6 +200,8 @@ const MapCheckInScreen = () => {
     );
   }
 
+  const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
   return (
     <View style={styles.container}>
       <MapView
@@ -243,7 +245,7 @@ const MapCheckInScreen = () => {
           <Text style={styles.placeTitle}>
             {selectedPlace.cached_data?.name || selectedPlace.name}
           </Text>
-          <Text style={styles.placeCategory}>{selectedPlace.category}</Text>
+          <Text style={styles.placeCategory}>{capitalize(selectedPlace.category)}</Text>
           {alreadyCheckedIn ? (
             <Text style={{ color: 'green', marginTop: 10 }}>Already checked in</Text>
           ) : !inRange ? (

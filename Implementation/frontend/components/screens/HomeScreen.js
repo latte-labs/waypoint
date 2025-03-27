@@ -289,7 +289,7 @@ function HomeScreen() {
 
 
                 {/* ✅ Feature Highlights Carousel */}
-                <View style={{marginLeft: 10}}>
+                <View style={{marginLeft: 7}}>
                     <FeatureCarousel />
                 </View>
 
