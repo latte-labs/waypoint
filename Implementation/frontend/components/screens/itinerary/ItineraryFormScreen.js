@@ -48,28 +48,29 @@ const ItineraryFormScreen = () => {
   }, [itineraryId]);
 
   const fetchItineraryDetails = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/itineraries/${itineraryId}`);
-      if (response.status === 200) {
-        const itinerary = response.data;
-        setName(itinerary.name);
-        setDestination(itinerary.destination);
-        setBudget(itinerary.budget ? itinerary.budget.toString() : '');
-        setStartDate(itinerary.start_date.split('T')[0]);
-        setEndDate(itinerary.end_date.split('T')[0]);
+  try {
+    const response = await axios.get(`${API_BASE_URL}/itineraries/${itineraryId}`);
+    if (response.status === 200) {
+      const itinerary = response.data;
+      setName(itinerary.name);
+      const [city, country] = (itinerary.destination || '').split(',').map(s => s.trim());
+      setDestination({ city, country });
+            setBudget(itinerary.budget ? itinerary.budget.toString() : '');
+      setStartDate(itinerary.start_date.split('T')[0]);
+      setEndDate(itinerary.end_date.split('T')[0]);
 
-        // Marked dates
-        const range = getMarkedDates(
-          itinerary.start_date.split('T')[0],
-          itinerary.end_date.split('T')[0]
-        );
-        setMarkedDates(range);
-      }
-    } catch (error) {
-      console.error("❌ Error fetching itinerary:", error.response?.data || error.message);
-      Alert.alert("Error", "Failed to load itinerary details.");
+      const range = getMarkedDates(
+        itinerary.start_date.split('T')[0],
+        itinerary.end_date.split('T')[0]
+      );
+      setMarkedDates(range);
     }
-  };
+  } catch (error) {
+    console.error("❌ Error fetching itinerary:", error.response?.data || error.message);
+    Alert.alert("Error", "Failed to load itinerary details.");
+  }
+};
+
 
   // Handle date selection
   const handleDateSelect = (day) => {
