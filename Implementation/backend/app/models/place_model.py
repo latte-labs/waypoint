@@ -6,7 +6,7 @@ from app.db.base import Base  # ✅ Import Base from base.py (Fix Circular Impor
 # Place Model
 class Place(Base):
     __tablename__ = "places"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String, nullable=False)
     category = Column(String, nullable=False)
     latitude = Column(Float, nullable=False)
