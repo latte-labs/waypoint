@@ -31,6 +31,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import WeatherSearchModal from './WeatherSearchModal';
 import { navigationStyles } from '../../styles/NavigationStyles';
+import ItineraryListScreen from '../screens/itinerary/ItineraryListScreen';
 
 const { width, height } = Dimensions.get('window');
 function clamp(val, min, max) {
@@ -365,10 +366,19 @@ function HomeScreen() {
                 ) : null}
 
                 {/* ✅ 3. TITLE SECTION (5% HEIGHT) */}
-                <View style={HomeScreenStyles.titleContainer}>
+                <View
+                    style={[
+                        HomeScreenStyles.titleContainer,
+                        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginHorizontal: 7 }
+                    ]}
+                >
                     <Text style={HomeScreenStyles.titleText}>Trip Plans</Text>
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate("Main", { screen: ItineraryListScreen })}
+                    >
+                        <Text style={{ fontSize: 14, color: '#1E3A8A', fontWeight: 'bold' }}>View All</Text>
+                    </TouchableOpacity>
                 </View>
-
 
                 {/* ✅ 4. TRIPS LIST */}
                 <ScrollView
@@ -386,7 +396,7 @@ function HomeScreen() {
                             contentContainerStyle={{ flexDirection: 'row', alignItems: 'center' }}
                             style={HomeScreenStyles.tripScrollView}
                         >
-                            {itineraries.map(renderItineraryCard)}
+                            {itineraries.slice(0, 3).map(renderItineraryCard)}
                         </ScrollView>
                     ) : (
                         <Text style={{ textAlign: 'center', marginVertical: 20 }}>You have no itineraries yet.</Text>
