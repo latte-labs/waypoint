@@ -374,7 +374,7 @@ function HomeScreen() {
                 >
                     <Text style={HomeScreenStyles.titleText}>Trip Plans</Text>
                     <TouchableOpacity
-                        onPress={() => navigation.navigate("Main", { screen: ItineraryListScreen })}
+                        onPress={() => navigation.navigate("Main", { screen: "Itinerary" })}
                     >
                         <Text style={{ fontSize: 14, color: '#1E3A8A', fontWeight: 'bold' }}>View All</Text>
                     </TouchableOpacity>
