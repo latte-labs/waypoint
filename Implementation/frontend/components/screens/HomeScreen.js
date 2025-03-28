@@ -266,6 +266,19 @@ function HomeScreen() {
         });
     };
 
+    const renderEmptyItineraryCard = () => (
+        <View style={HomeScreenStyles.tripCard}>
+          <Image
+            source={require('../../assets/images/travelling_placeholder.jpg')}
+            style={HomeScreenStyles.tripImage}
+          />
+          <View style={HomeScreenStyles.tripOverlay} />
+          <View style={{ justifyContent: 'center', alignItems: 'center', zIndex: 1 }}>
+            <Text style={HomeScreenStyles.tripTitle}>You have no itineraries yet.</Text>
+          </View>
+        </View>
+      );
+
     // Render a card for each itinerary
     const renderItineraryCard = (itinerary) => {
         // Use itinerary.extra_data.image_url if available, otherwise the placeholder image
@@ -399,7 +412,7 @@ function HomeScreen() {
                             {itineraries.slice(0, 3).map(renderItineraryCard)}
                         </ScrollView>
                     ) : (
-                        <Text style={{ textAlign: 'center', marginVertical: 20 }}>You have no itineraries yet.</Text>
+                        renderEmptyItineraryCard()
                     )}
                 </ScrollView>
 
