@@ -68,6 +68,23 @@ const LoginScreen = ({ navigation }) => {
     }
 };
 
+// ✅ Function to fetch 3 most recent itineraries
+const fetchAndStoreRecentItineraries = async (userId) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/itineraries/users/${userId}/itineraries/recent`);
+
+    if (response.status === 200 && response.data.length > 0) {
+      await AsyncStorage.setItem('recent_itineraries', JSON.stringify(response.data));
+      console.log("✅ Recent itineraries saved:", response.data);
+    } else {
+      console.log("ℹ️ No recent itineraries found.");
+    }
+  } catch (error) {
+    console.error("❌ Error fetching recent itineraries:", error);
+  }
+};
+
+
   
 
 // ✅ Handle Login (modified to ensure `travel_style_id` is included)
@@ -92,6 +109,9 @@ const handleLogin = async () => {
 
           // ✅ Store user details in AsyncStorage
           await storeUserSession(user);
+
+          // ✅ Fetch and store recent itineraries (only if any exist)
+          await fetchAndStoreRecentItineraries(user.id);
 
           // ✅ Log login event to Firebase
           await logLoginToFirebase(user.id);

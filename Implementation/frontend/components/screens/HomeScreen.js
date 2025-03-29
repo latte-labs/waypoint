@@ -51,6 +51,8 @@ function HomeScreen() {
     const translationY = useSharedValue(height - FAB_SIZE * 3);
     const prevTranslationX = useSharedValue(300);
     const prevTranslationY = useSharedValue(500);
+    const [recentTrips, setRecentTrips] = useState([]);
+
 
     const animatedStyle = useAnimatedStyle(() => ({
         transform: [
@@ -194,6 +196,10 @@ function HomeScreen() {
                     const response = await axios.get(`${API_BASE_URL}/itineraries/users/${userData.id}/itineraries`);
                     if (response.status === 200) {
                         setItineraries(response.data);
+                    }
+                    const storedRecentTrips = await AsyncStorage.getItem('recent_itineraries');
+                    if (storedRecentTrips) {
+                        setRecentTrips(JSON.parse(storedRecentTrips));
                     }
                 }
             } catch (error) {
@@ -402,18 +408,19 @@ function HomeScreen() {
                 >
                     {loadingItineraries ? (
                         <Text>Loading itineraries...</Text>
-                    ) : itineraries.length > 0 ? (
+                    ) : (
                         <ScrollView
                             horizontal
                             showsHorizontalScrollIndicator={true}
                             contentContainerStyle={{ flexDirection: 'row', alignItems: 'center' }}
                             style={HomeScreenStyles.tripScrollView}
                         >
-                            {itineraries.slice(0, 3).map(renderItineraryCard)}
+                            {recentTrips.length > 0
+                                ? recentTrips.map(renderItineraryCard)
+                                : renderEmptyItineraryCard()}
                         </ScrollView>
-                    ) : (
-                        renderEmptyItineraryCard()
                     )}
+
                 </ScrollView>
 
             </ScrollView>

@@ -19,6 +19,8 @@ import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplet
 import { GOOGLE_PLACES_API_KEY } from '@env';
 import 'react-native-get-random-values';
 import DestinationSearchModal from './DestinationSearchModal';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 
 const ItineraryFormScreen = () => {
@@ -127,6 +129,19 @@ const ItineraryFormScreen = () => {
     return range;
 };
 
+  const updateRecentTripsInStorage = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/itineraries/users/${userId}/itineraries/recent`);
+      if (response.status === 200 && response.data.length > 0) {
+        await AsyncStorage.setItem('recent_itineraries', JSON.stringify(response.data));
+        console.log("✅ Recent itineraries updated in AsyncStorage");
+      }
+    } catch (err) {
+      console.error("❌ Failed to update recent itineraries:", err);
+    }
+  };
+
+
   // Handle form submission (Create or Edit)
   const handleSubmit = async () => {
     if (!name || !destination || !startDate || !endDate) {
@@ -166,6 +181,7 @@ const ItineraryFormScreen = () => {
 
       if (response.status === 200) {
         const newItineraryId = response.data.itinerary_id || response.data.id;
+        await updateRecentTripsInStorage();
         Alert.alert(
           "Success",
           itineraryId ? "Itinerary updated successfully!" : "Itinerary created successfully!"

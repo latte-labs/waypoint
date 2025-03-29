@@ -499,3 +499,28 @@ def update_activity(
     "extra_data": activity.extra_data,
     "created_at": activity.created_at,
     }
+
+@itinerary_router.get("/users/{user_id}/itineraries/recent", response_model=List[itinerary_schema.ItinerarySchema])
+def get_recent_user_itineraries(user_id: str, db: Session = Depends(get_db)):
+    """
+    ✅ Returns only the 3 most recent itineraries for the given user, with presigned image URLs if available.
+    """
+    itineraries = (
+        db.query(Itinerary)
+        .filter(Itinerary.created_by == user_id)
+        .order_by(Itinerary.updated_at.desc())  # Sort by most recently updated
+        .limit(3)
+        .all()
+    )
+
+    for itinerary in itineraries:
+        if itinerary.extra_data and "image_url" in itinerary.extra_data:
+            key = extract_key(itinerary.extra_data["image_url"])
+            presigned_url = s3_client.generate_presigned_url(
+                "get_object",
+                Params={"Bucket": AWS_BUCKET_NAME, "Key": key},
+                ExpiresIn=3600  # URL valid for 1 hour
+            )
+            itinerary.extra_data["image_url"] = presigned_url
+
+    return itineraries

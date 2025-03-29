@@ -111,9 +111,9 @@ const HomeScreenStyles = StyleSheet.create({
 
     // ✅ TITLE SECTION (5% HEIGHT)
     titleContainer: {
-        height: height * 0.05,
-        justifyContent: 'center',
         marginLeft: 7,
+        marginTop: 10, // Add slight top space if needed
+        marginBottom: 6, // Reduce space before the cards    
     },
 
     titleText: {
@@ -123,13 +123,11 @@ const HomeScreenStyles = StyleSheet.create({
 
     // ✅ TRIPS LIST (30% HEIGHT)
     tripScrollView: {
-        height: height * 0.3,
-        marginLeft: 7,
-    },
-    tripScrollView: {
-        height: height * 0.3,
+        height: height * 0.28, // slightly shorter if needed
         marginLeft: 5,
-      },
+        marginTop: 0, // make sure no added vertical gap
+    },
+    
     tripCard: {
         borderRadius: 15,
         borderWidth: 0.25,

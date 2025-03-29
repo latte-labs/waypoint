@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
 from uuid import UUID
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 # -------------------- Activity Schema --------------------
 
@@ -99,6 +99,7 @@ class ItinerarySchema(BaseModel):
     budget: Optional[float] = None
     updated_at: Optional[datetime] = None  # <-- Now optional
     last_updated_by: UUID
+    extra_data: Optional[Dict[str, Any]] = None
 
     class Config:
         from_attributes = True
