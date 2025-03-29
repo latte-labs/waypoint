@@ -158,7 +158,18 @@ const ItineraryDetailScreen = () => {
     }
   }, [isPlacesModalVisible, itineraryId]);    
     
-
+  const updateRecentTripsInStorage = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/itineraries/users/${user?.id}/itineraries/recent`);
+      if (response.status === 200 && response.data.length > 0) {
+        await AsyncStorage.setItem('recent_itineraries', JSON.stringify(response.data));
+        console.log("✅ Recent itineraries updated in AsyncStorage");
+      }
+    } catch (err) {
+      console.error("❌ Failed to update recent itineraries:", err);
+    }
+  };
+  
   const requestPhotoLibraryPermission = async () => {
     if (Platform.OS === "ios") {
       const result = await check(PERMISSIONS.IOS.PHOTO_LIBRARY);
@@ -210,6 +221,8 @@ const ItineraryDetailScreen = () => {
         headers: { "Content-Type": "image/jpeg" },
       });
       setImageUrl(image_url);
+      await updateRecentTripsInStorage();
+
     } catch (error) {
       console.error("Upload failed:", error);
       Alert.alert("Error", "Image upload failed.");
