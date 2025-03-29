@@ -12,6 +12,7 @@ const MoreMenu = ({ closeMenu }) => {
     const [profileImage, setProfileImage] = useState(null);
     const [profileName, setProfileName] = useState("Guest");
 
+
     useEffect(() => {
         // Retrieve the profile image from AsyncStorage on mount
         const fetchProfileData = async () => {

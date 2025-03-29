@@ -67,6 +67,23 @@ const LoginScreen = ({ navigation }) => {
         console.error('❌ AsyncStorage Error:', error);
     }
 };
+const fetchAndStoreProfileImage = async (userId) => {
+  try {
+    const snapshot = await database().ref(`users/${userId}/profilePhotoUrl`).once('value');
+    const photoUrl = snapshot.val();
+
+    if (photoUrl) {
+      const cacheBustedUrl = `${photoUrl}?ts=${Date.now()}`;
+      await AsyncStorage.setItem('profileImage', cacheBustedUrl);
+      console.log("✅ Profile image saved to AsyncStorage:", cacheBustedUrl);
+    } else {
+      console.log("ℹ️ No profile photo URL found in Firebase for this user.");
+    }
+  } catch (error) {
+    console.error("❌ Error fetching profile image:", error);
+  }
+};
+
 
 // ✅ Function to fetch 3 most recent itineraries
 const fetchAndStoreRecentItineraries = async (userId) => {
@@ -115,6 +132,9 @@ const handleLogin = async () => {
 
           // ✅ Log login event to Firebase
           await logLoginToFirebase(user.id);
+
+          // ✅ Fetch and store profile image
+          await fetchAndStoreProfileImage(user.id);
 
           // ✅ Navigate to HomeScreen with user details
           navigation.replace('Main', { user });  
