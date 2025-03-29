@@ -43,24 +43,21 @@ export default StyleSheet.create({
       },
       
     columnWrapper: {
-        justifyContent: 'space-between',
+        // justifyContent: 'space-between',
+        justifyContent: 'flex-start', 
         marginBottom: 20,
     },
 
     // Each grid item
     gridItem: {
-        flex: 1,
+        width: '30%',
+        marginRight: 10,
+        marginBottom: 20,
         alignItems: 'center',
-        marginHorizontal: 5,
         backgroundColor: 'white',
         borderRadius: 15,
         padding: 10,
-        // borderBottomColor: "#ddd",
-        // shadowColor: "#000",
-        // shadowOffset: { width: 0, height: 3 },
-        // shadowOpacity: 0.2,
-        // shadowRadius: 2,
-    },
+    },      
     badgeImage: {
         width: 60,
         height: 60,
@@ -134,4 +131,9 @@ export default StyleSheet.create({
         marginVertical: 10,
         borderRadius: 10,
     },
+    gridContainer: {
+        alignSelf: 'center',
+        paddingHorizontal: 10,
+      },
+      
 });

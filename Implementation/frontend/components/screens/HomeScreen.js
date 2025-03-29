@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
     Image,
     Text,
@@ -31,7 +31,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import WeatherSearchModal from './WeatherSearchModal';
 import { navigationStyles } from '../../styles/NavigationStyles';
-import ItineraryListScreen from '../screens/itinerary/ItineraryListScreen';
+import OnboardingChecklist from './OnboardingChecklist';
+
 
 const { width, height } = Dimensions.get('window');
 function clamp(val, min, max) {
@@ -52,8 +53,7 @@ function HomeScreen() {
     const prevTranslationX = useSharedValue(300);
     const prevTranslationY = useSharedValue(500);
     const [recentTrips, setRecentTrips] = useState([]);
-
-
+    const [onboardingComplete, setOnboardingComplete] = useState(false);
     const animatedStyle = useAnimatedStyle(() => ({
         transform: [
             { translateX: translationX.value },
@@ -134,6 +134,11 @@ function HomeScreen() {
 
             if (response.data.status === 'success') {
                 setPackingTip(response.data.packing_tip);
+                if (userId) {
+                    database()
+                        .ref(`/users/${userId}/onboarding/packing_tip_viewed`)
+                        .set(true);
+                }
             } else {
                 setPackingTip("Oops! Couldn't generate a tip.");
             }
@@ -148,71 +153,58 @@ function HomeScreen() {
 
     useFocusEffect(
         React.useCallback(() => {
-            const fetchUserData = async () => {
-                try {
-                    const storedUser = await AsyncStorage.getItem('user');
-                    if (!storedUser) return;
-
-                    const user = JSON.parse(storedUser);
-                    setUserId(String(user.id));
-
-                    const userRef = database().ref(`/users/${user.id}`);
-                    const snapshot = await userRef.once('value');
-
-                    const firebaseTravelStyleId =
-                        snapshot.val()?.travel_style_id ?? user.travel_style_id;
-
-                    setShowQuizPrompt(firebaseTravelStyleId === 4);
-                    user.travel_style_id = firebaseTravelStyleId;
-                    await AsyncStorage.setItem('user', JSON.stringify(user));
-
-                    // ✅ Load saved weather
-                    const savedWeather = await AsyncStorage.getItem('last_searched_weather');
-                    if (savedWeather) {
-                        const { lat, lng } = JSON.parse(savedWeather);
-                        fetchWeather(lat, lng);
-                    }
-
-                } catch (error) {
-                    console.error('❌ Error retrieving user data or weather:', error);
-                }
-            };
-
-            fetchUserData();
+          const fetchData = async () => {
+            try {
+              const storedUser = await AsyncStorage.getItem('user');
+              if (!storedUser) return;
+      
+              const user = JSON.parse(storedUser);
+              setUserId(String(user.id));
+      
+              // ✅ Fetch onboarding status
+              const onboardingSnap = await database()
+                .ref(`/users/${user.id}/onboarding/onboarding_complete`)
+                .once('value');
+              setOnboardingComplete(onboardingSnap.val() === true);
+      
+              // ✅ Fetch travel style
+              const userRef = database().ref(`/users/${user.id}`);
+              const snapshot = await userRef.once('value');
+              const firebaseTravelStyleId =
+                snapshot.val()?.travel_style_id ?? user.travel_style_id;
+              setShowQuizPrompt(firebaseTravelStyleId === 4);
+              user.travel_style_id = firebaseTravelStyleId;
+              await AsyncStorage.setItem('user', JSON.stringify(user));
+      
+              // ✅ Fetch saved weather
+              const savedWeather = await AsyncStorage.getItem('last_searched_weather');
+              if (savedWeather) {
+                const { lat, lng } = JSON.parse(savedWeather);
+                fetchWeather(lat, lng);
+              }
+              // ✅ Load recent itineraries from AsyncStorage
+              const storedRecentTrips = await AsyncStorage.getItem('recent_itineraries');
+              if (storedRecentTrips) {
+                setRecentTrips(JSON.parse(storedRecentTrips));
+              }
+      
+            } catch (error) {
+              console.error('❌ Error during home screen data load:', error);
+            } finally {
+              setLoadingItineraries(false);
+            }
+          };
+      
+          setLoadingItineraries(true);
+          fetchData();
         }, [])
-    );
+      );
+      
+
+    
 
     const [itineraries, setItineraries] = useState([]);
     const [loadingItineraries, setLoadingItineraries] = useState(false);
-    // Fetch user info and itineraries on mount
-    useEffect(() => {
-        const fetchUserAndItineraries = async () => {
-            try {
-                const storedUser = await AsyncStorage.getItem('user');
-                if (storedUser) {
-                    const userData = JSON.parse(storedUser);
-                    setUserId(userData.id);
-                    // endpoint for fetching itineraries
-                    const response = await axios.get(`${API_BASE_URL}/itineraries/users/${userData.id}/itineraries`);
-                    if (response.status === 200) {
-                        setItineraries(response.data);
-                    }
-                    const storedRecentTrips = await AsyncStorage.getItem('recent_itineraries');
-                    if (storedRecentTrips) {
-                        setRecentTrips(JSON.parse(storedRecentTrips));
-                    }
-                }
-            } catch (error) {
-                console.error("Error fetching itineraries:", error);
-            } finally {
-                setLoadingItineraries(false);
-            }
-        };
-
-        setLoadingItineraries(true);
-        fetchUserAndItineraries();
-    }, []);
-
     // WEATHER
     const fetchWeather = async (latitude, longitude) => {
         try {
@@ -238,8 +230,7 @@ function HomeScreen() {
     };
 
     const handleLocationGranted = (coords) => {
-        // console.log('Location received in HomeScreen:', coords);
-        setLocation(coords); // This will trigger useEffect, which will fetch weather
+        setLocation(coords); 
         setHasLocationPermission(true);
     };
 
@@ -368,6 +359,13 @@ function HomeScreen() {
                     </View>
                 </View>
 
+                {/* Onboarding Checklist */}
+                {!onboardingComplete && (
+                <OnboardingChecklist
+                    userId={userId}
+                    onComplete={() => setOnboardingComplete(true)} // 💡 mark as complete
+                />
+                )}
 
                 {/* ✅ Feature Highlights Carousel */}
                 <View style={{ marginLeft: 7 }}>
@@ -448,6 +446,12 @@ function HomeScreen() {
                             JSON.stringify({ city, lat, lng })
                         );
                         fetchWeather(lat, lng);
+                    
+                        if (userId) {
+                            database()
+                                .ref(`/users/${userId}/onboarding/weather_changed`)
+                                .set(true);
+                        }
                     }}
                 />
             </Modal>

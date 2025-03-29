@@ -2,10 +2,11 @@ import React, { useRef, useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Image, Platform } from "react-native";
 import axios from "axios";
 import styles from "../../styles/ChatbotScreenStyles";
-import API_BASE_URL from "../../config";  // backend API
+import API_BASE_URL from "../../config";  
 import SafeAreaWrapper from "./SafeAreaWrapper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import MarkdownDisplay from "react-native-markdown-display";
+import database from '@react-native-firebase/database'; 
 
 const ChatbotScreen = () => {
   const [user, setUser] = useState(null);
@@ -98,11 +99,16 @@ const ChatbotScreen = () => {
     }
 
     const userMessage = { role: "user", content: input };
+    if (user?.id) {
+      const usedChatRef = database().ref(`/users/${user.id}/onboarding/used_chat`);
+      usedChatRef.set(true);
+    }
     setMessages((prevMessages) => [
       { role: "assistant", content: "..." }, // typing indicator
       userMessage,
       ...prevMessages
     ]);
+    
     setInput("");
 
     if (inputRef.current) {

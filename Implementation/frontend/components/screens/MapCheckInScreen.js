@@ -133,6 +133,7 @@ const MapCheckInScreen = () => {
 
   // Called when user confirms check in
   const confirmCheckIn = useCallback(async (place) => {
+    
     if (!place) return;
     setLoading(true);
     try {
@@ -158,6 +159,8 @@ const MapCheckInScreen = () => {
       };
 
       await database().ref(`/game/${userId}/${place.category.toLowerCase()}/${checkinId}`).set(checkInData);
+      await database().ref(`/users/${userId}/onboarding/checked_in`).set(true);
+
       setUserCheckIns(prev => [...prev, place.cached_data?.place_id || place.id || place.name]);
 
       Alert.alert(
