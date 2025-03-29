@@ -32,7 +32,21 @@ const ProfileScreen = ({ navigation }) => {
     planningHabit: '',
     tripRole: '',
   });
+  const [completion, setCompletion] = useState(0);
 
+  const calculateCompletion = (data) => {
+    const fields = [
+      'username', 'bio', 'location', 'languages',
+      'favoriteDestinations', 'dreamDestination', 'travelApp',
+      'instagram', 'packingStyle', 'travelCompanion',
+      'budgetRange', 'planningHabit', 'tripRole',
+    ];
+  
+    const filled = fields.filter(key => data[key]?.trim()).length;
+    const percent = Math.round((filled / fields.length) * 100);
+    setCompletion(percent);
+  };
+  
   useFocusEffect(
     useCallback(() => {
       if (!user?.id) return;
@@ -98,6 +112,7 @@ const ProfileScreen = ({ navigation }) => {
           
   
           setProfileData(profileFromDB);
+          calculateCompletion(profileFromDB);
           await AsyncStorage.setItem('@profile_data', JSON.stringify(profileFromDB));
         } else {
           console.warn("⚠️ No user data found in Firebase.");
@@ -198,12 +213,12 @@ const ProfileScreen = ({ navigation }) => {
             console.error("❌ No user found in AsyncStorage!");
             return;
           }
-
+      
           const userData = JSON.parse(storedUser);
           setUser(userData);
-          
+      
           console.log("📥 Retrieved Travel Style ID:", userData.travel_style_id);
-
+      
           if (userData.travel_style_id && userData.travel_style_id !== 4) {
             console.log("🔄 Fetching travel style details...");
             fetchTravelStyle(userData.travel_style_id);
@@ -211,12 +226,21 @@ const ProfileScreen = ({ navigation }) => {
             console.log("🚫 Travel Style is Undefined (4) or not set.");
             setTravelStyle(null);
           }
+      
+          // ✅ Also load profileData fallback if Firebase fails or is slow
+          const backup = await AsyncStorage.getItem('@profile_data');
+          if (backup) {
+            const profile = JSON.parse(backup);
+            setProfileData(profile);
+            calculateCompletion(profile);
+          }
         } catch (error) {
           console.error("❌ Error loading user data:", error);
         } finally {
           setLoading(false);
         }
       };
+      
       loadUser();
     }, [])
   );
@@ -328,6 +352,7 @@ const ProfileScreen = ({ navigation }) => {
       Alert.alert("Save Failed", "Could not update your profile. Please try again.");
     }
   };
+
   
 
   return (
@@ -393,12 +418,26 @@ const ProfileScreen = ({ navigation }) => {
               ? `Your travel style: ${travelStyle.name}`
               : "You haven't taken the quiz yet."}
           </Text>
+          <View style={styles.progressBarWrapper}>
+            <Text style={styles.progressText}>Profile Completion: {completion}%</Text>
+            <View style={styles.progressBarBackground}>
+            <View
+              style={[
+                styles.progressBarFill,
+                {
+                  width: `${completion}%`,
+                  backgroundColor: completion === 100 ? '#28a745' : '#263986', // green if complete
+                },
+              ]}
+            />
+            </View>
+          </View>
+
         </View>
 
         
         <View style={styles.cardContainer}>
           <Text style={styles.cardHeader}>About</Text>
-
           {/* Username */}
           <Text style={{ fontWeight: 'bold' }}>Username / Display Name</Text>
           {isEditing ? (
@@ -451,6 +490,7 @@ const ProfileScreen = ({ navigation }) => {
           ) : (
             <Text style={styles.textValue}>{profileData.languages || 'What languages do you speak?'}</Text>
           )}
+          
 
           {/* Favorite Destinations */}
           <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Top 3 Favorite Destinations</Text>
@@ -468,7 +508,6 @@ const ProfileScreen = ({ navigation }) => {
 
         <View style={styles.cardContainer}>
           <Text style={styles.cardHeader}>Fun Facts</Text>
-
           {/* Dream Destination */}
           <Text style={{ fontWeight: 'bold' }}>Dream Destination</Text>
           {isEditing ? (
@@ -511,7 +550,6 @@ const ProfileScreen = ({ navigation }) => {
 
         <View style={styles.cardContainer}>
           <Text style={styles.cardHeader}>Travel Behavior</Text>
-
           {isEditing ? (
             <CustomDropdown
               label="Packing Style"
@@ -557,7 +595,6 @@ const ProfileScreen = ({ navigation }) => {
 
         <View style={styles.cardContainer}>
           <Text style={styles.cardHeader}>Planning Habits</Text>
-
           {isEditing ? (
             <CustomDropdown
               label="Planning Habit"
@@ -739,6 +776,8 @@ const styles = StyleSheet.create({
     marginVertical: 12,
     borderRadius: 16,
     borderWidth: 1,
+    borderLeftWidth: 5,
+    borderLeftColor: '#263986', 
     borderColor: '#eee',
     elevation: 1,
     shadowColor: '#000',
@@ -747,11 +786,15 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },  
   cardHeader: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
-  },  
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#263986',
+    borderBottomWidth: 2,
+    borderBottomColor: '#d0d8ff',
+    paddingBottom: 6,
+    marginBottom: 16,
+  },
+  
   dropdown: {
     marginTop: 4,
     borderColor: '#ccc',
@@ -783,6 +826,33 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 14,
   },
+  divider: {
+    height: 1,
+    backgroundColor: '#e0e0e0',
+    marginVertical: 16,
+  },
+  progressBarWrapper: {
+    width: '80%',
+    marginTop: 14,
+    alignItems: 'center',
+  },
+  progressText: {
+    fontSize: 13,
+    color: '#666',
+    marginBottom: 4,
+  },
+  progressBarBackground: {
+    width: '100%',
+    height: 10,
+    backgroundColor: '#e6e6e6',
+    borderRadius: 5,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#263986',
+  },
+  
   
   
   
