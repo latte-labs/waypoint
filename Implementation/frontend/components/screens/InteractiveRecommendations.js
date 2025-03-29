@@ -9,6 +9,8 @@ import { useNavigation } from '@react-navigation/native';
 import styles from '../../styles/InteractiveRecommendationsStyle';
 import SafeAreaWrapper from './SafeAreaWrapper';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import AddToItineraryModal from './itinerary/AddToItineraryModal';
+import { database } from '../../firebase';
 
 
 const { width, height } = Dimensions.get('window');
@@ -29,7 +31,9 @@ const InteractiveRecommendations = () => {
     const [isFullscreen, setIsFullscreen] = useState(false);
     const flatListRef = useRef(null);
     const markerRefs = useRef([]);
-
+    const [selectedPlace, setSelectedPlace] = useState(null);
+    const [modalVisible, setModalVisible] = useState(false);
+    
 
 
     useEffect(() => {
@@ -225,7 +229,10 @@ const InteractiveRecommendations = () => {
                                     {/* Add to Itinerary Button */}
                                     <TouchableOpacity
                                         style={styles.addButton}
-                                        onPress={() => Alert.alert("Coming Soon", "Adding to Itinerary Feature will be available soon")}
+                                        onPress={() => {
+                                            setSelectedPlace(item);
+                                            setModalVisible(true);
+                                          }}
                                     >
                                         <Icon name="plus-circle" size={24} color="#007AFF" />
                                     </TouchableOpacity>
@@ -244,6 +251,35 @@ const InteractiveRecommendations = () => {
             </View>
             )}
        </View>
+       <AddToItineraryModal
+            visible={modalVisible}
+            onClose={() => setModalVisible(false)}
+            place={selectedPlace}
+            onSelectItinerary={async (itineraryId) => {
+                if (!selectedPlace?.name) return;
+              
+                try {
+                  const ref = database().ref(`/live_itineraries/${itineraryId}/places`);
+                  const snapshot = await ref.once('value');
+                  const existingPlaces = snapshot.exists() ? snapshot.val() : [];
+              
+                  // Avoid duplicates
+                  if (existingPlaces.includes(selectedPlace.name)) {
+                    Alert.alert("Already Exists", "This place is already in the itinerary.");
+                  } else {
+                    await ref.set([...existingPlaces, selectedPlace.name]);
+                    Alert.alert("Success", `${selectedPlace.name} added to itinerary.`);
+                  }
+                } catch (error) {
+                  console.error("❌ Error adding place:", error);
+                  Alert.alert("Error", "Failed to add place. Please try again.");
+                }
+              
+                setModalVisible(false);
+                setSelectedPlace(null);
+              }}
+        />
+
         </SafeAreaWrapper>
     );
 };
