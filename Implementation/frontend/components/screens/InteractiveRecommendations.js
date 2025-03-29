@@ -10,10 +10,10 @@ import { GOOGLE_PLACES_API_KEY } from '@env';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import AddToItineraryModal from './itinerary/AddToItineraryModal';
-import SafeAreaWrapper from './SafeAreaWrapper';
 import { database } from '../../firebase';
 import API_BASE_URL from '../../config';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width, height } = Dimensions.get('window');
 
@@ -39,7 +39,7 @@ const InteractiveRecommendations = () => {
   const [activeIndex, setActiveIndex] = useState(null);
 
 
-  const snapPoints = useMemo(() => ['20%', '50%', '85%'], []);
+  const snapPoints = useMemo(() => [Platform.OS === 'ios' ? '4%' : '11%', '40%', '80%'], []);
   const scrollViewRef = useRef(null);
   const cardRefs = useRef([]);
 
@@ -99,7 +99,6 @@ const InteractiveRecommendations = () => {
   };
     
   return (
-    <SafeAreaWrapper>
       <View style={{ flex: 1 }}>
         <MapView
           ref={mapRef}
@@ -131,7 +130,7 @@ const InteractiveRecommendations = () => {
         </MapView>
 
         {/* Travel Style Filter */}
-        <View style={styles.filterBar}>
+        <SafeAreaView style={styles.filterBar}>
           {['relaxation', 'adventure', 'cultural', 'foodie'].map((style) => (
             <TouchableOpacity
               key={style}
@@ -141,7 +140,7 @@ const InteractiveRecommendations = () => {
               <Text style={styles.filterText}>{capitalize(style)}</Text>
             </TouchableOpacity>
           ))}
-        </View>
+        </SafeAreaView>
 
         {/* Bottom Sheet */}
         <BottomSheet
@@ -237,14 +236,13 @@ const InteractiveRecommendations = () => {
           }}
         />
       </View>
-    </SafeAreaWrapper>
   );
 };
 
 const styles = StyleSheet.create({
   filterBar: {
     position: 'absolute',
-    top: 20,
+    top: 64,
     alignSelf: 'center',
     flexDirection: 'row',
     paddingHorizontal: 10,
