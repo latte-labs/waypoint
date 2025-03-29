@@ -323,7 +323,7 @@ function HomeScreen() {
             <ScrollView
                 style={{ flex: 1, backgroundColor: 'white' }}
                 contentContainerStyle={{
-                    paddingBottom: 70,
+                    paddingBottom: 10,
                     paddingHorizontal: 16, // ✅ Add space on left and right
                 }}
                 keyboardShouldPersistTaps="handled"
@@ -361,14 +361,17 @@ function HomeScreen() {
 
                 {/* Onboarding Checklist */}
                 {!onboardingComplete && (
+                <View style={HomeScreenStyles.checklistCard}>
                 <OnboardingChecklist
                     userId={userId}
-                    onComplete={() => setOnboardingComplete(true)} // 💡 mark as complete
+                    onComplete={() => setOnboardingComplete(true)}
                 />
+                </View>
+
                 )}
 
                 {/* ✅ Feature Highlights Carousel */}
-                <View style={{ marginLeft: 7 }}>
+                <View style={{ marginLeft: 0 }}>
                     <FeatureCarousel />
                 </View>
 
@@ -382,7 +385,7 @@ function HomeScreen() {
                     />
                 ) : null}
 
-                {/* ✅ 3. TITLE SECTION (5% HEIGHT) */}
+                {/* ✅ 3. TITLE SECTION*/}
                 <View
                     style={[
                         HomeScreenStyles.titleContainer,

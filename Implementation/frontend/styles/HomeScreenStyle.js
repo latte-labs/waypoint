@@ -29,7 +29,7 @@ const HomeScreenStyles = StyleSheet.create({
         borderRadius: 12,
         height: '80%',
         width: '100%',
-        marginLeft: 20,
+        marginLeft: 20, 
     },
 
     takeQuizText: {
@@ -124,7 +124,6 @@ const HomeScreenStyles = StyleSheet.create({
     // ✅ TRIPS LIST (30% HEIGHT)
     tripScrollView: {
         height: height * 0.28, // slightly shorter if needed
-        marginLeft: 5,
         marginTop: 0, // make sure no added vertical gap
     },
     
@@ -134,11 +133,12 @@ const HomeScreenStyles = StyleSheet.create({
         padding: 0,
         alignItems: 'center',
         justifyContent: 'center',
-        width: 350,
-        height: '80%',
-        marginRight: 15,
+        width: width - 32, // full width minus horizontal padding
+        height: '90%',
+        marginRight: 16,
         overflow: 'hidden',
-    },
+      },
+      
 
     tripTitle: {
         color: 'white',
@@ -188,6 +188,20 @@ const HomeScreenStyles = StyleSheet.create({
         alignItems: 'center',
         borderRadius: 30,
       },
+      checklistCard: {
+        backgroundColor: 'white',
+        borderRadius: 20,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        marginTop: 8,
+        marginBottom: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        elevation: 3, // for Android
+      },
+      
 });
 
 export default HomeScreenStyles;

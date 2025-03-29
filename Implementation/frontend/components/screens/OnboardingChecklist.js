@@ -13,6 +13,10 @@ import Animated, {
   withSpring,
   withTiming,
   Easing,
+  useAnimatedRef,
+  measure,
+  runOnUI
+
 } from 'react-native-reanimated';
 
 
@@ -28,6 +32,17 @@ const OnboardingChecklist = ({ userId, onComplete }) => {
   const badgeScale = useSharedValue(0);
   const badgeOpacity = useSharedValue(0);
   const badgeRotation = useSharedValue(0);
+  const isExpanded = useSharedValue(true);
+  const contentHeight = useSharedValue(0);
+  const contentRef = useAnimatedRef();
+  const [expanded, setExpanded] = useState(true);
+
+  
+  const animatedContainerStyle = useAnimatedStyle(() => ({
+    height: isExpanded.value ? withTiming(240) : withTiming(0),
+    opacity: isExpanded.value ? withTiming(1) : withTiming(0),
+    overflow: 'hidden',
+  }));
 
 
   useEffect(() => {
@@ -113,11 +128,30 @@ const OnboardingChecklist = ({ userId, onComplete }) => {
   const completedCount = Object.values(progress).filter(Boolean).length;
 
   return (
-    <View style={[HomeScreenStyles.card, { marginVertical: 12, padding: 16 }]}>
-      <Text style={[HomeScreenStyles.titleText, { marginBottom: 10 }]}>
-        Get Started with WayPoint
-      </Text>
+    <View style={[HomeScreenStyles.card, { marginTop: 2, padding: 8 }]}>
+      <TouchableOpacity
+        onPress={() => {
+          isExpanded.value = !isExpanded.value;
+          setExpanded((prev) => !prev);
+        }}
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 10,
+        }}
+      >
+        <Text style={[HomeScreenStyles.titleText]}>Get Started with WayPoint</Text>
+        <Icon
+          name={expanded ? 'chevron-up' : 'chevron-down'}
+          size={14}
+          color="#6B7280"
+        />
+      </TouchableOpacity>
 
+
+
+      <Animated.View style={animatedContainerStyle}>
       {checklistItems.map((item) => (
         <TouchableOpacity
           key={item.key}
@@ -156,6 +190,9 @@ const OnboardingChecklist = ({ userId, onComplete }) => {
           <Text style={{ color: 'white', fontWeight: 'bold' }}>🎉 Claim Your Reward!</Text>
         </TouchableOpacity>
       )}
+    </Animated.View>
+
+
       <Modal
         visible={showRewardModal}
         transparent
