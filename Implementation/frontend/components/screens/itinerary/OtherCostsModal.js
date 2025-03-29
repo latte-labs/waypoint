@@ -3,8 +3,10 @@ import {
     Modal, View, Text, TextInput, TouchableOpacity, FlatList, Alert 
 } from 'react-native';
 import costTypes from '../../../src/data/costTypes.json';
+import { database } from '../../../firebase';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
-const OtherCostsModal = ({ visible, onClose, otherCosts, setOtherCosts }) => {
+const OtherCostsModal = ({ visible, onClose, otherCosts, setOtherCosts, itineraryId }) => {
     const [selectedType, setSelectedType] = useState(null);
     const [selectedSubtype, setSelectedSubtype] = useState(null);
     const [itemName, setItemName] = useState('');
@@ -14,32 +16,49 @@ const OtherCostsModal = ({ visible, onClose, otherCosts, setOtherCosts }) => {
     const subtypes = selectedType ? costTypes[selectedType] : [];
 
     // ✅ Handle Save (Add Cost to List)
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!selectedType || !selectedSubtype || !itemName.trim() || !amount.trim()) {
             Alert.alert("Error", "Please fill in all fields.");
             return;
         }
-
+    
         const newCost = {
-            id: Date.now().toString(), // ✅ Generate a unique ID for tracking
+            id: Date.now().toString(),
             type: selectedType,
             subtype: selectedSubtype,
             item: itemName,
             amount: parseFloat(amount),
         };
-
-        setOtherCosts(prevCosts => [...prevCosts, newCost]); // ✅ Update cost list
-
-        Alert.alert("Success", "Other cost saved successfully!");
-        resetFields(); // ✅ Reset fields after saving
+    
+        const updatedCosts = [...otherCosts, newCost];
+        setOtherCosts(updatedCosts);
+    
+        try {
+            await database()
+                .ref(`/live_itineraries/${itineraryId}/other_costs`)
+                .set(updatedCosts);
+            console.log("✅ Other costs saved to Firebase");
+        } catch (error) {
+            console.error("❌ Failed to save other costs:", error);
+        }
+        resetFields();
     };
-
+    
     // ✅ Handle Cost Deletion
-    const handleDelete = (costId) => {
-        setOtherCosts(prevCosts => prevCosts.filter(cost => cost.id !== costId));
-        Alert.alert("Deleted", "Other cost removed.");
+    const handleDelete = async (costId) => {
+        const updatedCosts = otherCosts.filter(cost => cost.id !== costId);
+        setOtherCosts(updatedCosts);
+    
+        try {
+            await database()
+                .ref(`/live_itineraries/${itineraryId}/other_costs`)
+                .set(updatedCosts);
+            console.log("✅ Cost deleted from Firebase");
+        } catch (error) {
+            console.error("❌ Failed to delete cost from Firebase:", error);
+        }
     };
-
+    
     // ✅ Reset input fields
     const resetFields = () => {
         setSelectedType(null);
@@ -60,8 +79,12 @@ const OtherCostsModal = ({ visible, onClose, otherCosts, setOtherCosts }) => {
                     width: '90%',
                     backgroundColor: '#fff',
                     padding: 20,
-                    borderRadius: 10,
-                    alignItems: 'center',
+                    borderRadius: 20,
+                    shadowColor: '#000',
+                    shadowOpacity: 0.1,
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowRadius: 8,
+                    elevation: 4,
                 }}>
                     <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>Manage Other Costs</Text>
 
@@ -72,14 +95,20 @@ const OtherCostsModal = ({ visible, onClose, otherCosts, setOtherCosts }) => {
                         renderItem={({ item }) => (
                             <TouchableOpacity 
                                 style={{
-                                    padding: 10,
-                                    backgroundColor: selectedType === item ? '#007bff' : '#eef7ff',
-                                    borderRadius: 5,
+                                    paddingVertical: 8,
+                                    paddingHorizontal: 16,
+                                    backgroundColor: selectedType === item ? '#1d3a8a' : '#eef1f7',
+                                    borderRadius: 20,
                                     marginRight: 10,
+                                    marginBottom: 6,
                                 }}
                                 onPress={() => setSelectedType(item)}
                             >
-                                <Text style={{ fontSize: 14, fontWeight: 'bold', color: selectedType === item ? '#fff' : '#007bff' }}>
+                                <Text style={{
+                                    fontSize: 14,
+                                    fontWeight: 'bold',
+                                    color: selectedType === item ? '#fff' : '#1d3a8a',                                    
+                                }}>
                                     {item}
                                 </Text>
                             </TouchableOpacity>
@@ -97,14 +126,19 @@ const OtherCostsModal = ({ visible, onClose, otherCosts, setOtherCosts }) => {
                             renderItem={({ item }) => (
                                 <TouchableOpacity 
                                     style={{
-                                        padding: 10,
-                                        backgroundColor: selectedSubtype === item ? '#007bff' : '#f0f0f0',
-                                        borderRadius: 5,
+                                        paddingVertical: 8,
+                                        paddingHorizontal: 16,
+                                        backgroundColor: selectedSubtype === item ? '#1d3a8a' : '#eef1f7',
+                                        borderRadius: 20,
                                         marginRight: 10,
-                                    }}
+                                        marginBottom: 6,                                    }}
                                     onPress={() => setSelectedSubtype(item)}
                                 >
-                                    <Text style={{ fontSize: 14, fontWeight: 'bold', color: selectedSubtype === item ? '#fff' : '#007bff' }}>
+                                    <Text style={{
+                                        fontSize: 14,
+                                        fontWeight: 'bold',
+                                        color: selectedSubtype === item ? '#fff' : '#1d3a8a',
+                                    }}>
                                         {item}
                                     </Text>
                                 </TouchableOpacity>
@@ -120,10 +154,12 @@ const OtherCostsModal = ({ visible, onClose, otherCosts, setOtherCosts }) => {
                         style={{
                             width: '100%',
                             borderWidth: 1,
-                            borderColor: '#ddd',
-                            borderRadius: 5,
-                            padding: 10,
+                            borderColor: '#ccc',
+                            borderRadius: 12,
+                            paddingVertical: 12,
+                            paddingHorizontal: 16,
                             marginBottom: 10,
+                            fontSize: 12,
                         }}
                         placeholder="Enter item name (e.g., Taxi to airport)"
                         value={itemName}
@@ -135,10 +171,12 @@ const OtherCostsModal = ({ visible, onClose, otherCosts, setOtherCosts }) => {
                         style={{
                             width: '100%',
                             borderWidth: 1,
-                            borderColor: '#ddd',
-                            borderRadius: 5,
-                            padding: 10,
+                            borderColor: '#ccc',
+                            borderRadius: 12,
+                            paddingVertical: 12,
+                            paddingHorizontal: 16,
                             marginBottom: 10,
+                            fontSize: 12,
                         }}
                         placeholder="Enter amount ($)"
                         keyboardType="numeric"
@@ -151,11 +189,11 @@ const OtherCostsModal = ({ visible, onClose, otherCosts, setOtherCosts }) => {
                         <TouchableOpacity 
                             style={{
                                 flex: 1,
-                                padding: 12,
-                                backgroundColor: '#007bff',
-                                borderRadius: 5,
+                                paddingVertical: 14,
+                                borderRadius: 30,
                                 alignItems: 'center',
-                                marginRight: 5,
+                                backgroundColor: '#1d3a8a',
+                                marginRight: 6,                            
                             }} 
                             onPress={handleSave}
                         >
@@ -164,10 +202,10 @@ const OtherCostsModal = ({ visible, onClose, otherCosts, setOtherCosts }) => {
                         <TouchableOpacity 
                             style={{
                                 flex: 1,
-                                padding: 12,
-                                backgroundColor: 'gray',
-                                borderRadius: 5,
+                                paddingVertical: 14,
+                                borderRadius: 30,
                                 alignItems: 'center',
+                                backgroundColor: '#999',
                             }} 
                             onPress={onClose}
                         >
@@ -176,32 +214,49 @@ const OtherCostsModal = ({ visible, onClose, otherCosts, setOtherCosts }) => {
                     </View>
 
                     {/* Saved Costs Preview */}
-                    <View style={{ marginTop: 20, width: '100%' }}>
-                        <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#007bff', marginBottom: 5 }}>
+                    <View style={{ marginTop: 24, width: '100%' }}>
+                        <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#1d3a8a', marginBottom: 10 }}>
                             Saved Other Costs
                         </Text>
 
                         {otherCosts.length > 0 ? (
                             otherCosts.map((cost, index) => (
-                                <View key={index} style={{
-                                    flexDirection: 'row',
-                                    justifyContent: 'space-between',
-                                    padding: 10,
-                                    backgroundColor: '#f9f9f9',
-                                    borderRadius: 5,
-                                    marginBottom: 5
-                                }}>
-                                    <Text style={{ fontSize: 14, fontWeight: 'bold' }}>{cost.type} - {cost.subtype}</Text>
+                                <View
+                                    key={index}
+                                    style={{
+                                        flexDirection: 'row',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        backgroundColor: '#f5f7fa',
+                                        paddingVertical: 12,
+                                        paddingHorizontal: 14,
+                                        borderRadius: 12,
+                                        marginBottom: 8,
+                                    }}
+                                >
+                                    <Text style={{ fontSize: 14, fontWeight: '600', color: '#333' }}>
+                                        {cost.type} - {cost.subtype}
+                                    </Text>
+
                                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                        <Text style={{ fontSize: 14, color: '#007bff', marginRight: 10 }}>${cost.amount}</Text>
+                                        <Text style={{
+                                            fontSize: 14,
+                                            fontWeight: 'bold',
+                                            color: '#1d3a8a',
+                                            marginRight: 12,
+                                        }}>
+                                            ${cost.amount}
+                                        </Text>
                                         <TouchableOpacity onPress={() => handleDelete(cost.id)}>
-                                            <Text style={{ color: 'red', fontSize: 14 }}>Remove</Text>
+                                            <Icon name="trash" size={16} color="#d11a2a" />
                                         </TouchableOpacity>
                                     </View>
                                 </View>
                             ))
                         ) : (
-                            <Text style={{ fontSize: 14, color: '#888', fontStyle: 'italic' }}>No other costs added.</Text>
+                            <Text style={{ fontSize: 14, color: '#888', fontStyle: 'italic' }}>
+                                No other costs added.
+                            </Text>
                         )}
                     </View>
 

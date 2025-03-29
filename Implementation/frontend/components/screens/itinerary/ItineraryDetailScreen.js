@@ -13,7 +13,7 @@ import DraggableFlatList from 'react-native-draggable-flatlist';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import { Calendar } from 'react-native-calendars';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { database } from '../../../firebase';
+import { database, firebase } from '../../../firebase';
 // Using react-native-image-crop-picker for image selection and cropping
 import ImagePicker from 'react-native-image-crop-picker';
 import { check, request, PERMISSIONS, RESULTS } from "react-native-permissions";
@@ -21,6 +21,7 @@ import NotesModal from './NotesModal';
 import PlacesModal from './PlacesModal';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import OtherCostsModal from './OtherCostsModal';
+
 
 
 const DayCard = memo(({ item, onPress, onLongPress, onEdit, renderRightActions, onLayout }) => {
@@ -343,6 +344,22 @@ const ItineraryDetailScreen = () => {
       };
     }
   }, [itineraryId, itinerary, user]);
+
+  useEffect(() => {
+    const fetchOtherCosts = async () => {
+      const ref = database().ref(`/live_itineraries/${itineraryId}/other_costs`);
+      ref.once('value', (snapshot) => {
+        if (snapshot.exists()) {
+          setOtherCosts(snapshot.val());
+        } else {
+          setOtherCosts([]);
+        }
+      });
+    };
+  
+    fetchOtherCosts();
+  }, [itineraryId, isOtherCostsModalVisible]);
+  
     
   const handleDayPress = useCallback((dayId) => {
     navigation.navigate('ItineraryDay', { itineraryId, dayId });
@@ -787,6 +804,7 @@ const ItineraryDetailScreen = () => {
             onClose={() => setIsOtherCostsModalVisible(false)}
             otherCosts={otherCosts} 
             setOtherCosts={setOtherCosts} 
+            itineraryId={itineraryId} 
         />
         <NotesModal
           visible={isNotesModalVisible}
