@@ -20,7 +20,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 
-const OnboardingChecklist = ({ userId, onComplete }) => {
+const OnboardingChecklist = ({ userId, onComplete, refreshTrigger }) => {
   const navigation = useNavigation();
   const [progress, setProgress] = useState({
     quiz: false,
@@ -75,46 +75,46 @@ const OnboardingChecklist = ({ userId, onComplete }) => {
 
   useFocusEffect(
     useCallback(() => {
-        const fetchChecklistStatus = async () => {
-            if (!userId) return;
-          
-            try {
-              const [travelStyleSnap, itinerariesRes, chatbotSnap, weatherChangedSnap, packingTipSnap, checkedInSnap, achievementsSnap] = await Promise.all([
-                database().ref(`/users/${userId}/travel_style_id`).once('value'),
-                fetch(`${API_BASE_URL}/itineraries/users/${userId}/itineraries`),
-                database().ref(`/users/${userId}/onboarding/used_chat`).once('value'),
-                database().ref(`/users/${userId}/onboarding/weather_changed`).once('value'),
-                database().ref(`/users/${userId}/onboarding/packing_tip_viewed`).once('value'),
-                database().ref(`/users/${userId}/onboarding/checked_in`).once('value'),
-                database().ref(`/users/${userId}/onboarding/viewed_achievements`).once('value'),
-              ]);
-          
-              const travelStyleId = travelStyleSnap.val();
-              const quizDone = travelStyleId && travelStyleId !== 4;
-              const itineraries = await itinerariesRes.json();
-              const hasItinerary = itineraries.length > 0;
-              const chatbotUsed = chatbotSnap.val() === true;
-              const weatherChecked = weatherChangedSnap.val() === true && packingTipSnap.val() === true;
-              const checkedIn = checkedInSnap.val() === true;
-              const achievementsViewed = achievementsSnap.val() === true;
-          
-              setProgress({
-                quiz: quizDone,
-                itinerary: hasItinerary,
-                chatbot: chatbotUsed,
-                weatherChecked,
-                checkedIn,
-                achievementsViewed,
-              });
-            } catch (err) {
-              console.error('Checklist fetch error:', err);
-            }
-            };
-            
-      fetchChecklistStatus();
-    }, [userId])
-  );
+      const fetchChecklistStatus = async () => {
+        if (!userId) return;
   
+        try {
+          const [travelStyleSnap, itinerariesRes, chatbotSnap, weatherChangedSnap, packingTipSnap, checkedInSnap, achievementsSnap] = await Promise.all([
+            database().ref(`/users/${userId}/travel_style_id`).once('value'),
+            fetch(`${API_BASE_URL}/itineraries/users/${userId}/itineraries`),
+            database().ref(`/users/${userId}/onboarding/used_chat`).once('value'),
+            database().ref(`/users/${userId}/onboarding/weather_changed`).once('value'),
+            database().ref(`/users/${userId}/onboarding/packing_tip_viewed`).once('value'),
+            database().ref(`/users/${userId}/onboarding/checked_in`).once('value'),
+            database().ref(`/users/${userId}/onboarding/viewed_achievements`).once('value'),
+          ]);
+  
+          const travelStyleId = travelStyleSnap.val();
+          const quizDone = travelStyleId && travelStyleId !== 4;
+          const itineraries = await itinerariesRes.json();
+          const hasItinerary = itineraries.length > 0;
+          const chatbotUsed = chatbotSnap.val() === true;
+          const weatherChecked = weatherChangedSnap.val() === true && packingTipSnap.val() === true;
+          const checkedIn = checkedInSnap.val() === true;
+          const achievementsViewed = achievementsSnap.val() === true;
+  
+          setProgress({
+            quiz: quizDone,
+            itinerary: hasItinerary,
+            chatbot: chatbotUsed,
+            weatherChecked,
+            checkedIn,
+            achievementsViewed,
+          });
+        } catch (err) {
+          console.error('Checklist fetch error:', err);
+        }
+      };
+  
+      fetchChecklistStatus();
+    }, [userId, refreshTrigger]) 
+  );
+    
   const checklistItems = [
     { key: 'quiz', label: 'Take Travel Style Quiz', action: () => navigation.navigate('QuizScreen') },
     { key: 'itinerary', label: 'Create Your First Itinerary', action: () => navigation.navigate('Itinerary') },

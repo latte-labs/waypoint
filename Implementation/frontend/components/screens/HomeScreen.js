@@ -205,6 +205,8 @@ function HomeScreen() {
 
     const [itineraries, setItineraries] = useState([]);
     const [loadingItineraries, setLoadingItineraries] = useState(false);
+    const [checklistRefreshTrigger, setChecklistRefreshTrigger] = useState(0);
+
     // WEATHER
     const fetchWeather = async (latitude, longitude) => {
         try {
@@ -365,6 +367,7 @@ function HomeScreen() {
                 <OnboardingChecklist
                     userId={userId}
                     onComplete={() => setOnboardingComplete(true)}
+                    refreshTrigger={checklistRefreshTrigger}
                 />
                 </View>
 
@@ -454,6 +457,7 @@ function HomeScreen() {
                             database()
                                 .ref(`/users/${userId}/onboarding/weather_changed`)
                                 .set(true);
+                            setChecklistRefreshTrigger((prev) => prev + 1); 
                         }
                     }}
                 />
