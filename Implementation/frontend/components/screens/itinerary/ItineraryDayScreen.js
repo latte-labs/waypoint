@@ -72,28 +72,31 @@ const ItineraryDayScreen = () => {
 
     // ✅ Fetch Activities from PostgreSQL
     useEffect(() => {
-        const fetchActivities = async () => {
-          try {
-            // Only add header if user is defined
-            const config = user
-              ? { headers: { "X-User-Id": user.id } }
-              : {};
-            const response = await axios.get(
-              `${API_BASE_URL}/itineraries/${itineraryId}/days/${dayId}`,
-              config
-            );
-            if (response.status === 200) {
-              setActivities(sortActivitiesByTime(response.data.activities));
-            }
-          } catch (error) {
-            console.error("❌ Error fetching activities:", error.response?.data || error.message);
-          } finally {
-            setLoading(false);
+      const fetchActivities = async () => {
+        try {
+          if (!dayId) {
+            console.warn("❌ Missing dayId:", dayId);
+            return;
+          }          
+    
+          const config = user ? { headers: { "X-User-Id": user.id } } : {};
+          const response = await axios.get(
+            `${API_BASE_URL}/itineraries/${itineraryId}/days/${dayId}`,
+            config
+          );
+          if (response.status === 200) {
+            setActivities(sortActivitiesByTime(response.data.activities));
           }
-        };
-      
-        fetchActivities();
+        } catch (error) {
+          console.error("❌ Error fetching activities:", error.response?.data || error.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+    
+      fetchActivities();
     }, [itineraryId, dayId, user]);
+    
 
     useEffect(() => {
       if (modalVisible && !isEditing) {
@@ -241,7 +244,6 @@ const ItineraryDayScreen = () => {
               setActivities((prev) =>
                 prev.map((act) => (act.id === editingActivity.id ? response.data : act))
               );
-              Alert.alert("Success", "Activity updated successfully.");
             }
           } catch (error) {
             console.error("❌ Error updating activity:", error.response?.data || error.message);
