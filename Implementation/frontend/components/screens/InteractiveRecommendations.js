@@ -3,7 +3,7 @@ import {
   View, Text, TouchableOpacity, FlatList, Image, Alert,
   Dimensions, StyleSheet, ActivityIndicator, ScrollView
 } from 'react-native';
-import MapView, { Marker, Callout } from 'react-native-maps';
+import MapView, { Marker, Callout, CalloutSubview } from 'react-native-maps';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GOOGLE_PLACES_API_KEY } from '@env';
@@ -39,9 +39,11 @@ const InteractiveRecommendations = () => {
   const [activeIndex, setActiveIndex] = useState(null);
 
 
-  const snapPoints = useMemo(() => [Platform.OS === 'ios' ? '4%' : '11%', '40%', '80%'], []);
+  const snapPoints = useMemo(() => [Platform.OS === 'ios' ? '11%' : '11%', '40%', '80%'], []);
   const scrollViewRef = useRef(null);
   const cardRefs = useRef([]);
+  const [focusedPlace, setFocusedPlace] = useState(null); 
+
 
 
   useEffect(() => {
@@ -74,19 +76,11 @@ const InteractiveRecommendations = () => {
   const focusMapOnPlace = (place, index) => {
     setActiveIndex(index);
   
-    if (mapRef.current) {
-      mapRef.current.animateToRegion({
-        latitude: place.latitude,
-        longitude: place.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      }, 500);
-    }
-  
+    // Do NOT animate or change region — just show callout and scroll
     if (markerRefs.current[index]?.current) {
       markerRefs.current[index].current.showCallout();
     }
-      
+  
     if (cardRefs.current[index] && scrollViewRef.current) {
       cardRefs.current[index].measureLayout(
         scrollViewRef.current,
@@ -97,7 +91,7 @@ const InteractiveRecommendations = () => {
       );
     }
   };
-    
+      
   return (
       <View style={{ flex: 1 }}>
         <MapView
@@ -115,13 +109,23 @@ const InteractiveRecommendations = () => {
                 key={index}
                 coordinate={{ latitude: place.latitude, longitude: place.longitude }}
                 ref={markerRefs.current[index]}
-                title={place.name}
                 onPress={() => focusMapOnPlace(place, index)}
-                >
-                <Callout>
-                  <View>
-                    <Text style={{ fontWeight: 'bold' }}>{place.name}</Text>
-                    <Text>{capitalize(place.category)}</Text>
+              >
+                <Callout tooltip={true}>
+                  <View style={styles.calloutContainer}>
+                    <View style={styles.calloutHeader}>
+                      <Text style={styles.calloutTitle}>{place.name}</Text>
+                      <CalloutSubview
+                        onPress={() => {
+                          setSelectedPlace(place);
+                          setModalVisible(true);
+                        }}
+                        style={styles.calloutIconWrapper}
+                      >
+                        <Icon name="plus-circle" size={20} color="#007AFF" />
+                      </CalloutSubview>
+                    </View>
+                    <Text style={styles.calloutSubtitle}>{capitalize(place.category)}</Text>
                   </View>
                 </Callout>
               </Marker>
@@ -242,7 +246,7 @@ const InteractiveRecommendations = () => {
 const styles = StyleSheet.create({
   filterBar: {
     position: 'absolute',
-    top: 64,
+    top: 60,
     alignSelf: 'center',
     flexDirection: 'row',
     paddingHorizontal: 10,
@@ -287,6 +291,48 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     backgroundColor: '#eaf0ff',
   },
+  calloutContainer: {
+    width: 180,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  
+  calloutHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 4,
+  },
+  
+  calloutTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    flex: 1,
+    flexWrap: 'wrap',
+  },
+  
+  calloutSubtitle: {
+    fontSize: 13,
+    color: '#444',
+    marginTop: 2,
+  },
+  
+  calloutIconWrapper: {
+    marginLeft: 8,
+    padding: 4,
+    borderRadius: 20,
+  },
+  
+  
+  
+  
   
 });
 
