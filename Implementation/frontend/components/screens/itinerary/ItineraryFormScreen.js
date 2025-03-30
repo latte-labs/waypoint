@@ -9,6 +9,11 @@ import {
   StyleSheet,
   Modal,
   TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
+  ScrollView
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import axios from 'axios';
@@ -198,87 +203,97 @@ const ItineraryFormScreen = () => {
 
   return (
     <SafeAreaWrapper>
-      <View style={styles.container}>
-        <Text style={styles.title}>
-          {itineraryId ? "Edit Itinerary" : "Create Itinerary"}
-        </Text>
-
-        {/* Trip Name */}
-        <TextInput
-          style={styles.input}
-          placeholder="Enter Trip Name"
-          placeholderTextColor="#999"
-          value={name}
-          onChangeText={setName}
-        />
-
-        {/* Destination (Pressable to open bottom overlay) */}
-        <View style={styles.destinationContainer}>
-            {/* Clickable Area to Open Modal (90%) */}
-            <Pressable style={styles.destinationInput} onPress={() => setShowDestinationModal(true)}>
-              <Text style={destination ? styles.inputText : styles.placeholderText}>
-                {destination ? `${destination.city}, ${destination.country}` : "Enter Destination"}
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={100} // Adjust based on header height
+        >
+          <ScrollView
+            contentContainerStyle={styles.container}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Text style={styles.title}>
+              {itineraryId ? "Edit Itinerary" : "Create Itinerary"}
+            </Text>
+  
+            {/* Trip Name */}
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Trip Name"
+              placeholderTextColor="#999"
+              value={name}
+              onChangeText={setName}
+            />
+  
+            {/* Destination (Pressable to open bottom overlay) */}
+            <View style={styles.destinationContainer}>
+              <Pressable
+                style={styles.destinationInput}
+                onPress={() => setShowDestinationModal(true)}
+              >
+                <Text style={destination ? styles.inputText : styles.placeholderText}>
+                  {destination ? `${destination.city}, ${destination.country}` : "Enter Destination"}
+                </Text>
+              </Pressable>
+  
+              {destination !== '' && (
+                <TouchableOpacity style={styles.clearButton} onPress={() => setDestination('')}>
+                  <Text style={styles.clearButtonText}>✕</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+  
+            {/* Date Selection */}
+            <Pressable style={styles.input} onPress={() => setCalendarVisible(!calendarVisible)}>
+              <Text style={styles.inputText}>
+                {startDate ? startDate : "Select Start Date"} -{" "}
+                {endDate ? endDate : "Select End Date"}
               </Text>
             </Pressable>
-
-            {/* "X" Button for Clearing Input (10%) */}
-            {destination !== '' && (
-                <TouchableOpacity style={styles.clearButton} onPress={() => setDestination('')}>
-                    <Text style={styles.clearButtonText}>✕</Text>
-                </TouchableOpacity>
+  
+            {calendarVisible && (
+              <Calendar
+                markingType="period"
+                markedDates={markedDates}
+                onDayPress={handleDateSelect}
+                style={styles.calendar}
+              />
             )}
-        </View>
-
-        {/* Date Selection */}
-        <Pressable style={styles.input} onPress={() => setCalendarVisible(!calendarVisible)}>
-          <Text style={styles.inputText}>
-            {startDate ? startDate : "Select Start Date"} -{" "}
-            {endDate ? endDate : "Select End Date"}
-          </Text>
-        </Pressable>
-
-        {calendarVisible && (
-          <Calendar
-            markingType="period"
-            markedDates={markedDates}
-            onDayPress={handleDateSelect}
-            style={styles.calendar}
+  
+            {/* Budget */}
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Budget (Optional)"
+              placeholderTextColor="#999"
+              value={budget}
+              onChangeText={setBudget}
+              keyboardType="numeric"
+            />
+  
+            {/* Submit Button */}
+            {loading ? (
+              <ActivityIndicator size="large" color="#007bff" />
+            ) : (
+              <Pressable onPress={handleSubmit} style={styles.submitButton}>
+                <Text style={styles.submitText}>
+                  {itineraryId ? "Save Changes" : "Create Itinerary"}
+                </Text>
+              </Pressable>
+            )}
+          </ScrollView>
+  
+          {/* Destination Modal */}
+          <DestinationSearchModal
+            visible={showDestinationModal}
+            onClose={() => setShowDestinationModal(false)}
+            onSelectPlace={(selectedPlace) => {
+              setDestination(selectedPlace);
+              setShowDestinationModal(false);
+            }}
           />
-        )}
-
-        {/* Budget */}
-        <TextInput
-          style={styles.input}
-          placeholder="Enter Budget (Optional)"
-          placeholderTextColor="#999"
-          value={budget}
-          onChangeText={setBudget}
-          keyboardType="numeric"
-        />
-
-        {/* Submit Button */}
-        {loading ? (
-          <ActivityIndicator size="large" color="#007bff" />
-        ) : (
-          <Pressable onPress={handleSubmit} style={styles.submitButton}>
-            <Text style={styles.submitText}>
-              {itineraryId ? "Save Changes" : "Create Itinerary"}
-            </Text>
-          </Pressable>
-        )}
-      </View>
-
-        {/* Destination Modal (Bottom Overlay) */}
-        <DestinationSearchModal
-  visible={showDestinationModal}
-  onClose={() => setShowDestinationModal(false)}
-  onSelectPlace={(selectedPlace) => {
-    setDestination(selectedPlace);
-    setShowDestinationModal(false);
-  }}
-/>
-
-
+        </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
     </SafeAreaWrapper>
   );
 };

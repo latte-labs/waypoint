@@ -1,12 +1,5 @@
 import React, { useState, useRef } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
+import { KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, View, TextInput, Text, Button, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import { GOOGLE_PLACES_API_KEY } from '@env';
 
@@ -81,39 +74,50 @@ const DestinationSearchModal = ({ visible, onClose, onSelectPlace }) => {
   if (!visible) return null;
 
   return (
-    <View style={styles.backdrop}>
-      <View style={styles.modalBox}>
-        <Text style={styles.title}>Search Destination</Text>
-        <TextInput
-          placeholder="Type a place..."
-          value={input}
-          onChangeText={(text) => {
-            setInput(text);
-            clearTimeout(debounceRef.current);
-            debounceRef.current = setTimeout(() => fetchPlaces(text), 600);
-          }}
-          style={styles.input}
-        />
-        <FlatList
-          data={results}
-          keyExtractor={(item) => item.placeId}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.item}
-              onPress={() => handleSelect(item.placeId)}
-
-            >
-              <Text style={styles.itemText}>{item.structuredFormat?.mainText?.text}</Text>
-              <Text style={styles.itemSubText}>{item.structuredFormat?.secondaryText?.text}</Text>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={styles.backdrop}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1, justifyContent: 'flex-end' }}
+          keyboardVerticalOffset={80} // tweak this value based on header height
+        >
+          <View style={styles.modalBox}>
+            <Text style={styles.title}>Search Destination</Text>
+  
+            <TextInput
+              placeholder="Type a place..."
+              value={input}
+              onChangeText={(text) => {
+                setInput(text);
+                clearTimeout(debounceRef.current);
+                debounceRef.current = setTimeout(() => fetchPlaces(text), 600);
+              }}
+              style={styles.input}
+            />
+  
+            <FlatList
+              data={results}
+              keyExtractor={(item) => item.placeId}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.item}
+                  onPress={() => handleSelect(item.placeId)}
+                >
+                  <Text style={styles.itemText}>{item.structuredFormat?.mainText?.text}</Text>
+                  <Text style={styles.itemSubText}>{item.structuredFormat?.secondaryText?.text}</Text>
+                </TouchableOpacity>
+              )}
+              keyboardShouldPersistTaps="handled"
+              style={{ flex: 1 }}
+            />
+  
+            <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+              <Text style={styles.closeText}>Close</Text>
             </TouchableOpacity>
-          )}
-          keyboardShouldPersistTaps="handled"
-        />
-        <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-          <Text style={styles.closeText}>Close</Text>
-        </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
       </View>
-    </View>
+    </TouchableWithoutFeedback>
   );
 };
 
@@ -122,7 +126,6 @@ export default DestinationSearchModal;
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'flex-end',
   },
   modalBox: {
