@@ -96,7 +96,7 @@ const ItineraryDetailScreen = () => {
   // Modal and Calendar state for Add/Edit day
   const [modalVisible, setModalVisible] = useState(false);
   const [dayTitle, setDayTitle] = useState('');
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isCollaborator, setIsCollaborator] = useState(false);
   const [owner, setOwner] = useState({ name: "", email: "" });
@@ -112,7 +112,13 @@ const ItineraryDetailScreen = () => {
   const [totalItineraryCost, setTotalItineraryCost] = useState(0);
   const [isOtherCostsModalVisible, setIsOtherCostsModalVisible] = useState(false);
   const [otherCosts, setOtherCosts] = useState([]);
-
+  const getNextAvailableDate = () => {
+    if (!itinerary?.start_date) return new Date().toISOString().split('T')[0];
+    const start = new Date(itinerary.start_date);
+    return start.toISOString().split('T')[0];
+  };
+  
+  
 
 
   useEffect(() => {
@@ -699,7 +705,7 @@ const ItineraryDetailScreen = () => {
             onPress={() => {
               setEditingDayId(null);
               setDayTitle('');
-              setSelectedDate(new Date().toISOString().split('T')[0]);
+              setSelectedDate(getNextAvailableDate());
               setModalVisible(true);
             }}
           >
@@ -731,7 +737,7 @@ const ItineraryDetailScreen = () => {
               onPress={() => {
                 setEditingDayId(null);
                 setDayTitle('');
-                setSelectedDate(new Date().toISOString().split('T')[0]);
+                setSelectedDate(getNextAvailableDate());
                 setModalVisible(true);
               }}
             >
@@ -867,6 +873,7 @@ const ItineraryDetailScreen = () => {
                 {showDatePicker && (
                   <View style={styles.calendarContainer}>
                     <Calendar
+                      current={selectedDate}
                       onDayPress={(day) => {
                         setSelectedDate(day.dateString);
                         setShowDatePicker(false);
