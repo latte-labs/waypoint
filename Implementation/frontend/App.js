@@ -8,6 +8,8 @@ import LoginScreen from './components/screens/LoginScreen';
 import SignupScreen from './components/screens/SignupScreen';
 import AppNavigator from './components/navigation/AppNavigator';
 import firebase from '@react-native-firebase/app';
+import AuthLoadingScreen from './components/AuthLoadingScreen';
+
 
 const Stack = createStackNavigator();
 
@@ -24,6 +26,7 @@ export default function App() {
         <BottomSheetModalProvider>
           <NavigationContainer>
             <Stack.Navigator screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="AuthLoading" component={AuthLoadingScreen} />
               <Stack.Screen name="Login" component={LoginScreen} />
               <Stack.Screen name="Signup" component={SignupScreen} />
               <Stack.Screen name="Main" component={AppNavigator} />
