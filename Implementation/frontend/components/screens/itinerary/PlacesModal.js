@@ -89,13 +89,25 @@ const PlacesModal = ({ visible, onClose, itineraryId }) => {
             keyExtractor={(item, index) => index.toString()}
             renderItem={({ item, index }) => (
               <View style={styles.placeItem}>
-                <Text style={styles.placeText}>{item}</Text>
+                <TouchableOpacity 
+                  style={styles.actionButton} 
+                  onPress={() => Alert.alert("Action", `You tapped on "${item}"`)}
+                >
+                  <Text style={styles.actionText}>⚡</Text>
+                </TouchableOpacity>
+
+                {/* 👇 Wrap Text inside a flex container */}
+                <View style={styles.placeTextWrapper}>
+                  <Text style={styles.placeText}>{item}</Text>
+                </View>
+
                 <TouchableOpacity onPress={() => deletePlace(index)}>
                   <Text style={styles.deleteText}>❌</Text>
                 </TouchableOpacity>
               </View>
             )}
           />
+
 
           {/* Save & Cancel Buttons */}
           <View style={styles.buttonContainer}>
@@ -171,8 +183,15 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },
+  placeTextWrapper: {
+    flex: 1,
+    paddingRight: 10, // spacing before ❌ icon
+  },
+  
   placeText: {
     fontSize: 16,
+    color: '#333',
+    flexWrap: 'wrap',
   },
   deleteText: {
     fontSize: 16,
@@ -205,6 +224,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  actionButton: {
+    marginRight: 10,
+    padding: 6,
+    borderRadius: 4,
+    backgroundColor: '#eef7ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionText: {
+    fontSize: 16,
+    color: '#007bff',
+  },
+  
 });
 
 export default PlacesModal;
