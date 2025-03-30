@@ -161,19 +161,27 @@ const ItineraryDayScreen = () => {
 
     // ✅ Function to Format Time in HH:MM AM/PM Format
     const formatTime = (date) => {
-        const hours = date.getHours();
-        const minutes = date.getMinutes();
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        return `${hours % 12 || 12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+      let hours = date.getHours();
+      const minutes = date.getMinutes();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+    
+      hours = hours % 12;
+      hours = hours ? hours : 12; // the hour '0' should be '12'
+      
+      const strHours = hours < 10 ? `0${hours}` : `${hours}`;
+      const strMinutes = minutes < 10 ? `0${minutes}` : `${minutes}`;
+      
+      return `${strHours}:${strMinutes} ${ampm}`;
     };
+    
 
     // ✅ Function to Close Time Picker Only When "Done" is Pressed
     const handleDone = () => {
-        // ✅ Format the selected time before closing
-        const formattedTime = formatTime(selectedTime);
-        setNewActivity({ ...newActivity, time: formattedTime });
-        setShowTimePicker(false);
+      const formattedTime = selectedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      setNewActivity(prev => ({ ...prev, time: formattedTime }));
+      setShowTimePicker(false);
     };
+    
 
 
     // ✅ Placeholder Time (Default: 00:00 AM)
@@ -365,6 +373,7 @@ const ItineraryDayScreen = () => {
                   handleSaveActivity={handleSaveActivity}
                   handleDone={handleDone}
                   selectedTime={selectedTime}
+                  setSelectedTime={setSelectedTime}  
                   DateTimePicker={DateTimePicker}
                 />
 

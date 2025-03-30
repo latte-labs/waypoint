@@ -12,7 +12,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { database } from '../../../firebase';
 
-const PlacesModal = ({ visible, onClose, itineraryId }) => {
+const PlacesModal = ({ visible, onClose, itineraryId, onPlaceTap }) => {
   const [place, setPlace] = useState('');
   const [placesList, setPlacesList] = useState([]);
 
@@ -91,8 +91,8 @@ const PlacesModal = ({ visible, onClose, itineraryId }) => {
               <View style={styles.placeItem}>
                 <TouchableOpacity 
                   style={styles.actionButton} 
-                  onPress={() => Alert.alert("Action", `You tapped on "${item}"`)}
-                >
+                  onPress={() => onPlaceTap(item)}
+                  >
                   <Text style={styles.actionText}>⚡</Text>
                 </TouchableOpacity>
 

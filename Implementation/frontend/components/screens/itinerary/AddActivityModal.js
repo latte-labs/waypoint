@@ -12,12 +12,14 @@ const AddActivityModal = ({
   setNewActivity,
   showTimePicker,
   setShowTimePicker,
-  displayTime,
   handleSaveActivity,
   handleDone,
   selectedTime,
+  setSelectedTime,
   DateTimePicker
 }) => {
+    const displayTime = newActivity.time || 'Tap to choose time';
+  
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
       <View style={styles.modalOverlay}>
@@ -38,8 +40,10 @@ const AddActivityModal = ({
                     mode="time"
                     display="spinner"
                     onChange={(e, selected) => {
-                      if (selected) setNewActivity(prev => ({ ...prev, time: selected }));
-                    }}
+                        if (selected) {
+                            setSelectedTime(selected); 
+                        }
+                      }}                      
                   />
                   <TouchableOpacity onPress={handleDone} style={styles.doneButton}>
                     <Text style={styles.doneText}>DONE</Text>

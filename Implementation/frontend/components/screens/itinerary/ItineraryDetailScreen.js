@@ -21,7 +21,9 @@ import NotesModal from './NotesModal';
 import PlacesModal from './PlacesModal';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import OtherCostsModal from './OtherCostsModal';
-
+import AddActivityModal from './AddActivityModal';
+import DaySelectionModal from './DaySelectionModal';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 
 const DayCard = memo(({ item, onPress, onLongPress, onEdit, renderRightActions, onLayout }) => {
@@ -117,6 +119,20 @@ const ItineraryDetailScreen = () => {
     const start = new Date(itinerary.start_date);
     return start.toISOString().split('T')[0];
   };
+  const formatTime = (date) => {
+    let hours = date.getHours();
+    const minutes = date.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+  
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+    
+    const strHours = hours < 10 ? `0${hours}` : `${hours}`;
+    const strMinutes = minutes < 10 ? `0${minutes}` : `${minutes}`;
+    
+    return `${strHours}:${strMinutes} ${ampm}`;
+  };
+  
   
   
 
@@ -365,6 +381,12 @@ const ItineraryDetailScreen = () => {
   
     fetchOtherCosts();
   }, [itineraryId, isOtherCostsModalVisible]);
+  useEffect(() => {
+    if (index === 1 && isPlacesModalVisible) {
+      setIsPlacesModalVisible(false);
+    }
+  }, [index, isPlacesModalVisible]);
+  
   
     
   const handleDayPress = useCallback((dayId) => {
@@ -521,6 +543,108 @@ const ItineraryDetailScreen = () => {
       Alert.alert("Error", "Failed to update itinerary day.");
     }
   };
+
+  const [selectedPlace, setSelectedPlace] = useState(null);
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [isDayModalVisible, setIsDayModalVisible] = useState(false);
+  const [isAddActivityModalVisible, setIsAddActivityModalVisible] = useState(false);
+
+  const [newActivity, setNewActivity] = useState({
+    name: '',
+    location: '',
+    estimated_cost: '',
+    time: '',
+  });
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [selectedTime, setSelectedTime] = useState(new Date());
+  const handlePlaceTap = (placeName) => {
+    if (days.length === 0) {
+      Alert.alert(
+        "No Days Planned",
+        "Please add at least one day to your itinerary before assigning a place.",
+        [
+          {
+            text: "Go Add Day",
+            onPress: () => {
+              setIndex(1);
+              setEditingDayId(null);
+              setDayTitle('');
+              setSelectedDate(getNextAvailableDate());
+              setModalVisible(true); 
+            },
+          },
+          { text: "Cancel", style: "cancel" }
+        ]
+      );
+      return;
+    }
+  
+    setSelectedPlace(placeName);
+    setIsPlacesModalVisible(false);
+    setTimeout(() => setIsDayModalVisible(true), 300);
+  };
+      
+  
+  const handleSelectDay = (day) => {
+    const now = new Date();
+    const formattedTime = formatTime(now);
+  
+    setSelectedDay(day);
+    setSelectedTime(now);
+    setNewActivity({
+      name: 'Visit ' + selectedPlace,  
+      location: selectedPlace,
+      estimated_cost: '',
+      notes: '',
+      time: formattedTime,
+    });
+    setIsDayModalVisible(false);
+    setTimeout(() => setIsAddActivityModalVisible(true), 300);
+  };
+  
+  
+  const handleDoneTimePicker = () => {
+    const formattedTime = selectedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setNewActivity(prev => ({ ...prev, time: formattedTime }));
+    setShowTimePicker(false);  
+  };
+  
+  const handleSaveActivity = async () => {
+    try {
+      const config = {
+        headers: {
+          "Content-Type": "application/json",
+          "X-User-Id": user?.id,
+        },
+      };
+  
+      const payload = {
+        name: newActivity.name,
+        location: newActivity.location || '',
+        estimated_cost: newActivity.estimated_cost ? parseFloat(newActivity.estimated_cost) : 0,
+        time: newActivity.time,
+        notes: newActivity.notes || '',
+        itinerary_day_id: selectedDay.id,
+      };
+  
+      const response = await axios.post(
+        `${API_BASE_URL}/itineraries/${itineraryId}/days/${selectedDay.id}/activities/`,
+        payload,
+        config
+      );
+  
+      if (response.status === 200) {
+        setIsAddActivityModalVisible(false);
+        fetchItineraryDetails();
+      }
+    } catch (error) {
+      console.error("❌ Failed to save activity:", error.response?.data || error.message);
+      Alert.alert("Error", "Failed to save activity.");
+    }
+  };
+  
+  
+
 
   // OverviewRoute: if an image exists, use ImageBackground with overlay and white text/icon.
   const OverviewRoute = () => (
@@ -820,7 +944,8 @@ const ItineraryDetailScreen = () => {
         <PlacesModal
           visible={isPlacesModalVisible}
           onClose={() => setIsPlacesModalVisible(false)}
-          itineraryId={itineraryId} // ✅ Pass itineraryId as a prop
+          itineraryId={itineraryId}
+          onPlaceTap={handlePlaceTap} 
         />
         <TabView
           navigationState={{ index, routes }}
@@ -922,6 +1047,28 @@ const ItineraryDetailScreen = () => {
             )
           )}
         </View>
+        <DaySelectionModal
+          visible={isDayModalVisible}
+          onClose={() => setIsDayModalVisible(false)}
+          days={days}
+          onSelectDay={handleSelectDay}
+        />
+
+        <AddActivityModal
+          visible={isAddActivityModalVisible}
+          onClose={() => setIsAddActivityModalVisible(false)}
+          newActivity={newActivity}
+          setNewActivity={setNewActivity}
+          showTimePicker={showTimePicker}
+          setShowTimePicker={setShowTimePicker}
+          displayTime={newActivity.time || 'Tap to choose time'}
+          handleDone={handleDoneTimePicker}
+          handleSaveActivity={handleSaveActivity}
+          selectedTime={selectedTime}
+          setSelectedTime={setSelectedTime}  
+          DateTimePicker={DateTimePicker}
+        />
+
         
       </SafeAreaWrapper>
     </GestureHandlerRootView>
