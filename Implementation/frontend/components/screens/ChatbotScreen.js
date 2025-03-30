@@ -17,6 +17,8 @@ const ChatbotScreen = () => {
   const [isTyping, setIsTyping] = useState(false); // Track when bot is typing
   const [typingDots, setTypingDots] = useState("");
   const inputRef = useRef(null);
+  const [profileImage, setProfileImage] = useState(null);
+
 
   // ✅ Fetch User & Travel Style on Component Mount
   useEffect(() => {
@@ -24,21 +26,25 @@ const ChatbotScreen = () => {
       try {
         console.log("🔄 Fetching user data from AsyncStorage...");
         const storedUser = await AsyncStorage.getItem("user");
+
+        const storedImage = await AsyncStorage.getItem('profileImage');
+          if (storedImage) {
+              setProfileImage(storedImage);
+          }
+  
         if (!storedUser) {
           console.error("❌ No user found in AsyncStorage!");
-          setTravelStyle("general"); // Default if no user
+          setTravelStyle("general");
           return;
         }
-
+  
         const userData = JSON.parse(storedUser);
         setUser(userData);
         console.log("📥 Retrieved Travel Style ID:", userData.travel_style_id);
-
+  
         if (userData.travel_style_id && userData.travel_style_id !== 4) {
-          console.log("🔄 Fetching travel style details...");
           await fetchTravelStyle(userData.travel_style_id);
         } else {
-          console.log("🚫 Travel Style is Undefined (4) or not set.");
           setTravelStyle("general");
         }
       } catch (error) {
@@ -46,10 +52,10 @@ const ChatbotScreen = () => {
         setTravelStyle("general");
       }
     };
-
+  
     fetchUserTravelStyle();
   }, []);
-
+  
   useEffect(() => {
     if (!isTyping) return;
 
@@ -160,15 +166,19 @@ const ChatbotScreen = () => {
 
                 {/* User Message */}
                 {item.role === "user" && (
-                  <>
-                    <View style={item.role === "user" ? styles.userMessage : styles.botMessage}>
-                      <Text style={[styles.messageText, item.role === "user" ? { color: "#fff" } : { color: "#000" }]}>
-                        {item.content === "..." ? typingDots : item.content}
-                      </Text>
-                    </View>
-                    <Image source={require("../../assets/images/woman.png")} style={styles.userAvatar} />
-                  </>
-                )}
+                <>
+                  <View style={item.role === "user" ? styles.userMessage : styles.botMessage}>
+                    <Text style={[styles.messageText, item.role === "user" ? { color: "#fff" } : { color: "#000" }]}>
+                      {item.content === "..." ? typingDots : item.content}
+                    </Text>
+                  </View>
+                  <Image
+                    source={profileImage ? { uri: profileImage } : require("../../assets/images/woman.png")}
+                    style={styles.userAvatar}
+                  />
+                </>
+              )}
+
 
                 {/* Bot Message */}
                 {item.role === "assistant" && (
