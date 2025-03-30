@@ -171,6 +171,13 @@ const handleLogin = async () => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <View style={styles.headingContainer}>
+        <Text style={styles.heading}>EXPLORE</Text>
+        <Text style={styles.heading}>THE WORLD</Text>
+        <Text style={styles.tagline}>Your Journey, Your Way.</Text>
+      </View>
+
+
       <View style={styles.card}>
       <View style={[
         styles.inputContainer,
@@ -288,7 +295,7 @@ const styles = StyleSheet.create({
   },
   
   card: {
-    width: '85%',
+    width: '100%',
     backgroundColor: 'rgba(255,255,255,0.95)',
     padding: 24,
     borderRadius: 16,
@@ -297,12 +304,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 6,
     elevation: 5,
+    paddingBottom: 50
   },
   loginButton: {
     backgroundColor: '#263986',
     paddingVertical: 12,
     paddingHorizontal: 30,
-    borderRadius: 50, // ⬅️ pill shape
+    borderRadius: 50,
     marginTop: 10,
   },
   
@@ -315,13 +323,38 @@ const styles = StyleSheet.create({
   
   signupText: {
     color: '#263986',
-    fontSize: 14,
+    fontSize: 13,
     marginTop: 16,
     textAlign: 'center',
   },
+  container: {
+    flex: 1,
+    width: '100%',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingBottom: 40,
+  },
+  headingContainer: {
+    marginBottom: 24,
+    alignItems: 'center',
+  },
   
+  heading: {
+    color: '#fff',
+    fontSize: 40,
+    fontWeight: 'bold',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    textAlign: 'center',
+  },
   
-  
+  tagline: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '300',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
   
 });
 

@@ -184,11 +184,13 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    justifyContent: 'center',
+    width: '100%',
+    justifyContent: 'flex-end',
     alignItems: 'center',
+    paddingBottom: 40,
   },
   card: {
-    width: '85%',
+    width: '100%',
     backgroundColor: 'rgba(255,255,255,0.95)',
     padding: 24,
     borderRadius: 20,
@@ -198,6 +200,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 5,
     alignItems: 'center',
+    paddingBottom: 50,
   },
   inputContainer: {
     width: '100%',
@@ -228,16 +231,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     borderRadius: 50,
     marginTop: 10,
+    width: '100%'
   },
   signupButtonText: {
     color: '#fff',
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
-    textAlign: 'center',
+    textAlign: 'center',  
   },
   loginText: {
     color: '#263986',
-    fontSize: 12,
+    fontSize: 13,
     marginTop: 16,
     textAlign: 'center',
   },
