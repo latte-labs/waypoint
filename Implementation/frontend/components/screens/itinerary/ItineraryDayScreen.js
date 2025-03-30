@@ -10,7 +10,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import AddActivityModal from './AddActivityModal';
 
 
 const ItineraryDayScreen = () => {
@@ -94,6 +94,16 @@ const ItineraryDayScreen = () => {
       
         fetchActivities();
     }, [itineraryId, dayId, user]);
+
+    useEffect(() => {
+      if (modalVisible && !isEditing) {
+        const now = new Date();
+        const formattedTime = formatTime(now);
+        setSelectedTime(now);
+        setNewActivity((prev) => ({ ...prev, time: formattedTime }));
+      }
+    }, [modalVisible, isEditing]);
+    
           
     // ✅ Function to Handle Time Selection
     const handleTimeChange = (event, selected) => {
@@ -344,86 +354,20 @@ const ItineraryDayScreen = () => {
                 </TouchableOpacity>
 
                 {/* ✅ Modal for Adding Activity */}
-                <Modal visible={modalVisible} animationType="slide" transparent={true}>
-                    <View style={{
-                        flex: 1,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                    }}>
-                        <View style={{
-                            width: '80%',
-                            backgroundColor: '#fff',
-                            padding: 20,
-                            borderRadius: 10,
-                        }}>
-                            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>
-                                Add New Activity
-                            </Text>
+                <AddActivityModal
+                  visible={modalVisible}
+                  onClose={handleCloseModal}
+                  newActivity={newActivity}
+                  setNewActivity={setNewActivity}
+                  showTimePicker={showTimePicker}
+                  setShowTimePicker={setShowTimePicker}
+                  displayTime={displayTime}
+                  handleSaveActivity={handleSaveActivity}
+                  handleDone={handleDone}
+                  selectedTime={selectedTime}
+                  DateTimePicker={DateTimePicker}
+                />
 
-                            {/* ✅ Clickable Placeholder for Time Selection */}
-                            <TouchableOpacity 
-                                onPress={() => setShowTimePicker(true)} 
-                                style={styles.timeBox}
-                            >
-                                <Text style={styles.timeText}>{displayTime}</Text>
-                            </TouchableOpacity>
-
-                            {/* ✅ Modal with Time Picker & "Done" Button */}
-                            <Modal visible={showTimePicker} transparent={true} animationType="slide">
-                                <View style={styles.modalContainer}>
-                                    <View style={styles.modalContent}>
-                                        <DateTimePicker
-                                            value={selectedTime}
-                                            mode="time"
-                                            display="spinner" // ✅ Allows scrolling hours, minutes, AM/PM
-                                            onChange={handleTimeChange} // ✅ No longer closes automatically
-                                        />
-
-                                        {/* ✅ DONE Button to Close Time Picker */}
-                                        <TouchableOpacity onPress={handleDone} style={styles.doneButton}>
-                                            <Text style={styles.doneText}>DONE</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                </View>
-                            </Modal>
-
-                            <TextInput 
-                                placeholder="Activity Name"
-                                style={{ borderBottomWidth: 1, marginBottom: 10, padding: 5 }}
-                                value={newActivity.name}
-                                onChangeText={(text) => setNewActivity({ ...newActivity, name: text })}
-                            />
-                            <TextInput 
-                                placeholder="Location (optional)"
-                                style={{ borderBottomWidth: 1, marginBottom: 10, padding: 5 }}
-                                value={newActivity.location}
-                                onChangeText={(text) => setNewActivity({ ...newActivity, location: text })}
-                            />
-                            <TextInput 
-                                placeholder="Estimated Cost (optional)"
-                                style={{ borderBottomWidth: 1, marginBottom: 10, padding: 5 }}
-                                keyboardType="numeric"
-                                value={newActivity.estimated_cost}
-                                onChangeText={(text) => setNewActivity({ 
-                                    ...newActivity, 
-                                    estimated_cost: text !== "" ? parseFloat(text) : 0.0 
-                                })}                                
-                            />
-
-                            <TouchableOpacity 
-                                style={{ backgroundColor: '#007bff', padding: 10, borderRadius: 5, alignItems: 'center' }}
-                                onPress={handleSaveActivity}
-                            >
-                                <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Save</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity onPress={handleCloseModal}>
-                                <Text style={{ textAlign: 'center', color: '#007bff', marginTop: 10 }}>Cancel</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </Modal>
             </View>
         </SafeAreaWrapper>
     );
