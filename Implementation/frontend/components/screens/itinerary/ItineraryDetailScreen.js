@@ -574,7 +574,11 @@ const ItineraryDetailScreen = () => {
               setEditingDayId(null);
               setDayTitle('');
               setSelectedDate(getNextAvailableDate());
-              setModalVisible(true); 
+
+              setTimeout(() => {
+                setModalVisible(true);
+              }, 400); 
+
             },
           },
           { text: "Cancel", style: "cancel" }

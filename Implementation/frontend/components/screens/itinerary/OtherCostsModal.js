@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-    Modal, View, Text, TextInput, TouchableOpacity, FlatList, Alert 
+    Modal, View, Text, TextInput, TouchableOpacity, FlatList, Alert, KeyboardAvoidingView, ScrollView, Platform 
 } from 'react-native';
 import costTypes from '../../../src/data/costTypes.json';
 import { database } from '../../../firebase';
@@ -75,18 +75,27 @@ const OtherCostsModal = ({ visible, onClose, otherCosts, setOtherCosts, itinerar
                 alignItems: 'center',
                 backgroundColor: 'rgba(0,0,0,0.5)',
             }}>
-                <View style={{
-                    width: '90%',
-                    backgroundColor: '#fff',
-                    padding: 20,
-                    borderRadius: 20,
-                    shadowColor: '#000',
-                    shadowOpacity: 0.1,
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowRadius: 8,
-                    elevation: 4,
-                }}>
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={{
+                        width: '90%',
+                        maxHeight: '90%',
+                        backgroundColor: '#fff',
+                        borderRadius: 20,
+                        padding: 20,
+                        shadowColor: '#000',
+                        shadowOpacity: 0.1,
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowRadius: 8,
+                        elevation: 4,
+                    }}
+                >
+                    <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                     <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>Manage Other Costs</Text>
+                    {/* Label for Cost Type */}
+                    <Text style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 6, color: '#1d3a8a' }}>
+                    Select Cost Type
+                    </Text>
 
                     {/* Cost Type Selection */}
                     <FlatList
@@ -117,6 +126,13 @@ const OtherCostsModal = ({ visible, onClose, otherCosts, setOtherCosts, itinerar
                         showsHorizontalScrollIndicator={false}
                         style={{ marginBottom: 10 }}
                     />
+                    
+                    {/* Label for Subtype */}
+                    {selectedType && (
+                    <Text style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 6, color: '#1d3a8a' }}>
+                        Select Subtype
+                    </Text>
+                    )}
 
                     {/* Subtype Selection */}
                     {selectedType && (
@@ -260,7 +276,8 @@ const OtherCostsModal = ({ visible, onClose, otherCosts, setOtherCosts, itinerar
                         )}
                     </View>
 
-                </View>
+                </ScrollView>
+                </KeyboardAvoidingView>
             </View>
         </Modal>
     );
