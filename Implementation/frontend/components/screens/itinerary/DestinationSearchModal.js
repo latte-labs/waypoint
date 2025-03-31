@@ -135,6 +135,8 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     height: '90%',
   },
+  
+  
   title: {
     fontSize: 18,
     fontWeight: '600',

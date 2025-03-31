@@ -120,8 +120,8 @@ const OnboardingChecklist = ({ userId, onComplete, refreshTrigger }) => {
     { key: 'itinerary', label: 'Create Your First Itinerary', action: () => navigation.navigate('Itinerary') },
     { key: 'chatbot', label: 'Use Chatbot', action: () => navigation.navigate('Chatbot') },
     { key: 'weatherChecked', label: 'Check Weather Widget', action: () => null },
-    { key: 'checkedIn', label: 'Check In to a Place', action: () => navigation.navigate('Map') },
-    { key: 'achievementsViewed', label: 'View Achievements', action: () => navigation.navigate('AchievementsScreen') },
+    { key: 'checkedIn', label: 'Check In to a Place', action: () => navigation.navigate('CheckIn') },
+    { key: 'achievementsViewed', label: 'View Achievements', action: () => navigation.navigate('Badges') },
   ];
   
 

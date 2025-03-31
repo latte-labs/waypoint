@@ -159,9 +159,9 @@ const ItineraryFormScreen = () => {
       const requestData = {
         id: itineraryId,
         name,
-        destination: typeof destination === 'object'
-          ? `${destination.city}, ${destination.country}`
-          : destination,
+        destination: destination?.city && destination?.country
+        ? `${destination.city}, ${destination.country}`
+        : '',
         start_date: new Date(startDate).toISOString(),
         end_date: new Date(endDate).toISOString(),
         created_by: userId,
@@ -236,9 +236,9 @@ const ItineraryFormScreen = () => {
                   {destination ? `${destination.city}, ${destination.country}` : "Enter Destination"}
                 </Text>
               </Pressable>
-  
-              {destination !== '' && (
-                <TouchableOpacity style={styles.clearButton} onPress={() => setDestination('')}>
+
+              {destination && (
+                <TouchableOpacity style={styles.clearButton} onPress={() => setDestination(null)}>
                   <Text style={styles.clearButtonText}>✕</Text>
                 </TouchableOpacity>
               )}
@@ -284,14 +284,21 @@ const ItineraryFormScreen = () => {
           </ScrollView>
   
           {/* Destination Modal */}
-          <DestinationSearchModal
+          <Modal
             visible={showDestinationModal}
-            onClose={() => setShowDestinationModal(false)}
-            onSelectPlace={(selectedPlace) => {
-              setDestination(selectedPlace);
-              setShowDestinationModal(false);
-            }}
-          />
+            animationType="slide"
+            transparent={true}
+            onRequestClose={() => setShowDestinationModal(false)}
+          >
+            <DestinationSearchModal
+              visible={showDestinationModal}
+              onClose={() => setShowDestinationModal(false)}
+              onSelectPlace={(selectedPlace) => {
+                setDestination(selectedPlace);
+                setShowDestinationModal(false);
+              }}
+            />
+          </Modal>
         </KeyboardAvoidingView>
       </TouchableWithoutFeedback>
     </SafeAreaWrapper>
