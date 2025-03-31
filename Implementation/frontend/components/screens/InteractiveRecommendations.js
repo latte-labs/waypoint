@@ -14,6 +14,7 @@ import { database } from '../../firebase';
 import API_BASE_URL from '../../config';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width, height } = Dimensions.get('window');
 
@@ -43,7 +44,7 @@ const InteractiveRecommendations = () => {
   const scrollViewRef = useRef(null);
   const cardRefs = useRef([]);
   const [focusedPlace, setFocusedPlace] = useState(null); 
-
+  const insets = useSafeAreaInsets();
 
 
   useEffect(() => {
@@ -134,8 +135,8 @@ const InteractiveRecommendations = () => {
         </MapView>
 
         {/* Travel Style Filter */}
-        <SafeAreaView style={styles.filterBar}>
-          {['relaxation', 'adventure', 'cultural', 'foodie'].map((style) => (
+        <View style={[styles.filterBar, { top: insets.top + 10 }]}>
+        {['relaxation', 'adventure', 'cultural', 'foodie'].map((style) => (
             <TouchableOpacity
               key={style}
               style={[styles.filterButton, travelStyle === style && styles.selectedFilter]}
@@ -144,7 +145,7 @@ const InteractiveRecommendations = () => {
               <Text style={styles.filterText}>{capitalize(style)}</Text>
             </TouchableOpacity>
           ))}
-        </SafeAreaView>
+        </View>
 
         {/* Bottom Sheet */}
         <BottomSheet
@@ -246,7 +247,6 @@ const InteractiveRecommendations = () => {
 const styles = StyleSheet.create({
   filterBar: {
     position: 'absolute',
-    top: 60,
     alignSelf: 'center',
     flexDirection: 'row',
     paddingHorizontal: 10,
