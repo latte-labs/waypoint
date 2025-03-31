@@ -18,6 +18,7 @@ import MapCheckInScreen from '../screens/MapCheckInScreen';
 import AchievementsScreen from '../screens/AchievementsScreen';
 import ProfileStack from '../screens/ProfileStack';
 import AddFriendsScreen from '../screens/AddFriendsScreen';
+import PublicProfileScreen from '../screens/PublicProfileScreen';
 
 
 
@@ -47,6 +48,7 @@ function AppNavigator() {
         <Stack.Screen name='Badges' component={AchievementsScreen} />
         <Stack.Screen name='Profile' component={ProfileStack} />
         <Stack.Screen name='Friends' component={AddFriendsScreen} />
+        <Stack.Screen name='PublicProfile' component={PublicProfileScreen} />
       </Stack.Navigator>
 
       {/* Persistent Bottom Navigation */}

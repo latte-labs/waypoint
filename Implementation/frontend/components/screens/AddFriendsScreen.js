@@ -94,7 +94,12 @@ const AddFriendsScreen = () => {
             outgoingRef.on('value', handleOutgoing);
             return () => outgoingRef.off('value', handleOutgoing);
         }
-    }, [currentUser]);  /* NEW */
+    }, [currentUser]);
+
+    // Navigation
+    const handleViewProfile = (friend) => {
+        navigation.navigate('PublicProfile', { friendId: friend.friendId });
+    };
 
     // Search for a user by email
     const searchUserByEmail = async () => {
@@ -317,29 +322,32 @@ const AddFriendsScreen = () => {
                     data={friends}
                     keyExtractor={(item) => item.friendId}
                     renderItem={({ item }) => (
-                        <View style={{
+                        <TouchableOpacity 
+                        onPress={() => handleViewProfile(item)} 
+                        style={{
                             flexDirection: 'row',
                             justifyContent: 'space-between',
                             alignItems: 'center',
                             padding: 12,
                             borderBottomWidth: 1,
                             borderBottomColor: '#eee'
-                        }}>
-                            <Text style={{ fontSize: 16 }}>
-                                {item.friendName} ({item.friendEmail})
-                            </Text>
-                            <TouchableOpacity
-                                onPress={() => handleRemoveFriend(item.friendId)}
-                                style={{
-                                    backgroundColor: 'red',
-                                    paddingVertical: 6,
-                                    paddingHorizontal: 12,
-                                    borderRadius: 6,
-                                }}
-                            >
-                                <Text style={{ color: '#fff', fontSize: 14 }}>Remove</Text>
-                            </TouchableOpacity>
-                        </View>
+                        }}
+                    >
+                        <Text style={{ fontSize: 16 }}>
+                            {item.friendName} ({item.friendEmail})
+                        </Text>
+                        <TouchableOpacity
+                            onPress={() => handleRemoveFriend(item.friendId)}
+                            style={{
+                                backgroundColor: 'red',
+                                paddingVertical: 6,
+                                paddingHorizontal: 12,
+                                borderRadius: 6,
+                            }}
+                        >
+                            <Text style={{ color: '#fff', fontSize: 14 }}>Remove</Text>
+                        </TouchableOpacity>
+                    </TouchableOpacity> 
                     )}
                 />
             )}
