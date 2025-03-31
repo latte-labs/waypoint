@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, memo } from 'react';
 import { 
-  View, Text, ActivityIndicator, Alert, StyleSheet, TouchableOpacity, Modal, TextInput, Pressable, Platform, Image, ImageBackground, ScrollView 
+  View, Text, Alert, TouchableOpacity, Modal, TextInput, Pressable, Platform, Image, ImageBackground, ScrollView 
 } from 'react-native';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -8,23 +8,22 @@ import axios from 'axios';
 import API_BASE_URL from '../../../config';
 import SafeAreaWrapper from '../SafeAreaWrapper';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import DraggableFlatList from 'react-native-draggable-flatlist';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import { Calendar } from 'react-native-calendars';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { database, firebase } from '../../../firebase';
-// Using react-native-image-crop-picker for image selection and cropping
+import { database } from '../../../firebase';
 import ImagePicker from 'react-native-image-crop-picker';
 import { check, request, PERMISSIONS, RESULTS } from "react-native-permissions";
 import NotesModal from './NotesModal';
 import PlacesModal from './PlacesModal';
-import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import OtherCostsModal from './OtherCostsModal';
 import AddActivityModal from './AddActivityModal';
 import DaySelectionModal from './DaySelectionModal';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { format } from 'date-fns';
+import DayCard from './DayCard';
+import OverviewTab from './OverviewTab';
+import styles from '../../../styles/ItineraryDetailScreenStyle';
 
 const parseToSortableTime = (timeStr) => {
   const [time, modifier] = timeStr.split(" ");
@@ -35,59 +34,6 @@ const parseToSortableTime = (timeStr) => {
 
   return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
 };
-
-const DayCard = memo(({ item, onPress, onLongPress, onEdit, renderRightActions, onLayout }) => {
-  const totalEstimatedCost = item.activities?.reduce((sum, activity) => {
-    return sum + (activity.estimated_cost ? parseFloat(activity.estimated_cost) : 0);
-  }, 0) || 0;
-  return (
-    <Swipeable
-      overshootLeft={false}
-      overshootRight={false}
-      renderRightActions={() => renderRightActions(item.id)}
-    >
-      <TouchableOpacity 
-        onPress={() => onPress(item.id)} 
-        onLongPress={onLongPress} 
-        style={styles.dayCard}
-        onLayout={onLayout}
-      >
-        <Text style={styles.dayTitle}>{item.title}</Text>
-        <Text style={styles.dayDate}>
-          {new Date(item.date).toLocaleDateString('en-US', {
-            weekday: 'short',
-            month: 'short',
-            day: 'numeric',
-          })}
-        </Text>
-        <Text style={styles.totalCostText}>
-          Est. Cost: ${totalEstimatedCost.toFixed(2)}
-        </Text>
-
-        {item.activities && item.activities.length > 0 ? (
-          [...item.activities]
-            .sort((a, b) => parseToSortableTime(a.time).localeCompare(parseToSortableTime(b.time)))
-            .map(activity => (
-              <View key={activity.id} style={styles.activityCard}>
-                <Text style={styles.activityTime}>{activity.time}</Text>
-                <Text style={styles.activityName}>{activity.name}</Text>
-                <Text style={styles.activityLocation}>📍 {activity.location}</Text>
-              </View>
-            ))
-        ) : (
-          <Text style={styles.noActivities}>No activities planned.</Text>
-        )}
-
-        <TouchableOpacity 
-          style={styles.editIconContainer}
-          onPress={() => onEdit(item.id)}
-        >
-          <Icon name="pencil" size={16} color="#fff" />
-        </TouchableOpacity>
-      </TouchableOpacity>
-    </Swipeable>
-  );
-});
 
 const ItineraryDetailScreen = () => {
   const route = useRoute();
@@ -132,8 +78,6 @@ const ItineraryDetailScreen = () => {
     const start = new Date(itinerary.start_date);
     return start.toISOString().split('T')[0];
   };
-
-
   
   const formatTime = (date) => {
     let hours = date.getHours();
@@ -141,7 +85,7 @@ const ItineraryDetailScreen = () => {
     const ampm = hours >= 12 ? 'PM' : 'AM';
   
     hours = hours % 12;
-    hours = hours ? hours : 12; // the hour '0' should be '12'
+    hours = hours ? hours : 12; 
     
     const strHours = hours < 10 ? `0${hours}` : `${hours}`;
     const strMinutes = minutes < 10 ? `0${minutes}` : `${minutes}`;
@@ -149,10 +93,6 @@ const ItineraryDetailScreen = () => {
     return `${strHours}:${strMinutes} ${ampm}`;
   };
   
-  
-  
-
-
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -318,8 +258,6 @@ const ItineraryDetailScreen = () => {
 
         setTotalItineraryCost(totalCost);
       
-        
-        // If extra_data has image_url, extract it.
         if (response.data.extra_data && response.data.extra_data.image_url) {
           setImageUrl(response.data.extra_data.image_url);
         }
@@ -673,183 +611,7 @@ const ItineraryDetailScreen = () => {
       Alert.alert("Error", "Failed to save activity.");
     }
   };
-  
-  
-
-
-  // OverviewRoute: if an image exists, use ImageBackground with overlay and white text/icon.
-  const OverviewRoute = () => (
-    <ScrollView style={styles.scrollContainer}>
-        <View style={styles.overviewContainer}>
-          {loading ? (
-            <ActivityIndicator size="large" color="#007bff" />
-          ) : (
-            <>
-              {selectedImage || imageUrl ? (
-                <ImageBackground 
-                  source={{ uri: selectedImage || imageUrl }} 
-                  style={styles.overviewHeader} 
-                  imageStyle={styles.backgroundImage}
-                >
-                  <View style={styles.overlay} />
-                  <TouchableOpacity 
-                    style={styles.cameraButton} 
-                    onPress={selectImage}
-                    activeOpacity={0.7}
-                  >
-                    <Icon name="camera" size={16} color="#fff" />
-                  </TouchableOpacity>
-                  <View style={styles.headerContent}>
-                    <Text style={[styles.overviewTitle, { color: '#fff' }]}>{itinerary?.name}</Text>
-                    <View style={styles.destinationContainer}>
-                    <FontAwesome5 name="map-marker-alt" size={16} color="#fff" style={styles.locationIcon} />
-                    <Text style={[styles.overviewSubtitle, { color: '#fff' }]}>{itinerary?.destination}</Text>
-                    </View>
-
-                    {/* <Text style={[styles.overviewSubtitle, { color: '#fff' }]}>{itinerary?.destination}</Text> */}
-                    <Text style={[styles.overviewDates, { color: '#fff' }]}> 
-                      {new Date(itinerary.start_date).toLocaleDateString('en-US', {
-                        weekday: 'short',
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                      })} - {new Date(itinerary.end_date).toLocaleDateString('en-US', {
-                        weekday: 'short',
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}
-                    </Text>
-                  </View>
-                </ImageBackground>
-              ) : (
-                <View style={styles.overviewHeader}>
-                  <TouchableOpacity 
-                    style={styles.cameraButton} 
-                    onPress={selectImage}
-                    activeOpacity={0.7}
-                  >
-                    <Icon name="camera" size={24} color="#007bff" />
-                  </TouchableOpacity>
-                  <Text style={styles.overviewTitle}>{itinerary?.name}</Text>
-                  <Text style={styles.overviewSubtitle}>{itinerary?.destination}</Text>
-                  <Text style={styles.overviewDates}>
-                    {new Date(itinerary.start_date).toLocaleDateString('en-US', {
-                      weekday: 'short',
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric'
-                    })} - {new Date(itinerary.end_date).toLocaleDateString('en-US', {
-                      weekday: 'short',
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric'
-                    })}
-                  </Text>
-                </View>
-              )}
-
-              <View style={styles.overviewCollaborators}>
-              <View style={styles.collaboratorsHeader}>
-              <Text style={styles.overviewSectionTitle}>Collaborators</Text>
-                {user?.id === itinerary?.created_by && (
-                  <TouchableOpacity onPress={() => navigation.navigate('InviteCollaborators', { itinerary })}>
-                    <FontAwesome5 name="pencil-alt" size={14} color="#007bff" style={styles.collaboratorEditIcon} />
-                  </TouchableOpacity>
-                )}
-              </View>
-                {collaborators.length > 0 ? (
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.collaboratorsList}>
-                    {collaborators.map((collab) => (
-                      <View key={collab.userId} style={styles.collaboratorCard}>
-                        <Icon name="user" size={16} color="#007bff" style={styles.collaboratorIcon} />
-                        <Text style={styles.collaboratorName}>{collab.name}</Text>
-                      </View>
-                    ))}
-                  </ScrollView>
-                ) : (
-                  <Text style={styles.noCollaboratorsText}>No collaborators yet.</Text>
-                )}
-              </View>
-
-              <ScrollView 
-                  horizontal 
-                  showsHorizontalScrollIndicator={false} 
-                  contentContainerStyle={styles.budgetContainer}
-              >
-                  <View style={styles.squarePanel}>
-                      <Text style={styles.panelTitle}>Budget</Text>
-                      <Text style={styles.panelValue}>
-                          {itinerary?.budget ? `$${itinerary.budget.toLocaleString()}` : 'N/A'}
-                      </Text>
-                  </View>
-
-                  <View style={styles.squarePanel}>
-                      <Text style={styles.panelTitle}>Activities Cost</Text>
-                      <Text style={styles.panelValue}>
-                          {totalItineraryCost ? `$${totalItineraryCost.toLocaleString()}` : 'N/A'}
-                      </Text>
-                  </View>
-
-                  {/* ✅ "Other Costs" Panel */}
-                  <TouchableOpacity style={styles.squarePanel} onPress={() => setIsOtherCostsModalVisible(true)}>
-                    <Text style={styles.panelTitle}>Other Costs</Text>
-                    <Text style={styles.panelValue}>
-                        {otherCosts.length > 0 
-                            ? `$${otherCosts.reduce((sum, cost) => sum + parseFloat(cost.amount), 0).toLocaleString()}`
-                            : 'N/A'}
-                    </Text>
-                  </TouchableOpacity>
-              </ScrollView>
-
-              <View style={styles.notesContainer}>
-                <TouchableOpacity 
-                  style={styles.notesPanel} 
-                  onPress={() => setIsNotesModalVisible(true)}
-                  activeOpacity={1} 
-                >
-                  <Text style={styles.panelTitle}>Notes</Text>
-
-                  {/* Scrollable Preview Below Title */}
-                  <ScrollView 
-                    style={styles.notesScroll} 
-                    nestedScrollEnabled={true} 
-                    keyboardShouldPersistTaps="handled"
-                  >
-                    {notesPreview.trim() ? (
-                      <Text style={styles.notesPreview}>{notesPreview}</Text>
-                    ) : (
-                      <Text style={styles.notesPlaceholder}>Tap to add notes</Text>
-                    )}
-                  </ScrollView>
-
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.placesContainer}>
-                <TouchableOpacity style={styles.placesPanel} onPress={() => setIsPlacesModalVisible(true)}>
-                  {/* Title Positioned at the Top */}
-                  <Text style={styles.placesTitle}>Places to Visit</Text>
-
-                  {/* Content Wrapper to Ensure List is Below Title */}
-                  <View style={styles.placesList}>
-                    {placesList.length > 0 ? (
-                      placesList.map((place, index) => (
-                        <Text key={index} style={styles.placesItem}>• {place}</Text>
-                      ))
-                    ) : (
-                      <Text style={styles.placesPlaceholder}>Tap to add places</Text>
-                    )}
-                  </View>
-                </TouchableOpacity>
-              </View>
-
-            </>
-          )}
-        </View>
-      </ScrollView>
-  );
-        
+          
   const DaysRoute = () => (
     <View style={{ flex: 1, padding: 10 }}>
       {days.length === 0 ? (
@@ -905,9 +667,34 @@ const ItineraryDetailScreen = () => {
   );
   
   const renderScene = SceneMap({
-    overview: OverviewRoute,
+    overview: () => (
+      <OverviewTab 
+        itinerary={itinerary}
+        user={user}
+        imageUrl={imageUrl}
+        selectedImage={selectedImage}
+        selectImage={selectImage}
+        navigation={navigation}
+        collaborators={collaborators}
+        
+        // Panels
+        totalItineraryCost={totalItineraryCost}
+        otherCosts={otherCosts}
+        isOtherCostsModalVisible={isOtherCostsModalVisible}
+        setIsOtherCostsModalVisible={setIsOtherCostsModalVisible}
+        
+        notesPreview={notesPreview}
+        isNotesModalVisible={isNotesModalVisible}
+        setIsNotesModalVisible={setIsNotesModalVisible}
+        
+        placesList={placesList}
+        isPlacesModalVisible={isPlacesModalVisible}
+        setIsPlacesModalVisible={setIsPlacesModalVisible}
+      />
+    ),    
     days: DaysRoute,
   });
+  
 
   const handleDelete = async () => {
     Alert.alert(
@@ -1105,453 +892,5 @@ const ItineraryDetailScreen = () => {
     </GestureHandlerRootView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  headerContainer: {
-    padding: 10,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-    marginHorizontal: 10
-  },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },
-  detail: { fontSize: 14, marginBottom: 5, color: '#333' },
-  listContainer: { flex: 1, paddingHorizontal: 8 },
-  daysContainer: { flexGrow: 1, paddingBottom: 80 },
-  dayCard: { 
-    backgroundColor: '#f8f9fa',
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 15,
-    width: '100%',
-    alignSelf: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  dayTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
-  dayDate: { fontSize: 14, color: '#555', marginBottom: 10 },
-  deleteDayButton: {
-    backgroundColor: 'red',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 80,
-    borderRadius: 8,
-    marginLeft: 10,
-  },
-  totalCostText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#007bff',
-    marginBottom: 5,
-  },
-  deleteDayText: { color: '#fff', fontSize: 14, fontWeight: 'bold', textAlign: 'center' },
-  activityCard: {
-    backgroundColor: '#fff',
-    padding: 10,
-    borderRadius: 5,
-    marginVertical: 5,
-    borderLeftWidth: 5,
-    borderLeftColor: '#007bff',
-    width: '100%',
-    alignSelf: 'center',
-  },
-  activityTime: { fontSize: 14, fontWeight: 'bold', color: '#007bff' },
-  activityName: { fontSize: 16, fontWeight: '600', color: '#222' },
-  activityLocation: { fontSize: 14, color: '#555' },
-  noActivities: { fontSize: 14, color: '#888', fontStyle: 'italic' },
-  noDaysText: { fontSize: 14, textAlign: 'center', color: '#888' },
-  buttonContainer: { 
-    position: 'absolute', 
-    bottom: 0, 
-    left: 0, 
-    right: 0, 
-    flexDirection: 'row', 
-    padding: 10, 
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#ddd',
-  },
-  editButton: { 
-    flex: 0.8, 
-    padding: 15, 
-    backgroundColor: '#007bff', 
-    borderRadius: 8, 
-    alignItems: 'center', 
-    marginRight: 5,
-  },
-  deleteButton: {
-    flex: 0.2,
-    padding: 15,
-    backgroundColor: 'red',
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 5,
-  },
-  buttonText: { color: '#fff', fontSize: 14 },
-  addDayButton: {
-    backgroundColor: '#007bff',
-    paddingVertical: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  addDayButtonText: { color: '#fff', fontSize: 14 },
-  editDayButton: {
-    backgroundColor: 'green',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 80,
-    borderRadius: 8,
-    marginRight: 10,
-  },
-  editDayText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
-  inviteButton: {
-    flex: 0.6,
-    padding: 15,
-    backgroundColor: '#28a745',
-    borderRadius: 8,
-    alignItems: 'center',
-    marginRight: 5,
-  },
-  removeButton: {
-    flex: 0.8,
-    padding: 15,
-    backgroundColor: 'gray',
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 5,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: '80%',
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-    elevation: 5,
-  },
-  modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
-  input: {
-    width: '100%',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  datePicker: {
-    width: '100%',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 10,
-    alignItems: 'center',
-    backgroundColor: '#f9f9f9',
-  },
-  dateText: { fontSize: 16, color: '#333' },
-  calendarContainer: { marginBottom: 10 },
-  modalButton: {
-    width: '100%',
-    padding: 12,
-    backgroundColor: '#007bff',
-    borderRadius: 5,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  modalButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  editIconContainer: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: 'green',
-    borderRadius: 12,
-    padding: 4,
-    zIndex: 1,
-  },
-  overviewContainer: {
-    flex: 1,
-    backgroundColor: '#fff',
-    paddingBottom: 80,
-  },
-  // Fixed header size for a nice background look
-  overviewHeader: {
-    width: '100%',
-    height: 250, 
-    borderRadius: 0, 
-    padding: 0, 
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  backgroundImage: {
-    width: '100%',
-    height: '100%', 
-    resizeMode: 'cover', 
-  },
-  // Transparent black overlay
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-  },
-  // Header content container to ensure text/icon is above overlay
-  headerContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 2,
-  },
-  uploadIconContainer: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    padding: 10,
-  },
-  overviewTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#007bff',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  overviewSubtitle: {
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  destinationContainer: {
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-  },
-  locationIcon: {
-    marginRight: 5, 
-    alignSelf: 'center',
-    marginBottom: 8,
-  },  
-  overviewDates: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    fontStyle: 'italic',
-  },
-  overviewCollaborators: {
-    marginTop: 10,
-    paddingHorizontal: 10
-  },
-  collaboratorsHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  collaboratorEditContainer: {
-    flexDirection: 'row',
-    alignItems: 'center', 
-  },
-  overviewSectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#007bff',
-    marginBottom: 10,
-  },
-  collaboratorEditIcon: {
-    marginLeft: 10,
-    alignSelf: 'center',
-    marginBottom: 10
-  },
-
-  collaboratorsList: {
-    flexDirection: 'row', 
-    alignItems: 'center',
-  },
-  collaboratorCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#eef7ff',
-    padding: 8,
-    borderRadius: 5,
-    marginRight: 10,
-    marginBottom: 10,
-    minWidth: 100,
-    justifyContent: 'center'
-  },
-  collaboratorIcon: {
-    marginRight: 5,
-  },
-  collaboratorName: {
-    fontSize: 12,
-    color: '#007bff',
-  },
-  noCollaboratorsText: {
-    fontSize: 16,
-    color: '#888',
-    fontStyle: 'italic',
-    textAlign: 'center',
-  },
-  cameraButton: { 
-    position: 'absolute', 
-    top: 10, 
-    right: 10, 
-    padding: 10,
-    zIndex: 3 
-  },
-  imagePreview: { width: 200, height: 200, borderRadius: 10, marginBottom: 15 },
-  placeholderImage: {
-    width: 200, 
-    height: 200, 
-    backgroundColor: '#ddd', 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    borderRadius: 10
-  },
-
-  // BUDGET CONTAINER
-  budgetContainer: {
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    paddingVertical: 10,
-    marginLeft: 10
-  },
-  squarePanel: {
-    width: 175, // ✅ Ensures uniform size for horizontal scrolling
-    aspectRatio: 2.1,
-    backgroundColor: '#eef7ff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 10,
-    padding: 10,
-    marginRight: 10, // ✅ Adds space between panels
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  panelTitle: {
-    fontSize: 14,
-    color: '#007bff',
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  panelValue: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#222',
-  },
-
-  scrollContainer: {
-    flex: 1
-  },
-
-  notesContainer: {
-    marginTop: 20,
-    paddingHorizontal: 10,
-  },
-  
-  notesPanel: {
-    width: '100%',
-    backgroundColor: '#f9f9f9',
-    borderRadius: 10,
-    padding: 15,
-    paddingTop: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    alignItems: 'flex-start',
-    justifyContent: 'flex-start',
-    minHeight: 96, 
-    maxHeight: 200, 
-    overflow: 'hidden', 
-    position: 'relative', 
-  },
-  
-  notesScroll: {
-    flexGrow: 1, 
-    maxHeight: 180,
-    marginTop: 30,
-    width: '100%', 
-  },
-  
-  notesPreview: {
-    fontSize: 14,
-    color: '#555',
-    textAlign: 'left',
-    alignSelf: 'flex-start',
-  },
-  notesPlaceholder: {
-    fontSize: 14,
-    color: '#888',
-    fontStyle: 'italic',
-    textAlign: 'left',
-    alignSelf: 'flex-start',
-  },
-  
-  
-  placesContainer: {
-    marginTop: 20,
-    paddingHorizontal: 10,
-    minHeight: 96
-  },
-
-  placesPanel: {
-    width: '100%',
-    backgroundColor: '#f9f9f9',
-    borderRadius: 10,
-    padding: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    alignItems: 'flex-start',
-    justifyContent: 'flex-start',
-    minHeight: 50,
-    flexGrow: 1, 
-  },
-
-  placesTitle: {
-    fontSize: 16,
-    color: '#007bff',
-    marginBottom: 5,
-  },
-
-  placesList: {
-    width: '100%',
-    paddingTop: 5, 
-  },
-
-  placesItem: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 3, 
-  },
-
-  placesPlaceholder: {
-    fontSize: 14,
-    color: '#888',
-    fontStyle: 'italic',
-  },
-
-  
-      
-  
-});
 
 export default ItineraryDetailScreen;
