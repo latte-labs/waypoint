@@ -119,7 +119,12 @@ const AddFriendsScreen = () => {
                     Alert.alert("Invalid Request", "You cannot add yourself.");
                     setFoundUser(null);
                 } else {
-                    setFoundUser(searchedUser);
+                    if (friends.some(friend => friend.friendId === searchedUser.userId)) {
+                        Alert.alert("Already Friends", "This user is already in your friends list.");
+                        setFoundUser(null);
+                    } else {
+                        setFoundUser(searchedUser);
+                    }
                 }
             } else {
                 setFoundUser(null);
