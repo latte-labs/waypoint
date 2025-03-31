@@ -198,6 +198,16 @@ const AddFriendsScreen = () => {
             // Remove the friend request
             const requestRef = database().ref(`/friend_requests/${currentUser.id}/${request.id}`);
             await requestRef.remove();
+
+            // Remove the corresponding outgoing friend request from the sender's node 
+            const outgoingForSenderRef = database().ref(`/outgoing_friend_requests/${request.senderId}`);
+            const query = outgoingForSenderRef.orderByChild('receiverId').equalTo(currentUser.id);
+            const snapshot = await query.once('value');
+            if (snapshot.exists()) {
+                snapshot.forEach(childSnapshot => {
+                    childSnapshot.ref.remove();
+                });
+            }
             Alert.alert("Friend Added", `You are now friends with ${request.senderName}.`);
         } catch (error) {
             console.error("Error accepting friend request:", error);
@@ -412,7 +422,7 @@ const AddFriendsScreen = () => {
                 return renderSearchTab();
             case 'friends':
                 return renderFriendsTab();
-            case 'pending':         
+            case 'pending':
                 return renderPendingTab();
             case 'requests':
                 return renderRequestsTab();
