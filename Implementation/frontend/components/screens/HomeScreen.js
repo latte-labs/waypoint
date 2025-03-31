@@ -191,9 +191,12 @@ function HomeScreen() {
                         const response = await axios.get(`${API_BASE_URL}/itineraries/users/${user.id}/itineraries`);
                         if (response.status === 200) {
                             owned = response.data;
-                            await AsyncStorage.setItem('owned_itineraries', JSON.stringify(owned));
+                            await AsyncStorage.setItem('recent_itineraries', JSON.stringify(owned));
                         }
                     }
+                    // Add type "personal" to owned itineraries
+                    owned = owned.map(item => ({ ...item, type: 'personal' }));
+
                     //Fetch shared itineraries from backend API via Firebase
                     let shared = [];
                     const snapshotShared = await database().ref('/live_itineraries').once('value');
@@ -215,6 +218,8 @@ function HomeScreen() {
                             shared = (await Promise.all(itineraryPromises)).filter(Boolean);
                         }
                     }
+                    // Add type "shared" to shared itineraries
+                    shared = shared.map(item => ({ ...item, type: 'shared' }));
 
                     // CHANGED: Merge owned and shared itineraries into recentTrips
                     setRecentTrips([...owned, ...shared]);
@@ -332,7 +337,15 @@ function HomeScreen() {
                 <View style={HomeScreenStyles.tripOverlay} />
                 {/* Overlay container for text */}
                 <View style={{ justifyContent: 'center', alignItems: 'center', zIndex: 1 }}>
-                    <Text style={HomeScreenStyles.tripTitle}>{itinerary.name}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Text style={HomeScreenStyles.tripTitle}>{itinerary.name}</Text>
+                        <Icon
+                            name={itinerary.type === 'shared' ? 'users' : 'user'}
+                            size={16}
+                            color={itinerary.type === 'shared' ? '#28a745' : '#007bff'}
+                            style={{ marginLeft: 6 }}
+                        />
+                    </View>
                     <Text style={HomeScreenStyles.tripDate}>{formatDate(itinerary.start_date)}</Text>
                 </View>
             </TouchableOpacity>
