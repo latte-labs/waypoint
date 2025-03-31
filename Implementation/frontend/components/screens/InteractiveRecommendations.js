@@ -105,6 +105,7 @@ const InteractiveRecommendations = () => {
           ref={mapRef}
           style={StyleSheet.absoluteFillObject}
           region={region}
+          showsPointsOfInterest={false}
           onRegionChangeComplete={(newRegion) => setRegion(newRegion)}
         >
           {filteredPlaces.map((place, index) => {
@@ -160,6 +161,8 @@ const InteractiveRecommendations = () => {
                   {[
                     { label: 'Vancouver', coords: { latitude: 49.2827, longitude: -123.1207 } },
                     { label: 'Bali', coords: { latitude: -8.7031 , longitude: 115.1707 } },
+                    { label: 'San Francisco', coords: { latitude: 37.8018 , longitude: -122.4122 } },
+                    { label: 'Tokyo', coords: { latitude: 35.6796 , longitude: 139.7537 } },
                   ].map((city) => (
                     <TouchableOpacity
                       key={city.label}
@@ -229,7 +232,7 @@ const InteractiveRecommendations = () => {
           snapPoints={snapPoints}
           backgroundStyle={{ backgroundColor: '#fff' }}
           handleIndicatorStyle={{ backgroundColor: '#ccc' }}
-          onChange={(index) => setIsSheetExpanded(index === 2)} 
+          onChange={(index) => setIsSheetExpanded(index >= 2)} 
         >
 
           <BottomSheetScrollView
