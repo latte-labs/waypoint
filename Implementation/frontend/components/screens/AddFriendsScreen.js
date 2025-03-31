@@ -12,6 +12,7 @@ const AddFriendsScreen = () => {
     const [index, setIndex] = useState(0);
     const [routes] = useState([
         { key: 'search', title: 'Search' },
+        { key: 'pending', title: 'Pending' },
         { key: 'friends', title: 'Friends' },
         { key: 'requests', title: 'Requests' },
     ]);
@@ -24,8 +25,11 @@ const AddFriendsScreen = () => {
     // State for Friends List
     const [friends, setFriends] = useState([]);
 
-    // State for Pending Requests
+    // State for Incoming Requests
     const [pendingRequests, setPendingRequests] = useState([]);
+
+    // State for Outgoing Friend Requests
+    const [outgoingRequests, setOutgoingRequests] = useState([]);
 
     // Load current user from AsyncStorage on mount
     useEffect(() => {
@@ -56,7 +60,7 @@ const AddFriendsScreen = () => {
         }
     }, [currentUser]);
 
-    // Listen for pending friend requests (where current user is the invitee)
+    // Listen for incoming friend requests 
     useEffect(() => {
         if (currentUser) {
             const requestsRef = database().ref(`/friend_requests/${currentUser.id}`);
@@ -73,6 +77,24 @@ const AddFriendsScreen = () => {
             return () => requestsRef.off('value', handleRequests);
         }
     }, [currentUser]);
+
+    // Listen for outgoing friend requests 
+    useEffect(() => {
+        if (currentUser) {
+            const outgoingRef = database().ref(`/outgoing_friend_requests/${currentUser.id}`);
+            const handleOutgoing = (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    const outgoingArray = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+                    setOutgoingRequests(outgoingArray);
+                } else {
+                    setOutgoingRequests([]);
+                }
+            };
+            outgoingRef.on('value', handleOutgoing);
+            return () => outgoingRef.off('value', handleOutgoing);
+        }
+    }, [currentUser]);  /* NEW */
 
     // Search for a user by email
     const searchUserByEmail = async () => {
@@ -115,7 +137,7 @@ const AddFriendsScreen = () => {
         if (!foundUser) return;
         try {
             const requestRef = database().ref(`/friend_requests/${foundUser.userId}`);
-            /* NEW: Check if a friend request from the current user already exists */
+            /* Check if a friend request from the current user already exists */
             const snapshot = await requestRef.once('value');
             if (snapshot.exists()) {
                 const requests = snapshot.val();
@@ -132,6 +154,16 @@ const AddFriendsScreen = () => {
                 senderId: currentUser.id,
                 senderName: currentUser.name,
                 senderEmail: currentUser.email,
+                status: "pending",
+                timestamp: Date.now(),
+            });
+            // record the outgoing request for the current user
+            const outgoingRef = database().ref(`/outgoing_friend_requests/${currentUser.id}`);
+            const newOutgoingRef = outgoingRef.push();
+            await newOutgoingRef.set({
+                receiverId: foundUser.userId,
+                receiverName: foundUser.name,
+                receiverEmail: foundUser.email,
                 status: "pending",
                 timestamp: Date.now(),
             });
@@ -299,7 +331,33 @@ const AddFriendsScreen = () => {
         </View>
     );
 
-    // Requests Tab (Pending Friend Requests)
+    // Pending Tab (Outgoing Friend Requests)
+    const renderPendingTab = () => (
+        <View style={{ flex: 1, padding: 20 }}>
+            {outgoingRequests.length === 0 ? (
+                <Text style={{ textAlign: 'center', color: '#777', marginTop: 20 }}>No outgoing requests</Text>
+            ) : (
+                <FlatList
+                    data={outgoingRequests}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => (
+                        <View style={{
+                            padding: 12,
+                            borderBottomWidth: 1,
+                            borderBottomColor: '#eee'
+                        }}>
+                            <Text style={{ fontSize: 16 }}>
+                                {item.receiverName} ({item.receiverEmail})
+                            </Text>
+                            <Text style={{ fontSize: 12, color: '#777', marginTop: 5 }}>Pending</Text>
+                        </View>
+                    )}
+                />
+            )}
+        </View>
+    );
+
+    // Requests Tab (Incoming)
     const renderRequestsTab = () => (
         <View style={{ flex: 1, padding: 20 }}>
             {pendingRequests.length === 0 ? (
@@ -354,6 +412,8 @@ const AddFriendsScreen = () => {
                 return renderSearchTab();
             case 'friends':
                 return renderFriendsTab();
+            case 'pending':         
+                return renderPendingTab();
             case 'requests':
                 return renderRequestsTab();
             default:
