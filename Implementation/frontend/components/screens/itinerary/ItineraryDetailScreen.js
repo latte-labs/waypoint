@@ -391,12 +391,7 @@ const ItineraryDetailScreen = () => {
     }
   }, [days]);
 
-  const handleDeleteDay = useCallback(async (dayId) => {
-    if (!user || !user.id) {
-      Alert.alert("Error", "User not found. Please log in again.");
-      return;
-    }
-  
+  const handleDeleteDay = useCallback((dayId) => {
     Alert.alert(
       "Delete Day",
       "Are you sure you want to delete this day? All activities will be removed.",
@@ -407,7 +402,27 @@ const ItineraryDetailScreen = () => {
           style: "destructive",
           onPress: async () => {
             try {
-              const config = { headers: { "X-User-Id": user.id } };
+              // ✅ Make sure we get the user right before making the request
+              let currentUser = user;
+              if (!currentUser) {
+                const stored = await AsyncStorage.getItem('user');
+                if (stored) {
+                  currentUser = JSON.parse(stored);
+                  setUser(currentUser); // optional update
+                }
+              }
+  
+              if (!currentUser || !currentUser.id) {
+                Alert.alert("Error", "User not found. Please log in again.");
+                return;
+              }
+  
+              const config = {
+                headers: {
+                  "X-User-Id": currentUser.id,
+                  "Content-Type": "application/json",
+                },
+              };
               await axios.delete(`${API_BASE_URL}/itineraries/${itineraryId}/days/${dayId}`, config);
               fetchItineraryDetails();
             } catch (error) {
@@ -419,6 +434,7 @@ const ItineraryDetailScreen = () => {
       ]
     );
   }, [user, itineraryId]);
+    
   
   const handleAddDay = async () => {
     if (!dayTitle.trim()) {
@@ -485,7 +501,6 @@ const ItineraryDetailScreen = () => {
         config
       );
       if (response.status === 200) {
-        Alert.alert("Success", "Day updated successfully!");
         setModalVisible(false);
         setEditingDayId(null);
         fetchItineraryDetails();

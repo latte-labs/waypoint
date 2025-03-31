@@ -53,14 +53,14 @@ const LoginScreen = ({ navigation }) => {
   const storeUserSession = async (user) => {
     try {
         const userData = {
-            id: String(user.id),  // ✅ Ensure `user_id` is stored as a string (UUID)
+            id: String(user.id), 
             name: user.name,
             email: user.email,
             travel_style_id: user.travel_style_id,  
         };
 
         await AsyncStorage.setItem('user', JSON.stringify(userData));
-        await AsyncStorage.setItem('user_id', String(user.id));  // ✅ Store `user_id` separately for quick access
+        await AsyncStorage.setItem('user_id', String(user.id));
 
         console.log("✅ User session stored:", userData);
     } catch (error) {

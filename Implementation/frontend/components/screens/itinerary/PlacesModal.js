@@ -34,13 +34,21 @@ const PlacesModal = ({ visible, onClose, itineraryId, onPlaceTap }) => {
   }, [visible, itineraryId]);
   
   // Function to add a place
-  const addPlace = () => {
+  const addPlace = async () => {
     if (place.trim() === '') {
       Alert.alert("Empty Input", "Please enter a place name.");
       return;
     }
-    setPlacesList([...placesList, place]);
+  
+    const updatedPlaces = [...placesList, place];
+    setPlacesList(updatedPlaces);
     setPlace('');
+  
+    try {
+      await database().ref(`/live_itineraries/${itineraryId}/places`).set(updatedPlaces);
+    } catch (error) {
+      console.error('Error saving new place:', error);
+    }
   };
 
   // Function to delete a place from the list
@@ -111,11 +119,8 @@ const PlacesModal = ({ visible, onClose, itineraryId, onPlaceTap }) => {
 
           {/* Save & Cancel Buttons */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.saveButton} onPress={savePlaces}>
-              <Text style={styles.buttonText}>Save</Text>
-            </TouchableOpacity>
             <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-              <Text style={styles.buttonText}>Cancel</Text>
+              <Text style={styles.buttonText}>Close</Text>
             </TouchableOpacity>
           </View>
 
