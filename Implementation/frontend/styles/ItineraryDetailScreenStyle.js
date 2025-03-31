@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   editDayText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
-  noDaysText: { fontSize: 14, textAlign: 'center', color: '#888' },
+  noDaysText: { fontSize: 14, textAlign: 'center', color: '#888', marginTop: 20, marginBottom: 20, },
   buttonContainer: {
     position: 'absolute',
     bottom: 0,

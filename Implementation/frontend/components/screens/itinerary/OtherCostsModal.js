@@ -73,7 +73,7 @@ const OtherCostsModal = ({ visible, onClose, otherCosts, setOtherCosts, itinerar
                 flex: 1,
                 justifyContent: 'center',
                 alignItems: 'center',
-                backgroundColor: 'rgba(0,0,0,0.5)',
+                backgroundColor: 'rgba(0,0,0,0.5)'
             }}>
                 <KeyboardAvoidingView
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -230,7 +230,7 @@ const OtherCostsModal = ({ visible, onClose, otherCosts, setOtherCosts, itinerar
                     </View>
 
                     {/* Saved Costs Preview */}
-                    <View style={{ marginTop: 24, width: '100%' }}>
+                    <View style={{ marginTop: 24, width: '100%', marginBottom: 20, }}>
                         <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#1d3a8a', marginBottom: 10 }}>
                             Saved Other Costs
                         </Text>
