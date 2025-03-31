@@ -24,7 +24,17 @@ import OtherCostsModal from './OtherCostsModal';
 import AddActivityModal from './AddActivityModal';
 import DaySelectionModal from './DaySelectionModal';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { format } from 'date-fns';
 
+const parseToSortableTime = (timeStr) => {
+  const [time, modifier] = timeStr.split(" ");
+  let [hours, minutes] = time.split(":").map(Number);
+
+  if (modifier.toLowerCase() === "pm" && hours !== 12) hours += 12;
+  if (modifier.toLowerCase() === "am" && hours === 12) hours = 0;
+
+  return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+};
 
 const DayCard = memo(({ item, onPress, onLongPress, onEdit, renderRightActions, onLayout }) => {
   const totalEstimatedCost = item.activities?.reduce((sum, activity) => {
@@ -53,18 +63,21 @@ const DayCard = memo(({ item, onPress, onLongPress, onEdit, renderRightActions, 
         <Text style={styles.totalCostText}>
           Est. Cost: ${totalEstimatedCost.toFixed(2)}
         </Text>
-        
+
         {item.activities && item.activities.length > 0 ? (
-          item.activities.map(activity => (
-            <View key={activity.id} style={styles.activityCard}>
-              <Text style={styles.activityTime}>{activity.time}</Text>
-              <Text style={styles.activityName}>{activity.name}</Text>
-              <Text style={styles.activityLocation}>📍 {activity.location}</Text>
-            </View>
-          ))
+          [...item.activities]
+            .sort((a, b) => parseToSortableTime(a.time).localeCompare(parseToSortableTime(b.time)))
+            .map(activity => (
+              <View key={activity.id} style={styles.activityCard}>
+                <Text style={styles.activityTime}>{activity.time}</Text>
+                <Text style={styles.activityName}>{activity.name}</Text>
+                <Text style={styles.activityLocation}>📍 {activity.location}</Text>
+              </View>
+            ))
         ) : (
           <Text style={styles.noActivities}>No activities planned.</Text>
         )}
+
         <TouchableOpacity 
           style={styles.editIconContainer}
           onPress={() => onEdit(item.id)}
@@ -119,6 +132,9 @@ const ItineraryDetailScreen = () => {
     const start = new Date(itinerary.start_date);
     return start.toISOString().split('T')[0];
   };
+
+
+  
   const formatTime = (date) => {
     let hours = date.getHours();
     const minutes = date.getMinutes();
@@ -262,20 +278,14 @@ const ItineraryDetailScreen = () => {
   };
 
   const sortActivitiesByTime = (activities) => {
-    return activities.sort((a, b) => {
-      const parseTime = (time) => {
-        const match = time.match(/^(\d+):?(\d*)\s*(AM|PM)$/i);
-        if (!match) return 0;
-        let hours = parseInt(match[1], 10);
-        let minutes = match[2] ? parseInt(match[2], 10) : 0;
-        const period = match[3].toUpperCase();
-        if (period === "PM" && hours !== 12) hours += 12;
-        if (period === "AM" && hours === 12) hours = 0;
-        return hours * 60 + minutes;
-      };
-      return parseTime(a.time) - parseTime(b.time);
+    return [...activities].sort((a, b) => {
+      const aSortable = parseToSortableTime(a.time || "");
+      const bSortable = parseToSortableTime(b.time || "");
+      return aSortable.localeCompare(bSortable);
     });
   };
+  
+  
 
   const fetchItineraryDetails = async () => {
     try {
@@ -612,10 +622,23 @@ const ItineraryDetailScreen = () => {
   
   
   const handleDoneTimePicker = () => {
-    const formattedTime = selectedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    setNewActivity(prev => ({ ...prev, time: formattedTime }));
-    setShowTimePicker(false);  
+    const hours = selectedTime.getHours(); // 0-23
+    const minutes = selectedTime.getMinutes(); // 0-59
+  
+    const sortableTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`; // 24-hour
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const hour12 = hours % 12 === 0 ? 12 : hours % 12;
+    const formattedTime = `${hour12}:${minutes.toString().padStart(2, '0')} ${ampm}`; // 12-hour
+  
+    setNewActivity((prev) => ({
+      ...prev,
+      time: formattedTime,          // for UI
+    }));
+  
+    setShowTimePicker(false);
   };
+  
+  
   
   const handleSaveActivity = async () => {
     try {

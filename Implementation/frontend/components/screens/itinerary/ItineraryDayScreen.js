@@ -34,25 +34,25 @@ const ItineraryDayScreen = () => {
     const [editingActivity, setEditingActivity] = useState(null);    
     const [user, setUser] = useState(route.params?.user || null);
 
-    
-    const sortActivitiesByTime = (activities) => {
-        return activities.sort((a, b) => {
-            const parseTime = (time) => {
-                const match = time.match(/^(\d+):?(\d*)\s*(AM|PM)$/i);
-                if (!match) return 0; // If time is invalid, push it to the end
-                let hours = parseInt(match[1], 10);
-                let minutes = match[2] ? parseInt(match[2], 10) : 0;
-                const period = match[3].toUpperCase();
-    
-                if (period === "PM" && hours !== 12) hours += 12;
-                if (period === "AM" && hours === 12) hours = 0;
-    
-                return hours * 60 + minutes; // Convert to minutes for easy comparison
-            };
-    
-            return parseTime(a.time) - parseTime(b.time);
-        });
+    const parseToSortableTime = (timeStr) => {
+    const [time, modifier] = timeStr.split(" ");
+    let [hours, minutes] = time.split(":").map(Number);
+
+    if (modifier.toLowerCase() === "pm" && hours !== 12) hours += 12;
+    if (modifier.toLowerCase() === "am" && hours === 12) hours = 0;
+
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
     };
+
+  const sortActivitiesByTime = (activities) => {
+    return [...activities].sort((a, b) => {
+      const aSortable = parseToSortableTime(a.time || "");
+      const bSortable = parseToSortableTime(b.time || "");
+      return aSortable.localeCompare(bSortable);
+    });
+  };
+
+    
     useEffect(() => {
         if (!user) {
           const loadUser = async () => {
@@ -180,10 +180,22 @@ const ItineraryDayScreen = () => {
 
     // ✅ Function to Close Time Picker Only When "Done" is Pressed
     const handleDone = () => {
-      const formattedTime = selectedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      setNewActivity(prev => ({ ...prev, time: formattedTime }));
+      const hours = selectedTime.getHours(); // 0-23
+      const minutes = selectedTime.getMinutes(); // 0-59
+    
+      const sortableTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`; // 24-hour
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const hour12 = hours % 12 === 0 ? 12 : hours % 12;
+      const formattedTime = `${hour12}:${minutes.toString().padStart(2, '0')} ${ampm}`; // 12-hour
+    
+      setNewActivity((prev) => ({
+        ...prev,
+        time: formattedTime,          // for UI
+      }));
+    
       setShowTimePicker(false);
     };
+    
     
 
 
@@ -282,7 +294,8 @@ const ItineraryDayScreen = () => {
                       
                 
     const handleEditActivity = (activity) => {
-        setEditingActivity(activity); // ✅ Ensure activity ID is set
+        setEditingActivity(activity);
+
         setNewActivity({
           time: activity.time,
           name: activity.name,
@@ -290,6 +303,20 @@ const ItineraryDayScreen = () => {
           notes: activity.notes || '',
           estimated_cost: activity.estimated_cost ? activity.estimated_cost.toString() : '',
         });
+
+        if (activity.time) {
+          const [time, modifier] = activity.time.split(" ");
+          let [hours, minutes] = time.split(":").map(Number);
+        
+          if (modifier.toLowerCase() === "pm" && hours !== 12) hours += 12;
+          if (modifier.toLowerCase() === "am" && hours === 12) hours = 0;
+        
+          const restoredDate = new Date();
+          restoredDate.setHours(hours);
+          restoredDate.setMinutes(minutes);
+          setSelectedTime(restoredDate);
+        }
+              
         setIsEditing(true);
         setModalVisible(true);
     };
