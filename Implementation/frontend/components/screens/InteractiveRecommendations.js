@@ -40,11 +40,13 @@ const InteractiveRecommendations = () => {
   const [activeIndex, setActiveIndex] = useState(null);
 
 
-  const snapPoints = useMemo(() => [Platform.OS === 'ios' ? '11%' : '11%', '40%', '80%'], []);
+  const snapPoints = useMemo(() => [Platform.OS === 'ios' ? '11%' : '11%', '40%', '100%'], []);
   const scrollViewRef = useRef(null);
   const cardRefs = useRef([]);
   const [focusedPlace, setFocusedPlace] = useState(null); 
   const insets = useSafeAreaInsets();
+  const [isSheetExpanded, setIsSheetExpanded] = useState(false);
+
 
 
   useEffect(() => {
@@ -134,18 +136,21 @@ const InteractiveRecommendations = () => {
           })}
         </MapView>
 
-        {/* Travel Style Filter */}
-        <View style={[styles.filterBar, { top: insets.top + 10 }]}>
-        {['relaxation', 'adventure', 'cultural', 'foodie'].map((style) => (
-            <TouchableOpacity
-              key={style}
-              style={[styles.filterButton, travelStyle === style && styles.selectedFilter]}
-              onPress={() => setTravelStyle(style)}
-            >
-              <Text style={styles.filterText}>{capitalize(style)}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        {/* Travel Style Filter - Only show when BottomSheet is NOT fully expanded */}
+        {!isSheetExpanded && (
+          <View style={[styles.filterBar, { top: insets.top + 10 }]}>
+            {['relaxation', 'adventure', 'cultural', 'foodie'].map((style) => (
+              <TouchableOpacity
+                key={style}
+                style={[styles.filterButton, travelStyle === style && styles.selectedFilter]}
+                onPress={() => setTravelStyle(style)}
+              >
+                <Text style={styles.filterText}>{capitalize(style)}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
 
         {/* Bottom Sheet */}
         <BottomSheet
@@ -154,6 +159,7 @@ const InteractiveRecommendations = () => {
           snapPoints={snapPoints}
           backgroundStyle={{ backgroundColor: '#fff' }}
           handleIndicatorStyle={{ backgroundColor: '#ccc' }}
+          onChange={(index) => setIsSheetExpanded(index === 2)} 
         >
 
           <BottomSheetScrollView
