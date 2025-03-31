@@ -6,7 +6,13 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // Future: Enable Firebase when switching from AsyncStorage
 import { database } from '../../../firebase';
@@ -48,29 +54,40 @@ const NotesModal = ({ visible, onClose, itineraryId }) => {
       onRequestClose={onClose}
     >
       <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Notes</Text>
-  
-          {/* Expandable Writing Area */}
-          <TextInput
-            style={styles.textInput}
-            placeholder="Write your notes here..."
-            multiline
-            value={notes}
-            onChangeText={setNotes}
-            textAlignVertical="top"
-            scrollEnabled={true} // Allows scrolling inside input if needed
-          />
-  
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.saveButton} onPress={saveNotes}>
-              <Text style={styles.buttonText}>Save</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-              <Text style={styles.buttonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardAvoidingContainer}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.modalContainer}>
+              <ScrollView
+                contentContainerStyle={{ flexGrow: 1 }}
+                keyboardShouldPersistTaps="handled"
+              >
+                <Text style={styles.modalTitle}>Notes</Text>
+
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Write your notes here..."
+                  multiline
+                  value={notes}
+                  onChangeText={setNotes}
+                  textAlignVertical="top"
+                  scrollEnabled={true}
+                />
+
+                <View style={styles.buttonContainer}>
+                  <TouchableOpacity style={styles.saveButton} onPress={saveNotes}>
+                    <Text style={styles.buttonText}>Save</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+                    <Text style={styles.buttonText}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
+            </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
       </View>
     </Modal>
   );
@@ -135,6 +152,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  keyboardAvoidingContainer: {
+    flex: 1,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  
 });
 
 export default NotesModal;
