@@ -27,7 +27,7 @@ const trophyImages = {
 const specialBadges = {
     onboarding: require('../../assets/achievements/badge_onboarding_completed.png'),
 };
-  
+
 
 const ALL_CATEGORIES = ['park', 'bar', 'museum'];
 
@@ -110,17 +110,49 @@ const AchievementsScreen = () => {
             const onboardingComplete = onboardingSnap.val() === true;
             let specialBadge = null;
 
-            if (onboardingComplete === true) {
-                const onboardingBadge = {
+            // if (onboardingComplete === true) {
+            //     const onboardingBadge = {
+            //         category: 'onboarding',
+            //         count: 1,
+            //         badge: 'Completed',
+            //         isSpecial: true,
+            //     };
+            //     results.splice(3, 0, onboardingBadge);
+            //   }
+            if (onboardingComplete) {
+                results.push({
                     category: 'onboarding',
                     count: 1,
                     badge: 'Completed',
                     isSpecial: true,
-                };
-                results.splice(3, 0, onboardingBadge);
-              }
-              
-              setAchievements(results);              
+                });
+            }
+
+            // Now sort the results array:
+            results.sort((a, b) => {
+                // Always show the onboarding badge first.
+                if (a.category === 'onboarding' && b.category !== 'onboarding') return -1;
+                if (b.category === 'onboarding' && a.category !== 'onboarding') return 1;
+
+                // For non-onboarding achievements, consider complete if count >= 5.
+                const aComplete = a.category === 'onboarding' || a.count >= 5;
+                const bComplete = b.category === 'onboarding' || b.count >= 5;
+                if (aComplete && !bComplete) return -1;
+                if (!aComplete && bComplete) return 1;
+
+                // Prioritize badge levels (Completed > Gold > Silver > Bronze)
+                const badgePriority = { 'Completed': 4, 'Gold': 3, 'Silver': 2, 'Bronze': 1 };
+                const aPriority = badgePriority[a.badge] || 0;
+                const bPriority = badgePriority[b.badge] || 0;
+                if (aPriority !== bPriority) {
+                    return bPriority - aPriority;
+                }
+
+                // If same level, sort by check-in count (higher count first)
+                return b.count - a.count;
+            });
+
+            setAchievements(results);
         } catch (err) {
             console.error("Error fetching achievements:", err);
             setError("Failed to fetch achievements.");
@@ -149,7 +181,7 @@ const AchievementsScreen = () => {
     const openModal = async (achievement) => {
         setSelectedAchievement(achievement);
         setModalVisible(true);
-    
+
         try {
             const storedUser = await AsyncStorage.getItem('user');
             if (storedUser) {
@@ -161,7 +193,7 @@ const AchievementsScreen = () => {
             console.error("Error logging viewed achievement:", err);
         }
     };
-    
+
 
     const closeModal = () => {
         setModalVisible(false);
@@ -172,36 +204,36 @@ const AchievementsScreen = () => {
     const renderAchievementItem = ({ item }) => {
         const isSpecial = item.category === 'onboarding';
         const trophyImage = isSpecial
-          ? specialBadges.onboarding
-          : getBadgeImage(item.category, item.badge);
-      
+            ? specialBadges.onboarding
+            : getBadgeImage(item.category, item.badge);
+
         return (
-          <TouchableOpacity style={styles.gridItem} onPress={() => openModal(item)}>
-            <Image
-              source={trophyImage}
-              style={[
-                styles.badgeImage,
-                !isSpecial && item.count < 5 && { opacity: 0.3 },
-              ]}
-            />
-            {!isSpecial && (
-              <Progress.Bar
-                progress={getProgress(item.count)}
-                width={null}
-                height={10}
-                borderWidth={0}
-                unfilledColor="#EEE"
-                color="#1E3A8A"
-                style={styles.gridProgressBar}
-              />
-            )}
-            {isSpecial && (
-              <Text style={{ marginTop: 4, fontSize: 12, color: '#4B5563' }}>Onboarding</Text>
-            )}
-          </TouchableOpacity>
+            <TouchableOpacity style={styles.gridItem} onPress={() => openModal(item)}>
+                <Image
+                    source={trophyImage}
+                    style={[
+                        styles.badgeImage,
+                        !isSpecial && item.count < 5 && { opacity: 0.3 },
+                    ]}
+                />
+                {!isSpecial && (
+                    <Progress.Bar
+                        progress={getProgress(item.count)}
+                        width={null}
+                        height={10}
+                        borderWidth={0}
+                        unfilledColor="#EEE"
+                        color="#1E3A8A"
+                        style={styles.gridProgressBar}
+                    />
+                )}
+                {isSpecial && (
+                    <Text style={{ marginTop: 4, fontSize: 12, color: '#4B5563' }}>Onboarding</Text>
+                )}
+            </TouchableOpacity>
         );
-      };
-            
+    };
+
     return (
         <SafeAreaWrapper>
             <View style={styles.container}>
@@ -213,10 +245,10 @@ const AchievementsScreen = () => {
                 <FlatList
                     data={achievements}
                     keyExtractor={(item) => item.category}
-                    numColumns={3} 
+                    numColumns={3}
                     renderItem={renderAchievementItem}
                     columnWrapperStyle={styles.columnWrapper}
-                    contentContainerStyle={styles.gridContainer}                    
+                    contentContainerStyle={styles.gridContainer}
                 />
 
 
@@ -238,61 +270,61 @@ const AchievementsScreen = () => {
                             {selectedAchievement && (
                                 selectedAchievement.category === 'onboarding' ? (
                                     <>
-                                    <Image
-                                        source={specialBadges.onboarding}
-                                        style={styles.modalTrophyImage}
-                                    />
-                                    <Text style={styles.modalCategoryText}>Onboarding Completed</Text>
-                                    <Text style={styles.modalDescription}>
-                                        You completed all checklist tasks and earned this badge!
-                                    </Text>
+                                        <Image
+                                            source={specialBadges.onboarding}
+                                            style={styles.modalTrophyImage}
+                                        />
+                                        <Text style={styles.modalCategoryText}>Onboarding Completed</Text>
+                                        <Text style={styles.modalDescription}>
+                                            You completed all checklist tasks and earned this badge!
+                                        </Text>
                                     </>
                                 ) : (
                                     <>
-                                    <Image
-                                        source={getBadgeImage(selectedAchievement.category, selectedAchievement.badge)}
-                                        style={styles.modalTrophyImage}
-                                    />
-                                    <Text style={styles.modalCategoryText}>
-                                        {selectedAchievement.category.toUpperCase()}
-                                    </Text>
-
-                                    <View style={{ marginHorizontal: 20, width: [progressBarWidth], alignItems: 'center' }}>
-                                        <Progress.Bar
-                                        progress={getProgress(selectedAchievement.count)}
-                                        width={progressBarWidth}
-                                        borderWidth={0}
-                                        borderRadius={0}
-                                        unfilledColor="#EEE"
-                                        color="#1E3A8A"
-                                        style={styles.modalProgressBar}
-                                        />
-                                    </View>
-                                    <Text style={styles.modalProgressText}>
-                                        {getProgressText(selectedAchievement.count)} to next tier
-                                    </Text>
-
-                                    <Text style={styles.modalDescription}>
-                                        Check in at a {selectedAchievement.category} to earn this achievement. 5 = Bronze, 10 = Silver, 20 = Gold.
-                                    </Text>
-
-                                    <View style={styles.modalTiersRow}>
                                         <Image
-                                        source={getBadgeImage(selectedAchievement.category, 'Bronze')}
-                                        style={styles.modalTierIcon}
+                                            source={getBadgeImage(selectedAchievement.category, selectedAchievement.badge)}
+                                            style={styles.modalTrophyImage}
                                         />
-                                        <Image
-                                        source={getBadgeImage(selectedAchievement.category, 'Silver')}
-                                        style={styles.modalTierIcon}
-                                        />
-                                        <Image
-                                        source={getBadgeImage(selectedAchievement.category, 'Gold')}
-                                        style={styles.modalTierIcon}
-                                        />
-                                    </View>
+                                        <Text style={styles.modalCategoryText}>
+                                            {selectedAchievement.category.toUpperCase()}
+                                        </Text>
+
+                                        <View style={{ marginHorizontal: 20, width: [progressBarWidth], alignItems: 'center' }}>
+                                            <Progress.Bar
+                                                progress={getProgress(selectedAchievement.count)}
+                                                width={progressBarWidth}
+                                                borderWidth={0}
+                                                borderRadius={0}
+                                                unfilledColor="#EEE"
+                                                color="#1E3A8A"
+                                                style={styles.modalProgressBar}
+                                            />
+                                        </View>
+                                        <Text style={styles.modalProgressText}>
+                                            {getProgressText(selectedAchievement.count)} to next tier
+                                        </Text>
+
+                                        <Text style={styles.modalDescription}>
+                                            Check in at a {selectedAchievement.category} to earn this achievement. 5 = Bronze, 10 = Silver, 20 = Gold.
+                                        </Text>
+
+                                        <View style={styles.modalTiersRow}>
+                                            <Image
+                                                source={getBadgeImage(selectedAchievement.category, 'Bronze')}
+                                                style={styles.modalTierIcon}
+                                            />
+                                            <Image
+                                                source={getBadgeImage(selectedAchievement.category, 'Silver')}
+                                                style={styles.modalTierIcon}
+                                            />
+                                            <Image
+                                                source={getBadgeImage(selectedAchievement.category, 'Gold')}
+                                                style={styles.modalTierIcon}
+                                            />
+                                        </View>
                                     </>
                                 )
-                                )}
+                            )}
                         </View>
                     </View>
                 </Modal>
