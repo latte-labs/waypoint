@@ -14,6 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { database } from '../../firebase';
 import API_BASE_URL from '../../config';
 import styles from '../../styles/CheckInScreenStyles';
+import Icon from 'react-native-vector-icons/FontAwesome'
 
 // calculate distance (in meters) between two coordinates
 function getDistance(lat1, lon1, lat2, lon2) {
@@ -280,7 +281,8 @@ const MapCheckInScreen = () => {
         style={styles.refreshButton}
         onPress={fetchUserLocationAndPlaces}
       >
-        <Text style={styles.refreshButtonText}>Refresh</Text>
+       
+        <Icon name="refresh" size={24} color="#1E3A8A" />
       </TouchableOpacity>
     </View>
   );

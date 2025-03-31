@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
   },
   refreshButton: {
     position: 'absolute',
-    bottom: 120,
+    top: 75,
     right: 20,
     backgroundColor: '#D6E4FF',
     paddingVertical: 10,
@@ -72,7 +72,6 @@ const styles = StyleSheet.create({
   },
   refreshButtonText: {
     color: '#1E3A8A',
-    fontWeight: 'bold',
   },
 });
 
