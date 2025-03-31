@@ -46,6 +46,10 @@ const InteractiveRecommendations = () => {
   const [focusedPlace, setFocusedPlace] = useState(null); 
   const insets = useSafeAreaInsets();
   const [isSheetExpanded, setIsSheetExpanded] = useState(false);
+  const [toggleVisible, setToggleVisible] = useState(false);
+  const [selectedCity, setSelectedCity] = useState('Vancouver');
+  const [cityToggleVisible, setCityToggleVisible] = useState(false);
+  
 
 
 
@@ -138,18 +142,84 @@ const InteractiveRecommendations = () => {
 
         {/* Travel Style Filter - Only show when BottomSheet is NOT fully expanded */}
         {!isSheetExpanded && (
-          <View style={[styles.filterBar, { top: insets.top + 10 }]}>
-            {['relaxation', 'adventure', 'cultural', 'foodie'].map((style) => (
+          <View style={[styles.togglesContainer, { top: insets.top + 10 }]}>
+            {/* City Toggle */}
+            <View style={styles.dropdownWrapper}>
               <TouchableOpacity
-                key={style}
-                style={[styles.filterButton, travelStyle === style && styles.selectedFilter]}
-                onPress={() => setTravelStyle(style)}
+                onPress={() => setCityToggleVisible(prev => !prev)}
+                style={styles.dropdownHeader}
               >
-                <Text style={styles.filterText}>{capitalize(style)}</Text>
+            <View style={styles.dropdownHeaderContent}>
+              <Text style={styles.dropdownHeaderText}>City: {selectedCity}</Text>
+              <Icon name="chevron-down" size={12} color="#fff" style={styles.dropdownIcon} />
+            </View>
               </TouchableOpacity>
-            ))}
-          </View>
-        )}
+
+              {cityToggleVisible && (
+                <View style={styles.dropdownOptions}>
+                  {[
+                    { label: 'Vancouver', coords: { latitude: 49.2827, longitude: -123.1207 } },
+                    { label: 'Bali', coords: { latitude: -8.7031 , longitude: 115.1707 } },
+                  ].map((city) => (
+                    <TouchableOpacity
+                      key={city.label}
+                      style={[
+                        styles.dropdownOption,
+                        selectedCity === city.label && styles.selectedDropdownOption
+                      ]}
+                      onPress={() => {
+                        setSelectedCity(city.label);
+                        setRegion({
+                          ...city.coords,
+                          latitudeDelta: 0.05,
+                          longitudeDelta: 0.05
+                        });
+                        setCityToggleVisible(false);
+                      }}
+                    >
+                      <Text style={styles.dropdownOptionText}>{city.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+
+            {/* Style Toggle */}
+            <View style={styles.dropdownWrapper}>
+              <TouchableOpacity
+                onPress={() => setToggleVisible(prev => !prev)}
+                style={styles.dropdownHeader}
+              >
+                <View style={styles.dropdownHeaderContent}>
+                  <Text style={styles.dropdownHeaderText}>Style: {capitalize(travelStyle)}</Text>
+                  <Icon name="chevron-down" size={12} color="#fff" style={styles.dropdownIcon} />
+                </View>
+              </TouchableOpacity>
+
+              {toggleVisible && (
+                <View style={styles.dropdownOptions}>
+                  {['relaxation', 'adventure', 'cultural', 'foodie'].map((style) => (
+                    <TouchableOpacity
+                      key={style}
+                      style={[
+                        styles.dropdownOption,
+                        travelStyle === style && styles.selectedDropdownOption
+                      ]}
+                      onPress={() => {
+                        setTravelStyle(style);
+                        setToggleVisible(false);
+                      }}
+                    >
+                      <Text style={styles.dropdownOptionText}>{capitalize(style)}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+        </View>
+      )}
+
+
 
 
         {/* Bottom Sheet */}
@@ -246,6 +316,7 @@ const InteractiveRecommendations = () => {
             setSelectedPlace(null);
           }}
         />
+
       </View>
   );
 };
@@ -336,6 +407,64 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   
+  togglesContainer: {
+    position: 'absolute',
+    top: 0, // remove `alignSelf: 'center'` to use flex centering instead
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    gap: 10,
+    zIndex: 100,
+  },
+  
+  dropdownWrapper: {
+    width: 160
+  },
+  dropdownHeader: {
+    backgroundColor: '#1E3A8A',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  dropdownHeaderText: {
+    color: '#fff',
+    textAlign: 'center',
+  },
+  
+  dropdownOptions: {
+    marginTop: 6,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
+    overflow: 'hidden',
+  },
+  dropdownOption: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  selectedDropdownOption: {
+    backgroundColor: '#eaf0ff',
+  },
+  dropdownOptionText: {
+    textAlign: 'center',
+    color: '#333',
+  },
+  dropdownHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  
+  dropdownIcon: {
+    marginLeft: 4,
+    marginTop: 1, // fine-tune vertical alignment if needed
+  },
   
   
   
