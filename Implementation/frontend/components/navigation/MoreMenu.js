@@ -101,6 +101,13 @@ const MoreMenu = ({ closeMenu }) => {
                 </View>
             </TouchableOpacity>
 
+            <TouchableOpacity onPress={() => handleNavigate("Friends")} style={navigationStyles.moreMenuItem}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Icon name="trophy" size={20} color="#1E3A8A" style={{ marginRight: 12 }} />
+                    <Text style={navigationStyles.moreMenuText}>Friends</Text>
+                </View>
+            </TouchableOpacity>
+
             <View style={{ marginTop: 40 }}>
                 <Button title="Log Out" onPress={handleLogout} />
             </View>
