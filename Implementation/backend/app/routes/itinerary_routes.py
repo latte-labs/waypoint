@@ -230,6 +230,16 @@ def get_user_itineraries(user_id: str, db: Session = Depends(get_db)):
 
     if not itineraries:
         return []  # ✅ Instead of 404, return an empty list if no itineraries exist.
+    
+    for itinerary in itineraries:
+        if itinerary.extra_data and "image_url" in itinerary.extra_data:
+            key = extract_key(itinerary.extra_data["image_url"])
+            presigned_url = s3_client.generate_presigned_url(
+                "get_object",
+                Params={"Bucket": AWS_BUCKET_NAME, "Key": key},
+                ExpiresIn=3600  # URL valid for 1 hour
+            )
+            itinerary.extra_data["image_url"] = presigned_url
 
     return itineraries
 

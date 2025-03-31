@@ -45,7 +45,6 @@ function HomeScreen() {
     const goToChatbot = () => {
         navigation.navigate('Chatbot');
     };
-
     const FAB_SIZE = 60; // width/height of your floating button
     const PADDING = 20;
     const translationX = useSharedValue(width - FAB_SIZE - PADDING);
@@ -153,55 +152,87 @@ function HomeScreen() {
 
     useFocusEffect(
         React.useCallback(() => {
-          const fetchData = async () => {
-            try {
-              const storedUser = await AsyncStorage.getItem('user');
-              if (!storedUser) return;
-      
-              const user = JSON.parse(storedUser);
-              setUserId(String(user.id));
-      
-              // ✅ Fetch onboarding status
-              const onboardingSnap = await database()
-                .ref(`/users/${user.id}/onboarding/onboarding_complete`)
-                .once('value');
-              setOnboardingComplete(onboardingSnap.val() === true);
-      
-              // ✅ Fetch travel style
-              const userRef = database().ref(`/users/${user.id}`);
-              const snapshot = await userRef.once('value');
-              const firebaseTravelStyleId =
-                snapshot.val()?.travel_style_id ?? user.travel_style_id;
-              setShowQuizPrompt(firebaseTravelStyleId === 4);
-              user.travel_style_id = firebaseTravelStyleId;
-              await AsyncStorage.setItem('user', JSON.stringify(user));
-      
-              // ✅ Fetch saved weather
-              const savedWeather = await AsyncStorage.getItem('last_searched_weather');
-              if (savedWeather) {
-                const { lat, lng } = JSON.parse(savedWeather);
-                fetchWeather(lat, lng);
-              }
-              // ✅ Load recent itineraries from AsyncStorage
-              const storedRecentTrips = await AsyncStorage.getItem('recent_itineraries');
-              if (storedRecentTrips) {
-                setRecentTrips(JSON.parse(storedRecentTrips));
-              }
-      
-            } catch (error) {
-              console.error('❌ Error during home screen data load:', error);
-            } finally {
-              setLoadingItineraries(false);
-            }
-          };
-      
-          setLoadingItineraries(true);
-          fetchData();
-        }, [])
-      );
-      
+            const fetchData = async () => {
+                try {
+                    const storedUser = await AsyncStorage.getItem('user');
+                    if (!storedUser) return;
 
-    
+                    const user = JSON.parse(storedUser);
+                    setUserId(String(user.id));
+
+                    // ✅ Fetch onboarding status
+                    const onboardingSnap = await database()
+                        .ref(`/users/${user.id}/onboarding/onboarding_complete`)
+                        .once('value');
+                    setOnboardingComplete(onboardingSnap.val() === true);
+
+                    // ✅ Fetch travel style
+                    const userRef = database().ref(`/users/${user.id}`);
+                    const snapshot = await userRef.once('value');
+                    const firebaseTravelStyleId =
+                        snapshot.val()?.travel_style_id ?? user.travel_style_id;
+                    setShowQuizPrompt(firebaseTravelStyleId === 4);
+                    user.travel_style_id = firebaseTravelStyleId;
+                    await AsyncStorage.setItem('user', JSON.stringify(user));
+
+                    // ✅ Fetch saved weather
+                    const savedWeather = await AsyncStorage.getItem('last_searched_weather');
+                    if (savedWeather) {
+                        const { lat, lng } = JSON.parse(savedWeather);
+                        fetchWeather(lat, lng);
+                    }
+                    // ✅ Load owned itineraries from AsyncStorage + shared itineraries from backend API
+                    let owned = [];
+                    const storedOwnedTrips = await AsyncStorage.getItem('recent_itineraries');
+                    if (storedOwnedTrips) {
+                        owned = JSON.parse(storedOwnedTrips);
+                    } else {
+                        // Fallback: Fetch from backend if not in AsyncStorage
+                        const response = await axios.get(`${API_BASE_URL}/itineraries/users/${user.id}/itineraries`);
+                        if (response.status === 200) {
+                            owned = response.data;
+                            await AsyncStorage.setItem('owned_itineraries', JSON.stringify(owned));
+                        }
+                    }
+                    //Fetch shared itineraries from backend API via Firebase
+                    let shared = [];
+                    const snapshotShared = await database().ref('/live_itineraries').once('value');
+                    if (snapshotShared.exists()) {
+                        const data = snapshotShared.val();
+                        const itineraryIds = Object.keys(data).filter(itineraryId =>
+                            data[itineraryId].collaborators && data[itineraryId].collaborators[user.id]
+                        );
+                        if (itineraryIds.length > 0) {
+                            const itineraryPromises = itineraryIds.map(async (itineraryId) => {
+                                try {
+                                    const res = await axios.get(`${API_BASE_URL}/itineraries/${itineraryId}`);
+                                    return res.status === 200 ? res.data : null;
+                                } catch (error) {
+                                    console.error(`Error fetching shared itinerary ${itineraryId}:`, error);
+                                    return null;
+                                }
+                            });
+                            shared = (await Promise.all(itineraryPromises)).filter(Boolean);
+                        }
+                    }
+
+                    // CHANGED: Merge owned and shared itineraries into recentTrips
+                    setRecentTrips([...owned, ...shared]);
+
+                } catch (error) {
+                    console.error('❌ Error during home screen data load:', error);
+                } finally {
+                    setLoadingItineraries(false);
+                }
+            };
+
+            setLoadingItineraries(true);
+            fetchData();
+        }, [])
+    );
+
+
+
 
     const [itineraries, setItineraries] = useState([]);
     const [loadingItineraries, setLoadingItineraries] = useState(false);
@@ -232,7 +263,7 @@ function HomeScreen() {
     };
 
     const handleLocationGranted = (coords) => {
-        setLocation(coords); 
+        setLocation(coords);
         setHasLocationPermission(true);
     };
 
@@ -267,16 +298,16 @@ function HomeScreen() {
 
     const renderEmptyItineraryCard = () => (
         <View style={HomeScreenStyles.tripCard}>
-          <Image
-            source={require('../../assets/images/travelling_placeholder.jpg')}
-            style={HomeScreenStyles.tripImage}
-          />
-          <View style={HomeScreenStyles.tripOverlay} />
-          <View style={{ justifyContent: 'center', alignItems: 'center', zIndex: 1 }}>
-            <Text style={HomeScreenStyles.tripTitle}>You have no itineraries yet.</Text>
-          </View>
+            <Image
+                source={require('../../assets/images/travelling_placeholder.jpg')}
+                style={HomeScreenStyles.tripImage}
+            />
+            <View style={HomeScreenStyles.tripOverlay} />
+            <View style={{ justifyContent: 'center', alignItems: 'center', zIndex: 1 }}>
+                <Text style={HomeScreenStyles.tripTitle}>You have no itineraries yet.</Text>
+            </View>
         </View>
-      );
+    );
 
     // Render a card for each itinerary
     const renderItineraryCard = (itinerary) => {
@@ -363,13 +394,13 @@ function HomeScreen() {
 
                 {/* Onboarding Checklist */}
                 {!onboardingComplete && (
-                <View style={HomeScreenStyles.checklistCard}>
-                <OnboardingChecklist
-                    userId={userId}
-                    onComplete={() => setOnboardingComplete(true)}
-                    refreshTrigger={checklistRefreshTrigger}
-                />
-                </View>
+                    <View style={HomeScreenStyles.checklistCard}>
+                        <OnboardingChecklist
+                            userId={userId}
+                            onComplete={() => setOnboardingComplete(true)}
+                            refreshTrigger={checklistRefreshTrigger}
+                        />
+                    </View>
 
                 )}
 
@@ -420,7 +451,7 @@ function HomeScreen() {
                             style={HomeScreenStyles.tripScrollView}
                         >
                             {recentTrips.length > 0
-                                ? recentTrips.map(renderItineraryCard)
+                                ? recentTrips.slice(0, 3).map(renderItineraryCard)
                                 : renderEmptyItineraryCard()}
                         </ScrollView>
                     )}
@@ -452,12 +483,12 @@ function HomeScreen() {
                             JSON.stringify({ city, lat, lng })
                         );
                         fetchWeather(lat, lng);
-                    
+
                         if (userId) {
                             database()
                                 .ref(`/users/${userId}/onboarding/weather_changed`)
                                 .set(true);
-                            setChecklistRefreshTrigger((prev) => prev + 1); 
+                            setChecklistRefreshTrigger((prev) => prev + 1);
                         }
                     }}
                 />
