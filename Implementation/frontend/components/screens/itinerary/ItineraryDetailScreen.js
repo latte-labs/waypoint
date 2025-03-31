@@ -444,6 +444,11 @@ const ItineraryDetailScreen = () => {
   }, [days]);
 
   const handleDeleteDay = useCallback(async (dayId) => {
+    if (!user || !user.id) {
+      Alert.alert("Error", "User not found. Please log in again.");
+      return;
+    }
+  
     Alert.alert(
       "Delete Day",
       "Are you sure you want to delete this day? All activities will be removed.",
@@ -456,7 +461,6 @@ const ItineraryDetailScreen = () => {
             try {
               const config = { headers: { "X-User-Id": user.id } };
               await axios.delete(`${API_BASE_URL}/itineraries/${itineraryId}/days/${dayId}`, config);
-              Alert.alert("Success", "Day deleted successfully!");
               fetchItineraryDetails();
             } catch (error) {
               console.error("Error deleting day:", error.response?.data || error.message);
@@ -467,7 +471,7 @@ const ItineraryDetailScreen = () => {
       ]
     );
   }, [user, itineraryId]);
-
+  
   const handleAddDay = async () => {
     if (!dayTitle.trim()) {
       Alert.alert("Missing Field", "Please enter a title for the day.");
