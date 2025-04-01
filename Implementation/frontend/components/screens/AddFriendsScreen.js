@@ -50,8 +50,13 @@ const AddFriendsScreen = () => {
             const handleFriends = (snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.val();
-                    const friendsArray = Object.keys(data).map(key => ({ friendId: key, ...data[key] }));
-                    setFriends(friendsArray);
+                    const friendsArray = Object.entries(data).map(([key, value]) => ({
+                        friendId: key, // from the Firebase path
+                        friendName: value.friendName,
+                        friendEmail: value.friendEmail,
+                        addedAt: value.addedAt,
+                    }));
+                setFriends(friendsArray);
                 } else {
                     setFriends([]);
                 }
@@ -201,7 +206,7 @@ const AddFriendsScreen = () => {
             // Add friend to sender's friend list
             const senderFriendRef = database().ref(`/friends/${request.senderId}/${currentUser.id}`);
             await senderFriendRef.set({
-                friendId: String(request.senderId),
+                friendId: String(currentUser.id), // ✅ corrected
                 friendName: currentUser.name,
                 friendEmail: currentUser.email,
                 addedAt: Date.now(),
