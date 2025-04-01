@@ -1,6 +1,6 @@
 // PublicProfileScreen.js
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, ActivityIndicator, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, Text, Image, ActivityIndicator, ScrollView, StyleSheet, Alert, StatusBar } from 'react-native';
 import SafeAreaWrapper from './SafeAreaWrapper';
 import { database } from '../../firebase';
 
@@ -70,58 +70,110 @@ const PublicProfileScreen = ({ route, navigation }) => {
                 {/* About Section */}
                 <View style={styles.cardContainer}>
                     <Text style={styles.cardHeader}>About</Text>
-                    <Text style={styles.sectionText}>
-                        {friendData.bio || "No bio available."}
-                    </Text>
-                    <Text style={styles.sectionText}>
-                        {friendData.location || "Location not provided."}
-                    </Text>
-                    <Text style={styles.sectionText}>
-                        {friendData.languages || "Languages not specified."}
-                    </Text>
-                    <Text style={styles.sectionText}>
-                        {friendData.favoriteDestinations || "Favorite destinations not listed."}
-                    </Text>
+
+                    {friendData.bio ? (
+                        <>
+                            <Text style={{ fontWeight: 'bold' }}>Bio / Travel Philosophy</Text>
+                            <Text style={styles.sectionText}>{friendData.bio}</Text>
+                        </>
+                    ) : null}
+
+                    {friendData.location ? (
+                        <>
+                            <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Home Country / City</Text>
+                            <Text style={styles.sectionText}>{friendData.location}</Text>
+                        </>
+                    ) : null}
+
+                    {friendData.languages ? (
+                        <>
+                            <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Languages Spoken</Text>
+                            <Text style={styles.sectionText}>{friendData.languages}</Text>
+                        </>
+                    ) : null}
+
+                    {friendData.favoriteDestinations ? (
+                        <>
+                            <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Top 3 Favorite Destinations</Text>
+                            <Text style={styles.sectionText}>{friendData.favoriteDestinations}</Text>
+                        </>
+                    ) : null}
                 </View>
+
 
                 {/* Fun Facts Section */}
                 <View style={styles.cardContainer}>
                     <Text style={styles.cardHeader}>Fun Facts</Text>
-                    <Text style={styles.sectionText}>
-                        {friendData.dreamDestination || "No dream destination provided."}
-                    </Text>
-                    <Text style={styles.sectionText}>
-                        {friendData.travelApp || "No favorite travel app listed."}
-                    </Text>
-                    <Text style={styles.sectionText}>
-                        {friendData.instagram || "Instagram not provided."}
-                    </Text>
+
+                    {friendData.dreamDestination ? (
+                        <>
+                            <Text style={{ fontWeight: 'bold' }}>Dream Destination</Text>
+                            <Text style={styles.sectionText}>{friendData.dreamDestination}</Text>
+                        </>
+                    ) : null}
+
+                    {friendData.travelApp ? (
+                        <>
+                            <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Favorite Travel App</Text>
+                            <Text style={styles.sectionText}>{friendData.travelApp}</Text>
+                        </>
+                    ) : null}
+
+                    {friendData.instagram ? (
+                        <>
+                            <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Instagram Handle</Text>
+                            <Text style={styles.sectionText}>{friendData.instagram}</Text>
+                        </>
+                    ) : null}
                 </View>
+
 
                 {/* Travel Behavior Section */}
                 <View style={styles.cardContainer}>
                     <Text style={styles.cardHeader}>Travel Behavior</Text>
-                    <Text style={styles.sectionText}>
-                        Packing Style: {friendData.packingStyle || "Not set"}
-                    </Text>
-                    <Text style={styles.sectionText}>
-                        Travel Companion: {friendData.travelCompanion || "Not set"}
-                    </Text>
-                    <Text style={styles.sectionText}>
-                        Budget Range: {friendData.budgetRange || "Not set"}
-                    </Text>
+
+                    {friendData.packingStyle ? (
+                        <>
+                            <Text style={{ fontWeight: 'bold' }}>Packing Style</Text>
+                            <Text style={styles.sectionText}>{friendData.packingStyle}</Text>
+                        </>
+                    ) : null}
+
+                    {friendData.travelCompanion ? (
+                        <>
+                            <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Travel Companion</Text>
+                            <Text style={styles.sectionText}>{friendData.travelCompanion}</Text>
+                        </>
+                    ) : null}
+
+                    {friendData.budgetRange ? (
+                        <>
+                            <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Budget Range</Text>
+                            <Text style={styles.sectionText}>{friendData.budgetRange}</Text>
+                        </>
+                    ) : null}
                 </View>
+
 
                 {/* Planning Habits Section */}
                 <View style={styles.cardContainer}>
                     <Text style={styles.cardHeader}>Planning Habits</Text>
-                    <Text style={styles.sectionText}>
-                        Planning Habit: {friendData.planningHabit || "Not set"}
-                    </Text>
-                    <Text style={styles.sectionText}>
-                        Trip Role: {friendData.tripRole || "Not set"}
-                    </Text>
+
+                    {friendData.planningHabit ? (
+                        <>
+                            <Text style={{ fontWeight: 'bold' }}>Planning Habit</Text>
+                            <Text style={styles.sectionText}>{friendData.planningHabit}</Text>
+                        </>
+                    ) : null}
+
+                    {friendData.tripRole ? (
+                        <>
+                            <Text style={{ fontWeight: 'bold', marginTop: 12 }}>Trip Role</Text>
+                            <Text style={styles.sectionText}>{friendData.tripRole}</Text>
+                        </>
+                    ) : null}
                 </View>
+
             </ScrollView>
         </SafeAreaWrapper>
     );
@@ -134,29 +186,53 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     container: {
-        padding: 20,
+        flexGrow: 1,
         backgroundColor: '#fff',
+        padding: 20,
     },
     headerContainer: {
+        marginTop: 30,
         alignItems: 'center',
         marginBottom: 20,
+    },
+    placeholderImage: {
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        backgroundColor: '#eee',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     profileImage: {
         width: 120,
         height: 120,
         borderRadius: 60,
         borderWidth: 2,
-        borderColor: '#fff',
+        borderColor: 'white',
     },
+    profileImageWrapper: {
+        position: 'absolute',
+        top: 70,
+        zIndex: 2,
+        borderRadius: 70,
+        borderWidth: 2,
+        borderColor: '#f9f9f9',
+        backgroundColor: '#fff',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.08,
+        shadowRadius: 3,
+      },
     placeholderImage: {
         backgroundColor: '#eee',
         justifyContent: 'center',
         alignItems: 'center',
     },
     name: {
-        fontSize: 22,
+        fontSize: 20,
         fontWeight: 'bold',
-        marginTop: 10,
+        marginTop: 16,
+        textAlign: 'center',
     },
     emailText: {
         fontSize: 16,
@@ -165,22 +241,34 @@ const styles = StyleSheet.create({
     },
     cardContainer: {
         backgroundColor: '#f9f9f9',
-        padding: 16,
-        marginBottom: 15,
-        borderRadius: 10,
+        padding: 18,
+        marginHorizontal: 0,
+        marginVertical: 12,
+        borderRadius: 16,
         borderWidth: 1,
-        borderColor: '#ddd',
+        borderLeftWidth: 5,
+        borderLeftColor: '#263986',
+        borderColor: '#eee',
+        elevation: 1,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 3,
     },
     cardHeader: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: '700',
-        marginBottom: 8,
         color: '#263986',
+        borderBottomWidth: 2,
+        borderBottomColor: '#d0d8ff',
+        paddingBottom: 6,
+        marginBottom: 16,
     },
     sectionText: {
         fontSize: 14,
         color: '#444',
         marginBottom: 4,
+        marginTop: 6,
     },
 });
 
