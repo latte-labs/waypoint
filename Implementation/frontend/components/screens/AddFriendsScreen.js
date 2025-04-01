@@ -50,7 +50,7 @@ const AddFriendsScreen = () => {
             const handleFriends = (snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.val();
-                    const friendsArray = Object.keys(data).map(key => data[key]);
+                    const friendsArray = Object.keys(data).map(key => ({ friendId: key, ...data[key] }));
                     setFriends(friendsArray);
                 } else {
                     setFriends([]);
@@ -98,8 +98,8 @@ const AddFriendsScreen = () => {
     }, [currentUser]);
 
     // Navigation
-    const handleViewProfile = (friend) => {
-        navigation.navigate('PublicProfile', { friendId: friend.friendId });
+    const handleViewProfile = (friendId) => {
+        navigation.navigate('PublicProfile', { friendId });
     };
 
     // Search for a user by email
@@ -193,7 +193,7 @@ const AddFriendsScreen = () => {
             // Add friend to current user's friend list
             const currentUserFriendRef = database().ref(`/friends/${currentUser.id}/${request.senderId}`);
             await currentUserFriendRef.set({
-                friendId: request.senderId,
+                friendId: String(request.senderId),
                 friendName: request.senderName,
                 friendEmail: request.senderEmail,
                 addedAt: Date.now(),
@@ -201,7 +201,7 @@ const AddFriendsScreen = () => {
             // Add friend to sender's friend list
             const senderFriendRef = database().ref(`/friends/${request.senderId}/${currentUser.id}`);
             await senderFriendRef.set({
-                friendId: currentUser.id,
+                friendId: String(request.senderId),
                 friendName: currentUser.name,
                 friendEmail: currentUser.email,
                 addedAt: Date.now(),
