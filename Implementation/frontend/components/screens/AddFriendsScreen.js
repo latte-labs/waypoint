@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, Alert, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, Alert, ActivityIndicator, Dimensions, Image } from 'react-native';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import SafeAreaWrapper from './SafeAreaWrapper';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { database } from '../../firebase';
+import Icon from 'react-native-vector-icons/FontAwesome5';
 
 const AddFriendsScreen = () => {
     const navigation = useNavigation();
@@ -147,7 +148,7 @@ const AddFriendsScreen = () => {
         if (!foundUser) return;
         try {
             const requestRef = database().ref(`/friend_requests/${foundUser.userId}`);
-            /* Check if a friend request from the current user already exists */
+            // Check if a friend request from the current user already exists 
             const snapshot = await requestRef.once('value');
             if (snapshot.exists()) {
                 const requests = snapshot.val();
@@ -259,7 +260,52 @@ const AddFriendsScreen = () => {
         ]);
     };
 
-    // --- Render functions for each tab ---
+    // Component to render a friend item by fetching profile picture from /users
+    const FriendListItem = ({ friendId, friendName }) => {
+        const [profilePhotoUrl, setProfilePhotoUrl] = useState(null);
+        useEffect(() => {
+            const userRef = database().ref(`/users/${friendId}`);
+            userRef.once('value')
+                .then(snapshot => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+                        setProfilePhotoUrl(data.profilePhotoUrl);
+                    }
+                })
+                .catch(error => console.error("Error fetching friend photo:", error));
+        }, [friendId]);
+        return (
+            <TouchableOpacity
+                onPress={() => handleViewProfile(friendId)}
+                style={styles.friendItemContainer}
+            >
+                {profilePhotoUrl ? (
+                    <Image
+                        source={{ uri: `${profilePhotoUrl}?ts=${Date.now()}` }}
+                        style={styles.friendImage}
+                        resizeMode="cover"
+                    />
+                ) : (
+                    <Icon
+                        name="user-circle"
+                        size={60}
+                        color="#ccc"
+                        style={styles.friendImage}
+                    />
+                )}
+                <Text style={styles.friendName}>{friendName}</Text>
+                <TouchableOpacity
+                    onPress={() => handleRemoveFriend(friendId)}
+                    style={styles.removeButton}
+                >
+                    <Text style={styles.removeButtonText}>Remove</Text>
+                </TouchableOpacity>
+            </TouchableOpacity>
+        );
+    };
+
+
+    // Render functions for each tab
 
     // Search Tab
     const renderSearchTab = () => (
@@ -322,32 +368,10 @@ const AddFriendsScreen = () => {
                     data={friends}
                     keyExtractor={(item) => item.friendId}
                     renderItem={({ item }) => (
-                        <TouchableOpacity 
-                        onPress={() => handleViewProfile(item)} 
-                        style={{
-                            flexDirection: 'row',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            padding: 12,
-                            borderBottomWidth: 1,
-                            borderBottomColor: '#eee'
-                        }}
-                    >
-                        <Text style={{ fontSize: 16 }}>
-                            {item.friendName} ({item.friendEmail})
-                        </Text>
-                        <TouchableOpacity
-                            onPress={() => handleRemoveFriend(item.friendId)}
-                            style={{
-                                backgroundColor: 'red',
-                                paddingVertical: 6,
-                                paddingHorizontal: 12,
-                                borderRadius: 6,
-                            }}
-                        >
-                            <Text style={{ color: '#fff', fontSize: 14 }}>Remove</Text>
-                        </TouchableOpacity>
-                    </TouchableOpacity> 
+                        <FriendListItem 
+                            friendId={item.friendId} 
+                            friendName={item.friendName} 
+                        />
                     )}
                 />
             )}
@@ -477,3 +501,38 @@ const AddFriendsScreen = () => {
 };
 
 export default AddFriendsScreen;
+
+const styles = {
+    friendItemContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+    },
+    friendImage: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+    },
+    friendPlaceholder: {
+        backgroundColor: '#eee',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    friendName: {
+        fontSize: 16,
+        marginLeft: 20,
+        flex: 1, // Take up available space
+    },
+    removeButton: {
+        backgroundColor: 'red',
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 6,
+    },
+    removeButtonText: {
+        color: '#fff',
+        fontSize: 14,
+    },
+};
