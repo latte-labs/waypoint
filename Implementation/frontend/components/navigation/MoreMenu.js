@@ -103,7 +103,7 @@ const MoreMenu = ({ closeMenu }) => {
 
             <TouchableOpacity onPress={() => handleNavigate("Friends")} style={navigationStyles.moreMenuItem}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Icon name="trophy" size={20} color="#1E3A8A" style={{ marginRight: 12 }} />
+                    <Icon name="user-friends" size={20} color="#1E3A8A" style={{ marginRight: 12 }} />
                     <Text style={navigationStyles.moreMenuText}>Friends</Text>
                 </View>
             </TouchableOpacity>
