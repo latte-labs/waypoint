@@ -207,12 +207,12 @@ const ItineraryFormScreen = () => {
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={100} // Adjust based on header height
         >
           <ScrollView
-            contentContainerStyle={styles.container}
+            contentContainerStyle={[styles.container, { flexGrow: 1 }]}
             keyboardShouldPersistTaps="handled"
           >
+
             <Text style={styles.title}>
               {itineraryId ? "Edit Itinerary" : "Create Itinerary"}
             </Text>
