@@ -44,12 +44,16 @@ const features = [
   
 const FeatureCarousel = () => {
     const { width } = useWindowDimensions();
-    const [currentIndex, setCurrentIndex] = React.useState(0);
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    const horizontalPadding = 32; // 16 left + 16 right
+    
     const onScroll = (event) => {
         const offsetX = event.nativeEvent.contentOffset.x;
-        const newIndex = Math.round(offsetX / width);
+        const newIndex = Math.round(offsetX / (width - horizontalPadding));
         setCurrentIndex(newIndex);
     };
+    
     const flatListRef = useRef(null);
 
 
@@ -61,13 +65,13 @@ const FeatureCarousel = () => {
             keyExtractor={(item) => item.id}
             horizontal
             pagingEnabled
-            snapToInterval={width}
+            snapToInterval={width - horizontalPadding}
             decelerationRate="fast"
             showsHorizontalScrollIndicator={false}
             renderItem={({ item }) => (
                 <ImageBackground
                 source={item.image}
-                style={[styles.card, { width }]}
+                style={[styles.card, { width: width - horizontalPadding }]}
                 imageStyle={{ borderRadius: 20 }}
                 resizeMode="cover"
                 >
@@ -107,13 +111,17 @@ const FeatureCarousel = () => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-      marginTop: 20,
-    },
-    card: {
-        height: 180,
-        borderRadius: 20,
-    },
+  container: {
+    width: '100%', // Full width of parent screen
+    alignItems: 'center', // Keep dots and cards centered
+    marginTop: 20,
+  },
+  card: {
+    height: 180,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  
     overlay: {
         flex: 1,
         width: '100%',
