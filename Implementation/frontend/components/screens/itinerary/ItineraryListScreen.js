@@ -359,8 +359,11 @@ const ItineraryListScreen = () => {
         <SafeAreaWrapper>
             <View style={styles.container}>
                 {loading ? (
-                    <ActivityIndicator size="large" color="#007bff" />
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color="#007bff" />
+                    </View>
                 ) : (
+
                     <TabView
                         navigationState={{ index, routes }}
                         renderScene={renderScene} 
@@ -510,6 +513,12 @@ const styles = StyleSheet.create({
         color: '#555',
         marginTop: 5,
     },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    
 });
 
 export default ItineraryListScreen;
