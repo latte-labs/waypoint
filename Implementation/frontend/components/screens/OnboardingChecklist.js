@@ -129,7 +129,7 @@ const OnboardingChecklist = ({ userId, onComplete, refreshTrigger }) => {
   const completedCount = Object.values(progress).filter(Boolean).length;
 
   return (
-    <View style={[HomeScreenStyles.card, { marginTop: 2, padding: 8 }]}>
+    <View style={[HomeScreenStyles.card, { marginTop: 2, padding: 6, marginBottom: -2 }]}>
       <TouchableOpacity
         onPress={() => {
           isExpanded.value = !isExpanded.value;

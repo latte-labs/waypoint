@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, Alert, ActivityIndicator, Dimensions, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, Alert, ActivityIndicator, Dimensions, Image, SectionList } from 'react-native';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import SafeAreaWrapper from './SafeAreaWrapper';
 import { useNavigation } from '@react-navigation/native';
@@ -12,9 +12,8 @@ const AddFriendsScreen = () => {
     const [currentUser, setCurrentUser] = useState(null);
     const [index, setIndex] = useState(0);
     const [routes] = useState([
-        { key: 'search', title: 'Search' },
-        { key: 'pending', title: 'Pending' },
         { key: 'friends', title: 'Friends' },
+        { key: 'search', title: 'Search' },
         { key: 'requests', title: 'Requests' },
     ]);
 
@@ -231,7 +230,7 @@ const AddFriendsScreen = () => {
         }
     };
 
-    // --- Decline Friend Request ---
+    // Decline Friend Request
     const handleDeclineRequest = async (request) => {
         try {
             const requestRef = database().ref(`/friend_requests/${currentUser.id}/${request.id}`);
@@ -243,7 +242,7 @@ const AddFriendsScreen = () => {
         }
     };
 
-    // --- Remove Friend ---
+    // Remove Friend 
     const handleRemoveFriend = async (friendId) => {
         Alert.alert("Remove Friend", "Are you sure you want to remove this friend?", [
             { text: "Cancel", style: "cancel" },
@@ -383,91 +382,90 @@ const AddFriendsScreen = () => {
         </View>
     );
 
-    // Pending Tab (Outgoing Friend Requests)
-    const renderPendingTab = () => (
-        <View style={{ flex: 1, padding: 20 }}>
-            {outgoingRequests.length === 0 ? (
-                <Text style={{ textAlign: 'center', color: '#777', marginTop: 20 }}>No outgoing requests</Text>
+    // Combined Requests Tab for both incoming and outgoing requests
+    const renderCombinedRequestsTab = () => {
+        // Dynamically build sections array based on available data
+        const sections = [];
+        if (pendingRequests.length > 0) {
+          sections.push({ title: 'Requests', data: pendingRequests });
+        }
+        if (outgoingRequests.length > 0) {
+          sections.push({ title: 'Pending', data: outgoingRequests });
+        }
+      
+        return (
+          <View style={{ flex: 1, padding: 20 }}>
+            {sections.length === 0 ? (
+              <Text style={{ textAlign: 'center', color: '#777', marginTop: 20 }}>
+                No friend requests
+              </Text>
             ) : (
-                <FlatList
-                    data={outgoingRequests}
-                    keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => (
-                        <View style={{
-                            padding: 12,
-                            borderBottomWidth: 1,
-                            borderBottomColor: '#eee'
-                        }}>
-                            <Text style={{ fontSize: 16 }}>
-                                {item.receiverName} ({item.receiverEmail})
-                            </Text>
-                            <Text style={{ fontSize: 12, color: '#777', marginTop: 5 }}>Pending</Text>
+              <SectionList
+                sections={sections}
+                keyExtractor={(item) => item.id}
+                renderSectionHeader={({ section: { title } }) => (
+                  <Text style={{ fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
+                    {title}
+                  </Text>
+                )}
+                renderItem={({ item, section }) => {
+                  if (section.title === 'Requests') {
+                    return (
+                      <View style={{ padding: 12, borderBottomWidth: 1, borderBottomColor: '#eee' }}>
+                        <Text style={{ fontSize: 16 }}>
+                          {item.senderName} ({item.senderEmail})
+                        </Text>
+                        <View style={{ flexDirection: 'row', marginTop: 10 }}>
+                          <TouchableOpacity
+                            onPress={() => handleAcceptRequest(item)}
+                            style={{
+                              backgroundColor: '#28a745',
+                              padding: 10,
+                              borderRadius: 5,
+                              marginRight: 10,
+                            }}
+                          >
+                            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Accept</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={() => handleDeclineRequest(item)}
+                            style={{
+                              backgroundColor: '#dc3545',
+                              padding: 10,
+                              borderRadius: 5,
+                            }}
+                          >
+                            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Decline</Text>
+                          </TouchableOpacity>
                         </View>
-                    )}
-                />
+                      </View>
+                    );
+                  } else {
+                    return (
+                      <View style={{ padding: 12, borderBottomWidth: 1, borderBottomColor: '#eee' }}>
+                        <Text style={{ fontSize: 16 }}>
+                          {item.receiverName} ({item.receiverEmail})
+                        </Text>
+                        <Text style={{ fontSize: 12, color: '#777', marginTop: 5 }}>Pending</Text>
+                      </View>
+                    );
+                  }
+                }}
+              />
             )}
-        </View>
-    );
+          </View>
+        );
+      };
 
-    // Requests Tab (Incoming)
-    const renderRequestsTab = () => (
-        <View style={{ flex: 1, padding: 20 }}>
-            {pendingRequests.length === 0 ? (
-                <Text style={{ textAlign: 'center', color: '#777', marginTop: 20 }}>No pending requests</Text>
-            ) : (
-                <FlatList
-                    data={pendingRequests}
-                    keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => (
-                        <View style={{
-                            padding: 12,
-                            borderBottomWidth: 1,
-                            borderBottomColor: '#eee'
-                        }}>
-                            <Text style={{ fontSize: 16 }}>
-                                {item.senderName} ({item.senderEmail})
-                            </Text>
-                            <View style={{ flexDirection: 'row', marginTop: 10 }}>
-                                <TouchableOpacity
-                                    onPress={() => handleAcceptRequest(item)}
-                                    style={{
-                                        backgroundColor: '#28a745',
-                                        padding: 10,
-                                        borderRadius: 5,
-                                        marginRight: 10,
-                                    }}
-                                >
-                                    <Text style={{ color: '#fff', fontWeight: 'bold' }}>Accept</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    onPress={() => handleDeclineRequest(item)}
-                                    style={{
-                                        backgroundColor: '#dc3545',
-                                        padding: 10,
-                                        borderRadius: 5,
-                                    }}
-                                >
-                                    <Text style={{ color: '#fff', fontWeight: 'bold' }}>Decline</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    )}
-                />
-            )}
-        </View>
-    );
-
-    // --- Render TabView ---
+    // Render TabView 
     const renderScene = ({ route }) => {
         switch (route.key) {
             case 'search':
                 return renderSearchTab();
             case 'friends':
                 return renderFriendsTab();
-            case 'pending':
-                return renderPendingTab();
             case 'requests':
-                return renderRequestsTab();
+                return renderCombinedRequestsTab();
             default:
                 return null;
         }
