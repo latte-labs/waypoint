@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { database } from '../../firebase';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 
 const AddFriendsScreen = () => {
     const navigation = useNavigation();
@@ -55,7 +56,7 @@ const AddFriendsScreen = () => {
                         friendEmail: value.friendEmail,
                         addedAt: value.addedAt,
                     }));
-                setFriends(friendsArray);
+                    setFriends(friendsArray);
                 } else {
                     setFriends([]);
                 }
@@ -264,6 +265,29 @@ const AddFriendsScreen = () => {
         ]);
     };
 
+    // Cancel an outgoing friend request
+    const handleCancelOutgoingRequest = async (request) => {
+        try {
+            // Remove the outgoing request for the current user
+            await database().ref(`/outgoing_friend_requests/${currentUser.id}/${request.id}`).remove();
+            // Remove the corresponding friend request from the receiver's incoming requests
+            const receiverFriendRequestRef = database().ref(`/friend_requests/${request.receiverId}`);
+            const snapshot = await receiverFriendRequestRef
+                .orderByChild('senderId')
+                .equalTo(currentUser.id)
+                .once('value');
+            if (snapshot.exists()) {
+                snapshot.forEach(childSnapshot => {
+                    childSnapshot.ref.remove();
+                });
+            }
+            Alert.alert("Request Cancelled", "Your friend request has been cancelled.");
+        } catch (error) {
+            console.error("Error cancelling outgoing friend request:", error);
+            Alert.alert("Error", "Could not cancel friend request.");
+        }
+    };
+
     // Component to render a friend item by fetching profile picture from /users
     const FriendListItem = ({ friendId, friendName }) => {
         const [profilePhotoUrl, setProfilePhotoUrl] = useState(null);
@@ -372,9 +396,9 @@ const AddFriendsScreen = () => {
                     data={friends}
                     keyExtractor={(item) => item.friendId}
                     renderItem={({ item }) => (
-                        <FriendListItem 
-                            friendId={item.friendId} 
-                            friendName={item.friendName} 
+                        <FriendListItem
+                            friendId={item.friendId}
+                            friendName={item.friendName}
                         />
                     )}
                 />
@@ -387,75 +411,93 @@ const AddFriendsScreen = () => {
         // Dynamically build sections array based on available data
         const sections = [];
         if (pendingRequests.length > 0) {
-          sections.push({ title: 'Requests', data: pendingRequests });
+            sections.push({ title: 'Requests', data: pendingRequests });
         }
         if (outgoingRequests.length > 0) {
-          sections.push({ title: 'Pending', data: outgoingRequests });
+            sections.push({ title: 'Pending', data: outgoingRequests });
         }
-      
+
         return (
-          <View style={{ flex: 1, padding: 20 }}>
-            {sections.length === 0 ? (
-              <Text style={{ textAlign: 'center', color: '#777', marginTop: 20 }}>
-                No friend requests
-              </Text>
-            ) : (
-              <SectionList
-                sections={sections}
-                keyExtractor={(item) => item.id}
-                renderSectionHeader={({ section: { title } }) => (
-                  <Text style={{ fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
-                    {title}
-                  </Text>
+            <View style={{ flex: 1, padding: 20 }}>
+                {sections.length === 0 ? (
+                    <Text style={{ textAlign: 'center', color: '#777', marginTop: 20 }}>
+                        No friend requests
+                    </Text>
+                ) : (
+                    <SectionList
+                        sections={sections}
+                        keyExtractor={(item) => item.id}
+                        renderSectionHeader={({ section: { title } }) => (
+                            <Text style={{ fontSize: 18, fontWeight: 'bold', marginVertical: 10 }}>
+                                {title}
+                            </Text>
+                        )}
+                        renderItem={({ item, section }) => {
+                            if (section.title === 'Requests') {
+                                return (
+                                    <View style={{ padding: 12, borderBottomWidth: 1, borderBottomColor: '#eee' }}>
+                                        <Text style={{ fontSize: 16 }}>
+                                            {item.senderName} ({item.senderEmail})
+                                        </Text>
+                                        <View style={{ flexDirection: 'row', marginTop: 10 }}>
+                                            <TouchableOpacity
+                                                onPress={() => handleAcceptRequest(item)}
+                                                style={{
+                                                    backgroundColor: '#28a745',
+                                                    padding: 10,
+                                                    borderRadius: 5,
+                                                    marginRight: 10,
+                                                }}
+                                            >
+                                                <Text style={{ color: '#fff', fontWeight: 'bold' }}>Accept</Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity
+                                                onPress={() => handleDeclineRequest(item)}
+                                                style={{
+                                                    backgroundColor: '#dc3545',
+                                                    padding: 10,
+                                                    borderRadius: 5,
+                                                }}
+                                            >
+                                                <Text style={{ color: '#fff', fontWeight: 'bold' }}>Decline</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
+                                );
+                            } else {
+                                return (
+                                    <Swipeable
+                                        overshootLeft={false}
+                                        overshootRight={false}
+                                        renderRightActions={() => (
+                                            <TouchableOpacity
+                                                onPress={() => handleCancelOutgoingRequest(item)}
+                                                style={{
+                                                    backgroundColor: 'red',
+                                                    justifyContent: 'center',
+                                                    alignItems: 'center',
+                                                    width: 80,
+                                                }}
+                                            >
+                                                <Text style={{ color: '#fff', fontWeight: 'bold' }}>Cancel</Text>
+                                            </TouchableOpacity>
+                                        )}
+                                    >
+                                        <View style={{ padding: 12, borderBottomWidth: 1, borderBottomColor: '#eee' }}>
+                                            <Text style={{ fontSize: 16 }}>
+                                                {item.receiverName} ({item.receiverEmail})
+                                            </Text>
+                                            <Text style={{ fontSize: 12, color: '#777', marginTop: 5 }}>Pending</Text>
+                                        </View>
+                                    </Swipeable>
+                                );
+                            }
+                        }}
+                    />
                 )}
-                renderItem={({ item, section }) => {
-                  if (section.title === 'Requests') {
-                    return (
-                      <View style={{ padding: 12, borderBottomWidth: 1, borderBottomColor: '#eee' }}>
-                        <Text style={{ fontSize: 16 }}>
-                          {item.senderName} ({item.senderEmail})
-                        </Text>
-                        <View style={{ flexDirection: 'row', marginTop: 10 }}>
-                          <TouchableOpacity
-                            onPress={() => handleAcceptRequest(item)}
-                            style={{
-                              backgroundColor: '#28a745',
-                              padding: 10,
-                              borderRadius: 5,
-                              marginRight: 10,
-                            }}
-                          >
-                            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Accept</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            onPress={() => handleDeclineRequest(item)}
-                            style={{
-                              backgroundColor: '#dc3545',
-                              padding: 10,
-                              borderRadius: 5,
-                            }}
-                          >
-                            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Decline</Text>
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-                    );
-                  } else {
-                    return (
-                      <View style={{ padding: 12, borderBottomWidth: 1, borderBottomColor: '#eee' }}>
-                        <Text style={{ fontSize: 16 }}>
-                          {item.receiverName} ({item.receiverEmail})
-                        </Text>
-                        <Text style={{ fontSize: 12, color: '#777', marginTop: 5 }}>Pending</Text>
-                      </View>
-                    );
-                  }
-                }}
-              />
-            )}
-          </View>
+            </View>
         );
-      };
+    };
 
     // Render TabView 
     const renderScene = ({ route }) => {
