@@ -3,7 +3,7 @@ import {
     View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet, Dimensions, Alert 
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native';
 import axios from 'axios';
 import API_BASE_URL from '../../../config';
 import { database } from '../../../firebase';
@@ -13,14 +13,16 @@ import UserNameDisplay from '../../UserNameDisplay';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 const ItineraryListScreen = () => {
-    const navigation = useNavigation();
     const [ownedItineraries, setOwnedItineraries] = useState([]);
     const [sharedItineraries, setSharedItineraries] = useState([]);
     const [pendingInvites, setPendingInvites] = useState([]);
     const [loading, setLoading] = useState(true);
     const [userId, setUserId] = useState(null);
 
-    const [index, setIndex] = useState(0);
+    const navigation = useNavigation();
+    const route = useRoute();  // HIGHLIGHT: Added useRoute
+    const initialIndex = route.params && route.params.activeTab === 'shared' ? 1 : 0;
+    const [index, setIndex] = useState(initialIndex);
     const [routes] = useState([
         { key: 'personal', title: 'Personal' }, 
         { key: 'shared', title: 'Shared Itineraries' }  

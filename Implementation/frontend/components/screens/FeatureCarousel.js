@@ -2,7 +2,7 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, ImageBackground, useWindowDimensions, TouchableOpacity } from 'react-native';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-
+import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native';
 
 const features = [
     {
@@ -45,8 +45,17 @@ const features = [
 const FeatureCarousel = () => {
     const { width } = useWindowDimensions();
     const [currentIndex, setCurrentIndex] = useState(0);
-
     const horizontalPadding = 32; // 16 left + 16 right
+
+    const navigation = useNavigation();
+    const route = useRoute();
+    const initialIndex = route.params && route.params.activeTab === 'shared' ? 1 : 0;
+    const [index, setIndex] = useState(initialIndex);
+
+    const [routes] = useState([
+        { key: 'personal', title: 'Personal' }, 
+        { key: 'shared', title: 'Shared Itineraries' }  
+    ]);
     
     const onScroll = (event) => {
         const offsetX = event.nativeEvent.contentOffset.x;
@@ -56,6 +65,28 @@ const FeatureCarousel = () => {
     
     const flatListRef = useRef(null);
 
+    const handleFeaturePress = (item) => {
+      switch(item.title) {
+          case 'Plan with Friends':
+              // Navigate to ItineraryListScreen with shared itineraries as active tab
+              navigation.navigate('Itinerary', { activeTab: 'shared' });
+              break;
+          case 'AI Travel Assistant':
+              // Navigate to Chatbot screen
+              navigation.navigate('Chatbot');
+              break;
+          case 'Earn Badges':
+              // Navigate to Achievements screen (route: "Badges")
+              navigation.navigate('Badges');
+              break;
+          case 'Interactive Map':
+              // Navigate to InteractiveRecommendations screen (route: "Map")
+              navigation.navigate('Map');
+              break;
+          default:
+              break;
+      }
+  };
 
     return (
     <View style={styles.container}>
@@ -69,6 +100,7 @@ const FeatureCarousel = () => {
             decelerationRate="fast"
             showsHorizontalScrollIndicator={false}
             renderItem={({ item }) => (
+              <TouchableOpacity onPress={() => handleFeaturePress(item)}>
                 <ImageBackground
                 source={item.image}
                 style={[styles.card, { width: width - horizontalPadding }]}
@@ -81,6 +113,7 @@ const FeatureCarousel = () => {
                     <Text style={styles.desc}>{item.desc}</Text>
                 </View>
                 </ImageBackground>
+                </TouchableOpacity>
             )}
             onScroll={onScroll}
             scrollEventThrottle={16}
