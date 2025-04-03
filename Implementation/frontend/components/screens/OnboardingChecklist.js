@@ -36,10 +36,11 @@ const OnboardingChecklist = ({ userId, onComplete, refreshTrigger }) => {
   const contentHeight = useSharedValue(0);
   const contentRef = useAnimatedRef();
   const [expanded, setExpanded] = useState(true);
+  const [measuredHeight, setMeasuredHeight] = useState(0);
 
-  
+
   const animatedContainerStyle = useAnimatedStyle(() => ({
-    height: isExpanded.value ? withTiming(240) : withTiming(0),
+    height: isExpanded.value ? withTiming(measuredHeight) : withTiming(0),
     opacity: isExpanded.value ? withTiming(1) : withTiming(0),
     overflow: 'hidden',
   }));
@@ -50,11 +51,11 @@ const OnboardingChecklist = ({ userId, onComplete, refreshTrigger }) => {
       badgeScale.value = 0;
       badgeOpacity.value = 0;
       badgeRotation.value = 0;
-  
+
       // Show scale and fade in
       badgeScale.value = withSpring(1, { damping: 8, stiffness: 150 });
       badgeOpacity.value = withSpring(1);
-  
+
       // Spin fast and slow down
       badgeRotation.value = withTiming(720, {
         duration: 1500, // 2 full spins over 1.5s
@@ -62,7 +63,7 @@ const OnboardingChecklist = ({ userId, onComplete, refreshTrigger }) => {
       });
     }
   }, [showRewardModal]);
-  
+
   const animatedBadgeStyle = useAnimatedStyle(() => ({
     transform: [
       { scale: badgeScale.value },
@@ -70,14 +71,14 @@ const OnboardingChecklist = ({ userId, onComplete, refreshTrigger }) => {
     ],
     opacity: badgeOpacity.value,
   }));
-  
+
 
 
   useFocusEffect(
     useCallback(() => {
       const fetchChecklistStatus = async () => {
         if (!userId) return;
-  
+
         try {
           const [travelStyleSnap, itinerariesRes, chatbotSnap, weatherChangedSnap, packingTipSnap, checkedInSnap, achievementsSnap] = await Promise.all([
             database().ref(`/users/${userId}/travel_style_id`).once('value'),
@@ -88,7 +89,7 @@ const OnboardingChecklist = ({ userId, onComplete, refreshTrigger }) => {
             database().ref(`/users/${userId}/onboarding/checked_in`).once('value'),
             database().ref(`/users/${userId}/onboarding/viewed_achievements`).once('value'),
           ]);
-  
+
           const travelStyleId = travelStyleSnap.val();
           const quizDone = travelStyleId && travelStyleId !== 4;
           const itineraries = await itinerariesRes.json();
@@ -97,7 +98,7 @@ const OnboardingChecklist = ({ userId, onComplete, refreshTrigger }) => {
           const weatherChecked = weatherChangedSnap.val() === true && packingTipSnap.val() === true;
           const checkedIn = checkedInSnap.val() === true;
           const achievementsViewed = achievementsSnap.val() === true;
-  
+
           setProgress({
             quiz: quizDone,
             itinerary: hasItinerary,
@@ -110,11 +111,11 @@ const OnboardingChecklist = ({ userId, onComplete, refreshTrigger }) => {
           console.error('Checklist fetch error:', err);
         }
       };
-  
+
       fetchChecklistStatus();
-    }, [userId, refreshTrigger]) 
+    }, [userId, refreshTrigger])
   );
-    
+
   const checklistItems = [
     { key: 'quiz', label: 'Take Travel Style Quiz', action: () => navigation.navigate('QuizScreen') },
     { key: 'itinerary', label: 'Create Your First Itinerary', action: () => navigation.navigate('Itinerary') },
@@ -123,7 +124,7 @@ const OnboardingChecklist = ({ userId, onComplete, refreshTrigger }) => {
     { key: 'checkedIn', label: 'Check In to a Place', action: () => navigation.navigate('CheckIn') },
     { key: 'achievementsViewed', label: 'View Achievements', action: () => navigation.navigate('Badges') },
   ];
-  
+
 
   const completedCount = Object.values(progress).filter(Boolean).length;
 
@@ -152,45 +153,98 @@ const OnboardingChecklist = ({ userId, onComplete, refreshTrigger }) => {
 
 
       <Animated.View style={animatedContainerStyle}>
-      {checklistItems.map((item) => (
-        <TouchableOpacity
-          key={item.key}
-          onPress={item.action}
-          disabled={progress[item.key]}
-          style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}
-        >
-          <Icon
-            name={progress[item.key] ? 'check-circle' : 'circle'}
-            solid
-            size={16}
-            color={progress[item.key] ? '#10B981' : '#9CA3AF'}
-            style={{ marginRight: 8 }}
-          />
-          <Text style={{ color: progress[item.key] ? '#10B981' : '#374151' }}>
-            {item.label}
-          </Text>
-        </TouchableOpacity>
-      ))}
-
-      <Text style={{ marginTop: 8, fontSize: 12, color: '#6B7280' }}>
-        {completedCount} of {checklistItems.length} tasks completed
-      </Text>
-
-      {completedCount === checklistItems.length && (
-        <TouchableOpacity
-          onPress={() => setShowRewardModal(true)}
-          style={{
-            backgroundColor: '#F59E0B',
-            paddingVertical: 10,
-            borderRadius: 10,
-            marginTop: 12,
-            alignItems: 'center',
+        <View
+          onLayout={(event) => {
+            // Get the content height and update the shared value
+            const { height } = event.nativeEvent.layout;
+            contentHeight.value = height;
           }}
         >
-          <Text style={{ color: 'white', fontWeight: 'bold' }}>🎉 Claim Your Reward!</Text>
-        </TouchableOpacity>
-      )}
-    </Animated.View>
+          {checklistItems.map((item) => (
+            <TouchableOpacity
+              key={item.key}
+              onPress={item.action}
+              disabled={progress[item.key]}
+              style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}
+            >
+              <Icon
+                name={progress[item.key] ? 'check-circle' : 'circle'}
+                solid
+                size={16}
+                color={progress[item.key] ? '#10B981' : '#9CA3AF'}
+                style={{ marginRight: 8 }}
+              />
+              <Text style={{ color: progress[item.key] ? '#10B981' : '#374151' }}>
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+
+          <Text style={{ marginTop: 8, fontSize: 12, color: '#6B7280' }}>
+            {completedCount} of {checklistItems.length} tasks completed
+          </Text>
+
+          {completedCount === checklistItems.length && (
+            <TouchableOpacity
+              onPress={() => setShowRewardModal(true)}
+              style={{
+                backgroundColor: '#F59E0B',
+                paddingVertical: 10,
+                borderRadius: 10,
+                marginTop: 12,
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ color: 'white', fontWeight: 'bold' }}>🎉 Claim Your Reward!</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </Animated.View>
+
+      <View
+        style={{ position: 'absolute', opacity: 0, zIndex: -1 }}
+        onLayout={(event) => {
+          setMeasuredHeight(event.nativeEvent.layout.height);
+        }}
+      >
+        <View>
+          {checklistItems.map((item) => (
+            <TouchableOpacity
+              key={item.key}
+              onPress={item.action}
+              disabled={progress[item.key]}
+              style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}
+            >
+              <Icon
+                name={progress[item.key] ? 'check-circle' : 'circle'}
+                solid
+                size={16}
+                color={progress[item.key] ? '#10B981' : '#9CA3AF'}
+                style={{ marginRight: 8 }}
+              />
+              <Text style={{ color: progress[item.key] ? '#10B981' : '#374151' }}>
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+          <Text style={{ marginTop: 8, fontSize: 12, color: '#6B7280' }}>
+            {completedCount} of {checklistItems.length} tasks completed
+          </Text>
+          {completedCount === checklistItems.length && (
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#F59E0B',
+                paddingVertical: 10,
+                borderRadius: 10,
+                marginTop: 12,
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ color: 'white', fontWeight: 'bold' }}>🎉 Claim Your Reward!</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
 
 
       <Modal
