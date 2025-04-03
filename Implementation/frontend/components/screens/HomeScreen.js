@@ -335,17 +335,15 @@ function HomeScreen() {
                     style={HomeScreenStyles.tripImage}
                 />
                 <View style={HomeScreenStyles.tripOverlay} />
-                {/* Overlay container for text */}
+                <View style={{ position: 'absolute', top: 20, right: 20, zIndex: 2 }}>
+                    <Icon
+                        name={itinerary.type === 'shared' ? 'users' : 'user'}
+                        size={16}
+                        color={itinerary.type === 'shared' ? '#28a745' : '#007bff'}
+                    />
+                </View>
                 <View style={{ justifyContent: 'center', alignItems: 'center', zIndex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={HomeScreenStyles.tripTitle}>{itinerary.name}</Text>
-                        <Icon
-                            name={itinerary.type === 'shared' ? 'users' : 'user'}
-                            size={16}
-                            color={itinerary.type === 'shared' ? '#28a745' : '#007bff'}
-                            style={{ marginLeft: 6 }}
-                        />
-                    </View>
+                    <Text style={HomeScreenStyles.tripTitle}>{itinerary.name}</Text>
                     <Text style={HomeScreenStyles.tripDate}>{formatDate(itinerary.start_date)}</Text>
                 </View>
             </TouchableOpacity>

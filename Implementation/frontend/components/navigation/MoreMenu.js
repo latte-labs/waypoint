@@ -59,7 +59,7 @@ const MoreMenu = ({ closeMenu }) => {
     return (
         <View style={navigationStyles.moreContainer}>
             {/* Profile Card */}
-            <TouchableOpacity onPress={() => handleNavigate("Profile")} style={{ width: '90%' }}>
+            <TouchableOpacity onPress={() => handleNavigate("Profile")} style={{ width: '90%', alignItems: 'center' }}>
                 <View style={navigationStyles.profileHeader}>
                     {profileImage ? (
                         <Image
@@ -67,9 +67,8 @@ const MoreMenu = ({ closeMenu }) => {
                             style={navigationStyles.profileHeaderImage}
                         />
                     ) : (
-                        <Icon name="user-circle" size={60} color="#ccc" style={{ marginRight: 15 }} />
+                        <Icon name="user-circle" size={60} color="#ccc" />
                     )}
-                    <Text style={navigationStyles.profileHeaderName}>{profileName}</Text>
                 </View>
             </TouchableOpacity>
 
