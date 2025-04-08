@@ -351,7 +351,6 @@ function HomeScreen() {
     };
 
     return (
-
         <SafeAreaWrapper>
             {/* ✅ 1. HEADER SECTION (30% HEIGHT) */}
             <View style={HomeScreenStyles.headerContainer}>
@@ -403,6 +402,15 @@ function HomeScreen() {
                     </View>
                 </View>
 
+                {showQuizPrompt ? (
+                    <StartJourneyBanner
+                        title="Not sure where to go?"
+                        subtitle="Take our travel style quiz to unlock personalized destinations."
+                        buttonText="Start Quiz"
+                        onPress={handleQuizStart}
+                    />
+                ) : null}
+
                 {/* Onboarding Checklist */}
                 {!onboardingComplete && (
                     <View style={HomeScreenStyles.checklistCard}>
@@ -419,16 +427,6 @@ function HomeScreen() {
                 <View style={{ marginLeft: 0 }}>
                     <FeatureCarousel />
                 </View>
-
-                {showQuizPrompt ? (
-                    <StartJourneyBanner
-                        title="Not sure where to go?"
-                        subtitle="Take our travel style quiz to unlock personalized destinations."
-                        buttonText="Start Quiz"
-                        // image={require('../../assets/images/start-banner.jpg')} 
-                        onPress={handleQuizStart}
-                    />
-                ) : null}
 
                 {/* ✅ 3. TITLE SECTION*/}
                 <View

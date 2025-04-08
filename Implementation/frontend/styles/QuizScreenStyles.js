@@ -35,18 +35,19 @@ const QuizStyles = StyleSheet.create({
 
     optionButton: {
         backgroundColor: '#F2F2F2',
-        paddingVertical: 12,
-        paddingHorizontal: 15,
+        height: 72, // ← around 2 lines (18px line-height + padding)
+        paddingHorizontal: 16,
         borderRadius: 25,
+        flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        flexDirection: 'row',
         width: '90%',
         alignSelf: 'center',
-        marginBottom: 10,
+        marginBottom: 12,
         borderWidth: 1,
         borderColor: '#1E3A8A',
-    },
+      },
+      
 
     selectedOptionButton: {
         backgroundColor: '#1E3A8A',
@@ -295,13 +296,21 @@ const QuizStyles = StyleSheet.create({
       },
       optionContent: {
         flexDirection: 'row',
-        alignItems: 'center',           // ✅ ensures vertical alignment
+        alignItems: 'center', 
         justifyContent: 'space-between',
         width: '100%',
         paddingLeft: 10,
         paddingRight: 20,
       },
-        
+      resultText: {
+        fontSize: 18,
+        textAlign: 'center',
+        lineHeight: 26,
+        color: 'white',
+        marginBottom: 10,
+        marginTop: 5,
+      },
+      
     
 });
 

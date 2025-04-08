@@ -3,7 +3,7 @@ import {
   Text,
   Pressable,
   View,
-  TouchableOpacity,
+  TouchableOpacity, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Progress from 'react-native-progress';
@@ -110,17 +110,27 @@ function QuizScreen() {
       const userId = await getUserId();
       if (!userId) return;
   
+      const userJson = await AsyncStorage.getItem('user');
+      if (userJson) {
+        const parsedUser = JSON.parse(userJson);
+        if (parsedUser.name) {
+          setUserName(parsedUser.name);
+          console.log("👤 Loaded user name:", parsedUser.name);
+        }
+      }
+  
       const snapshot = await database().ref(`/Realtime_Quiz_Progress/${userId}`).once('value');
       const data = snapshot.val();
   
       if (data && data.current_question && data.selected_answers && data.scores) {
         setHasSavedProgress(true);
-        setShowResumePrompt(true); // Show confirmation before resuming
+        setShowResumePrompt(true);
       }
     } catch (error) {
-      console.error("❌ Failed to load quiz progress:", error.message);
+      console.error("❌ Failed to load quiz progress or username:", error.message);
     }
   };
+  
   const resumeSavedQuiz = async () => {
     const userId = await getUserId();
     if (!userId) return;
@@ -305,25 +315,28 @@ function QuizScreen() {
     }
   };
 
+  ///asfadfafadsf
 
   const determineTravelStyle = async () => {
     setIsLoadingResult(true);
     const { relaxation, culture, adventure, none } = scores;
     let resultStyle = '';
     let emoji = '';
-
+    let personalizedDescription = ''; // ✅ Declare at the top
+  
     if (none > 3) {
       resultStyle = "You didn’t align with any specific travel style.";
       emoji = '🔀';
+      personalizedDescription = `Hey ${userName || 'traveler'}, your travel style is still unfolding — no worries! You can retake the quiz anytime for fresh recommendations.`;
     } else {
       const maxScore = Math.max(relaxation, culture, adventure);
       const dominantStyles = [];
-
+  
       if (relaxation === maxScore) dominantStyles.push("Relaxation");
       if (culture === maxScore) dominantStyles.push("Cultural");
       if (adventure === maxScore) dominantStyles.push("Adventure");
-
-      // Determine emoji based on combinations
+  
+      // Set emoji
       if (dominantStyles.length === 1) {
         if (dominantStyles[0] === "Relaxation") emoji = "🏝";
         if (dominantStyles[0] === "Cultural") emoji = "🎭";
@@ -334,12 +347,25 @@ function QuizScreen() {
         if (dominantStyles.includes("Cultural") && dominantStyles.includes("Adventure")) emoji = "🎢";
       } else {
         resultStyle = "You have a unique travel style!";
-        emoji = "🔀";  // Default for rare all-tied cases
+        emoji = "🔀";
       }
-
+  
       resultStyle = dominantStyles.join(" and ");
+  
+      // 🧠 Personalized message
+      if (dominantStyles.length === 1) {
+        if (dominantStyles[0] === "Relaxation") {
+          personalizedDescription = `You're someone who values peaceful escapes. WayPoint will prioritize tranquil getaways and relaxing recommendations tailored just for you.`;
+        } else if (dominantStyles[0] === "Cultural") {
+          personalizedDescription = `You’re an explorer of stories and heritage. Expect culturally rich destinations and immersive experiences to fill your WayPoint journey.`;
+        } else if (dominantStyles[0] === "Adventure") {
+          personalizedDescription = `You're a thrill-seeker! WayPoint will recommend exciting activities, bold destinations, and a touch of the wild to match your pace.`;
+        }
+      } else {
+        personalizedDescription = `You have a dynamic taste for travel. WayPoint will mix it up for you with a balanced blend of experiences and destinations.`;
+      }
     }
-
+  
     const userId = await getUserId();
     if (userId) {
       await sendResultToBackend(userId, resultStyle);
@@ -347,16 +373,19 @@ function QuizScreen() {
     } else {
       console.error("User ID not found, cannot send quiz result to backend.");
     }
-
-    setTravelStyle({ emoji, resultStyle });
+  
+    // ✅ Set final state before ending loading
+    setTravelStyle({ emoji, resultStyle, description: personalizedDescription });
     setTimeout(() => {
       setIsLoadingResult(false);
       setHasFiredConfetti(true);
       setQuizCompleted(true);
       resultOpacity.value = withTiming(1, { duration: 600 });
-    }, 2000); 
-
+    }, 2000);
+  
   };
+  
+  // asdfasdfadadfadfadsfas
 
   const progress = useSharedValue(0); 
 
@@ -378,7 +407,12 @@ const [isLoadingResult, setIsLoadingResult] = useState(false);
 const [hasFiredConfetti, setHasFiredConfetti] = useState(false);
 const [hasSavedProgress, setHasSavedProgress] = useState(false);
 const [showResumePrompt, setShowResumePrompt] = useState(false);
-
+const [userName, setUserName] = useState('');
+const goHomeWithMessage = () => {
+  Alert.alert("🎉 All set!", "Your travel style has been saved.", [
+    { text: "OK", onPress: () => navigation.navigate('Main', { screen: 'Home' }) }
+  ]);
+};
 
 
   return (
@@ -421,14 +455,6 @@ const [showResumePrompt, setShowResumePrompt] = useState(false);
             />
           )}
 
-          {/* X Button */}
-          <TouchableOpacity 
-            style={styles.closeButton} 
-            onPress={() => navigation.navigate('Main', { screen: 'Home' })}
-          >
-            <Text style={styles.closeButtonText}>✖</Text>
-          </TouchableOpacity>
-
           {/* Result Card */}
           <Animated.View style={[styles.resultContainer, resultFadeIn]}>
 
@@ -443,12 +469,23 @@ const [showResumePrompt, setShowResumePrompt] = useState(false);
               <Text style={styles.resultText}>You are a</Text>
               <Text style={styles.resultStyleName}>{travelStyle.resultStyle}</Text>
               <Text style={styles.resultText}>Traveler!</Text>
+              <Text style={styles.resultText}>
+                {`Hey ${userName || 'traveler'}, ${travelStyle.description}`}
+              </Text>
+
             </>
           )}
 
           <TouchableOpacity style={styles.retakeQuizButton} onPress={handleRetakeQuiz}>
             <Text style={styles.retakeQuizButtonText}>RETAKE QUIZ</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.retakeQuizButton, { backgroundColor: '#1E3A8A', marginTop: 16 }]}
+            onPress={goHomeWithMessage}
+          >
+            <Text style={styles.retakeQuizButtonText}>BACK TO HOME</Text>
+          </TouchableOpacity>
+
         </Animated.View>
       </>
         ) : (
