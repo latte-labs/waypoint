@@ -41,7 +41,7 @@ const MapCheckInScreen = () => {
   const [userCheckIns, setUserCheckIns] = useState([]);
   const [region, setRegion] = useState(null);
   const mapRef = useRef(null);
-  const CIRCLE_RADIUS = 300;
+  const CIRCLE_RADIUS = 200;
 
   // Retrieve user check-ins from Firebase on mount
   useEffect(() => {
@@ -184,7 +184,7 @@ const MapCheckInScreen = () => {
     longitudeDelta: userLocation ? 0.01 : 0.05,
   };
 
-  // Check if selected place is within 300m of user's location
+  // Check if selected place is within 200m of user's location
   const inRange = selectedPlace
     ? getDistance(userLocation.latitude, userLocation.longitude, selectedPlace.latitude, selectedPlace.longitude) <= CIRCLE_RADIUS
     : false;
@@ -219,7 +219,7 @@ const MapCheckInScreen = () => {
         {userLocation && (
           <Circle
             center={userLocation}
-            radius={300}
+            radius={200}
             fillColor="rgba(66, 66, 221, 0.2)"
             strokeColor="rgba(0, 0, 255, 0.3)"
             strokeWidth={2}
