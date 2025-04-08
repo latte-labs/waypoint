@@ -12,6 +12,8 @@ const LoginScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
+  const passwordRef = useRef(null);
+
   
   const cardPosition = useRef(new Animated.Value(0)).current;
 
@@ -19,7 +21,7 @@ const LoginScreen = ({ navigation }) => {
     const showSub = Keyboard.addListener('keyboardWillShow', (event) => {
       const keyboardHeight = event.endCoordinates.height;
       Animated.timing(cardPosition, {
-        toValue: -keyboardHeight + 40, // 40px buffer so it's not glued to the top
+        toValue: -keyboardHeight, // 40px buffer so it's not glued to the top
         duration: 250,
         useNativeDriver: true,
         easing: Easing.out(Easing.ease),
@@ -195,6 +197,7 @@ const handleLogin = async () => {
     style={styles.background}
     resizeMode="cover"
     >
+      
     <View
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -216,7 +219,7 @@ const handleLogin = async () => {
         { borderColor: errors.email ? 'red' : '#ccc' }
       ]}>
         <TextInput
-          style={styles.passwordInput} // 👈 use the same style as passwordInput
+          style={styles.passwordInput}
           placeholder="Email"
           value={email}
           onChangeText={(text) => {
@@ -224,11 +227,22 @@ const handleLogin = async () => {
             setErrors((prev) => ({ ...prev, email: null }));
           }}
           keyboardType="email-address"
+          returnKeyType="next"
+          onSubmitEditing={() => passwordRef.current?.focus()}
         />
+
+
+        {email.length > 0 && (
+          <TouchableOpacity onPress={() => setEmail('')}>
+            <Icon name="times-circle" size={16} color="#999" style={styles.clearIcon} />
+          </TouchableOpacity>
+        )}
       </View>
           {errors.email ? <Text style={styles.error}>{errors.email}</Text> : null}
           <View style={[styles.passwordContainer,{ borderColor: errors.password ? 'red' : '#ccc' }] }>
-            <TextInput style={styles.passwordInput}
+            <TextInput
+              ref={passwordRef}
+              style={styles.passwordInput}
               placeholder="Password"
               value={password}
               onChangeText={(text) => {
@@ -236,13 +250,15 @@ const handleLogin = async () => {
                 setErrors((prev) => ({ ...prev, password: null }));
               }}
               secureTextEntry={!showPassword}
+              returnKeyType="done"
             />
+
+
             <TouchableOpacity onPress={() => setShowPassword((prev) => !prev)}>
               <Icon
                 name={showPassword ? 'eye-slash' : 'eye'}
-                size={14}
-                color="#333"
-                style={styles.icon}
+                size={16}
+                color="#999"
               />
             </TouchableOpacity>
           </View>
