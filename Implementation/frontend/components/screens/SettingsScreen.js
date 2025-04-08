@@ -127,11 +127,12 @@ const SettingsScreen = ({ navigation }) => {
     if (loading) {
         return (
             <SafeAreaView style={styles.safeContainer}>
-                <ActivityIndicator size="large" color="#0000ff" />
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#007bff" />
+                </View>
             </SafeAreaView>
         );
-    }
-
+    }    
     return (
         <SafeAreaView style={styles.safeContainer}>
             <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardContainer}>
