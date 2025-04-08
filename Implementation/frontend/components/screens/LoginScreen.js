@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert, StyleSheet, TouchableOpacity, ImageBackground, KeyboardAvoidingView, Platform} from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, TextInput, Button, Alert, StyleSheet, TouchableOpacity, ImageBackground, KeyboardAvoidingView, Platform, Animated, Keyboard, Easing} from 'react-native';
 import axios from 'axios';
 import API_BASE_URL from '../../config';
 import { database } from '../../firebase'; 
@@ -12,7 +12,35 @@ const LoginScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
+  
+  const cardPosition = useRef(new Animated.Value(0)).current;
 
+  useEffect(() => {
+    const showSub = Keyboard.addListener('keyboardWillShow', (event) => {
+      const keyboardHeight = event.endCoordinates.height;
+      Animated.timing(cardPosition, {
+        toValue: -keyboardHeight + 40, // 40px buffer so it's not glued to the top
+        duration: 250,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.ease),
+      }).start();
+    });
+  
+    const hideSub = Keyboard.addListener('keyboardWillHide', () => {
+      Animated.timing(cardPosition, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.ease),
+      }).start();
+    });
+  
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+  
 
   // ✅ Input validation
   const validateInputs = () => {
@@ -167,7 +195,7 @@ const handleLogin = async () => {
     style={styles.background}
     resizeMode="cover"
     >
-    <KeyboardAvoidingView
+    <View
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
@@ -178,7 +206,11 @@ const handleLogin = async () => {
       </View>
 
 
-      <View style={styles.card}>
+      <Animated.View style={[styles.card, { transform: [{ translateY: cardPosition }] }]}>
+
+      <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+        <Text style={styles.signupText}>Don't have an account? Sign Up</Text>
+      </TouchableOpacity>
       <View style={[
         styles.inputContainer,
         { borderColor: errors.email ? 'red' : '#ccc' }
@@ -194,10 +226,7 @@ const handleLogin = async () => {
           keyboardType="email-address"
         />
       </View>
-
-
           {errors.email ? <Text style={styles.error}>{errors.email}</Text> : null}
-
           <View style={[styles.passwordContainer,{ borderColor: errors.password ? 'red' : '#ccc' }] }>
             <TextInput style={styles.passwordInput}
               placeholder="Password"
@@ -232,12 +261,8 @@ const handleLogin = async () => {
           </TouchableOpacity>
 
 
-          <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-            <Text style={styles.signupText}>Don't have an account? Sign Up</Text>
-          </TouchableOpacity>
-
+      </Animated.View>
       </View>
-      </KeyboardAvoidingView>
     </ImageBackground>
   );
 };
@@ -304,7 +329,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 6,
     elevation: 5,
-    paddingBottom: 50
+    paddingBottom: 30
   },
   loginButton: {
     backgroundColor: '#263986',
@@ -312,6 +337,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     borderRadius: 50,
     marginTop: 10,
+    marginBottom: 24,
   },
   
   loginButtonText: {
@@ -323,16 +349,17 @@ const styles = StyleSheet.create({
   
   signupText: {
     color: '#263986',
-    fontSize: 13,
-    marginTop: 16,
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 14,
     textAlign: 'center',
   },
+  
   container: {
     flex: 1,
     width: '100%',
     justifyContent: 'flex-end',
     alignItems: 'center',
-    paddingBottom: 40,
   },
   headingContainer: {
     marginBottom: 24,
