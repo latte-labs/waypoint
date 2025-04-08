@@ -15,8 +15,8 @@ import Animated, {
   Easing,
   useAnimatedRef,
   measure,
-  runOnUI
-
+  runOnUI,
+  runOnJS
 } from 'react-native-reanimated';
 
 
@@ -32,18 +32,16 @@ const OnboardingChecklist = ({ userId, onComplete, refreshTrigger }) => {
   const badgeScale = useSharedValue(0);
   const badgeOpacity = useSharedValue(0);
   const badgeRotation = useSharedValue(0);
-  const isExpanded = useSharedValue(true);
   const contentHeight = useSharedValue(0);
   const contentRef = useAnimatedRef();
   const [expanded, setExpanded] = useState(true);
   const [measuredHeight, setMeasuredHeight] = useState(0);
 
-
   const animatedContainerStyle = useAnimatedStyle(() => ({
-    height: isExpanded.value ? withTiming(measuredHeight) : withTiming(0),
-    opacity: isExpanded.value ? withTiming(1) : withTiming(0),
+    height: contentHeight.value,
     overflow: 'hidden',
   }));
+  
 
 
   useEffect(() => {
@@ -64,14 +62,16 @@ const OnboardingChecklist = ({ userId, onComplete, refreshTrigger }) => {
     }
   }, [showRewardModal]);
 
-  const animatedBadgeStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: badgeScale.value },
-      { rotate: `${badgeRotation.value}deg` }
-    ],
-    opacity: badgeOpacity.value,
-  }));
-
+  useEffect(() => {
+    if (!expanded) {
+      // Always collapse instantly, even if height not yet measured
+      contentHeight.value = withTiming(0, { duration: 300 });
+    } else if (measuredHeight > 0) {
+      // Only expand if we have a measured height
+      contentHeight.value = withTiming(measuredHeight, { duration: 300 });
+    }
+  }, [expanded, measuredHeight]);
+  
 
 
   useFocusEffect(
@@ -107,6 +107,12 @@ const OnboardingChecklist = ({ userId, onComplete, refreshTrigger }) => {
             checkedIn,
             achievementsViewed,
           });
+          
+          // Trigger layout remeasure after a frame
+          setTimeout(() => {
+            if (expanded) updateHeight();
+          }, 100);
+          
         } catch (err) {
           console.error('Checklist fetch error:', err);
         }
@@ -127,19 +133,35 @@ const OnboardingChecklist = ({ userId, onComplete, refreshTrigger }) => {
 
 
   const completedCount = Object.values(progress).filter(Boolean).length;
-
+  const updateHeight = () => {
+    runOnUI(() => {
+      'worklet';
+      const measured = measure(contentRef);
+      if (measured) {
+        contentHeight.value = withTiming(measured.height, { duration: 300 });
+      }
+    })();
+  };
+  const animatedBadgeStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { scale: badgeScale.value },
+        { rotate: `${badgeRotation.value}deg` },
+      ],
+      opacity: badgeOpacity.value,
+    };
+  });
+  
   return (
     <View style={[HomeScreenStyles.card, { marginTop: 2, padding: 6, marginBottom: -2 }]}>
       <TouchableOpacity
         onPress={() => {
-          isExpanded.value = !isExpanded.value;
           setExpanded((prev) => !prev);
         }}
         style={{
           flexDirection: 'row',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: 10,
         }}
       >
         <Text style={[HomeScreenStyles.titleText]}>Get Started with WayPoint</Text>
@@ -150,63 +172,94 @@ const OnboardingChecklist = ({ userId, onComplete, refreshTrigger }) => {
         />
       </TouchableOpacity>
 
-
-
       <Animated.View style={animatedContainerStyle}>
-        <View
-          onLayout={(event) => {
-            // Get the content height and update the shared value
-            const { height } = event.nativeEvent.layout;
-            contentHeight.value = height;
-          }}
-        >
-          {checklistItems.map((item) => (
-            <TouchableOpacity
-              key={item.key}
-              onPress={item.action}
-              disabled={progress[item.key]}
-              style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}
-            >
-              <Icon
-                name={progress[item.key] ? 'check-circle' : 'circle'}
-                solid
-                size={16}
-                color={progress[item.key] ? '#10B981' : '#9CA3AF'}
-                style={{ marginRight: 8 }}
-              />
-              <Text style={{ color: progress[item.key] ? '#10B981' : '#374151' }}>
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+      <View
+        ref={contentRef}
+        onLayout={(event) => {
+          const { height } = event.nativeEvent.layout;
+          if (height > 0) {
+            setMeasuredHeight(height);
+          }
+        }}
+        
+      >
 
-          <Text style={{ marginTop: 8, fontSize: 12, color: '#6B7280' }}>
-            {completedCount} of {checklistItems.length} tasks completed
+    {/* Checklist items */}
+    {checklistItems.map((item) => (
+      <TouchableOpacity
+        key={item.key}
+        onPress={item.action}
+        disabled={progress[item.key]}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginVertical: 4,
+          paddingVertical: 6,
+          borderRadius: 8,
+          backgroundColor: !progress[item.key] ? '#F9FAFB' : 'transparent',
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Icon
+            name={progress[item.key] ? 'check-circle' : 'circle'}
+            solid
+            size={16}
+            color={progress[item.key] ? '#10B981' : '#9CA3AF'}
+            style={{ marginRight: 8 }}
+          />
+          <Text
+            style={{
+              color: progress[item.key] ? '#10B981' : '#374151',
+              fontWeight: progress[item.key] ? '500' : '400',
+            }}
+          >
+            {item.label}
           </Text>
-
-          {completedCount === checklistItems.length && (
-            <TouchableOpacity
-              onPress={() => setShowRewardModal(true)}
-              style={{
-                backgroundColor: '#F59E0B',
-                paddingVertical: 10,
-                borderRadius: 10,
-                marginTop: 12,
-                alignItems: 'center',
-              }}
-            >
-              <Text style={{ color: 'white', fontWeight: 'bold' }}>🎉 Claim Your Reward!</Text>
-            </TouchableOpacity>
-          )}
         </View>
-      </Animated.View>
+
+        {!progress[item.key] && (
+          <Icon
+            name="chevron-right"
+            size={12}
+            color="#9CA3AF"
+            style={{ marginLeft: 8 }}
+          />
+        )}
+      </TouchableOpacity>
+    ))}
+
+    <Text style={{ marginTop: 8, fontSize: 12, color: '#6B7280' }}>
+      {completedCount} of {checklistItems.length} tasks completed
+    </Text>
+  </View>
+</Animated.View>
+{completedCount === checklistItems.length && (
+  <TouchableOpacity
+    onPress={() => setShowRewardModal(true)}
+    style={{
+      backgroundColor: '#F59E0B',
+      paddingVertical: 10,
+      borderRadius: 10,
+      marginTop: 12,
+      alignItems: 'center',
+    }}
+  >
+    <Text style={{ color: 'white', fontWeight: 'bold' }}>🎉 Claim Your Reward!</Text>
+  </TouchableOpacity>
+)}
+
 
       <View
         style={{ position: 'absolute', opacity: 0, zIndex: -1 }}
         onLayout={(event) => {
-          setMeasuredHeight(event.nativeEvent.layout.height);
+          // Exclude reward button if not all tasks are complete
+          const { height } = event.nativeEvent.layout;
+          const rewardHeight = completedCount === checklistItems.length ? 52 : 0;
+          setMeasuredHeight(height - rewardHeight);
         }}
       >
+
         <View>
           {checklistItems.map((item) => (
             <TouchableOpacity
