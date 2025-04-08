@@ -1,12 +1,10 @@
 import React from 'react';
-import { SafeAreaView, StyleSheet } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet } from 'react-native';
 
 const SafeAreaWrapper = ({ children }) => {
-  const insets = useSafeAreaInsets();
-
   return (
-    <SafeAreaView style={[styles.container, { paddingTop: insets.top * 0.6 }]}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       {children}
     </SafeAreaView>
   );
@@ -15,7 +13,7 @@ const SafeAreaWrapper = ({ children }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white', // Keeps consistency
+    backgroundColor: 'white',
   },
 });
 
