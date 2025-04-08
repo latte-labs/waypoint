@@ -201,6 +201,85 @@ const HomeScreenStyles = StyleSheet.create({
         shadowRadius: 3,
         elevation: 3, // for Android
       },
+      tooltipContainer: {
+        position: 'absolute',
+        bottom: 28,
+        backgroundColor: '#1E3A8A',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6,
+        zIndex: 10,
+    },
+    tooltipLeftContainer: {
+        position: 'absolute',
+        right: 30, // move left of the icon
+        backgroundColor: '#1E3A8A',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6,
+        zIndex: 10,
+    },
+    
+
+    tooltipText: {
+        color: 'white',
+        fontSize: 12,
+        textAlign: 'center',
+    },
+    weatherBubbleBelowContainer: {
+        marginTop: 8,
+        backgroundColor: '#1E3A8A',
+        borderRadius: 10,
+        padding: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+      },
+      
+      weatherBubbleText: {
+        color: 'white',
+        fontSize: 14,
+        textAlign: 'center',
+        marginBottom: 8,
+      },
+      
+      weatherBubbleButton: {
+        backgroundColor: 'white',
+        paddingVertical: 6,
+        paddingHorizontal: 16,
+        borderRadius: 20,
+      },
+      
+      weatherBubbleButtonText: {
+        color: '#1E3A8A',
+        fontWeight: 'bold',
+        fontSize: 13,
+      },
+      weatherSectionWrapper: {
+        marginVertical: 10,
+      },
+      weatherTooltipContainer: {
+        backgroundColor: '#1E3A8A',
+        borderRadius: 20,
+        padding: 14,
+        marginTop: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+      },
+      weatherTooltipTail: {
+        width: 0,
+        height: 0,
+        borderLeftWidth: 8,
+        borderRightWidth: 8,
+        borderBottomWidth: 10,
+        borderLeftColor: 'transparent',
+        borderRightColor: 'transparent',
+        borderBottomColor: '#1E3A8A',
+        alignSelf: 'flex-end',
+        marginRight: 22,
+        marginTop: -18,
+      },
+      
+      
       
 });
 

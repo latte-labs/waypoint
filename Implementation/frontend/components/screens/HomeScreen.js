@@ -30,7 +30,6 @@ import Animated, {
     runOnJS
 } from 'react-native-reanimated';
 import WeatherSearchModal from './WeatherSearchModal';
-import { navigationStyles } from '../../styles/NavigationStyles';
 import OnboardingChecklist from './OnboardingChecklist';
 
 
@@ -59,6 +58,7 @@ function HomeScreen() {
             { translateY: translationY.value },
         ],
     }));
+    const [showWeatherGuide, setShowWeatherGuide] = useState(false);
 
     const panGesture = Gesture.Pan()
         .minDistance(1)
@@ -149,7 +149,6 @@ function HomeScreen() {
         }
     };
 
-
     useFocusEffect(
         React.useCallback(() => {
             const fetchData = async () => {
@@ -159,6 +158,12 @@ function HomeScreen() {
 
                     const user = JSON.parse(storedUser);
                     setUserId(String(user.id));
+                    // Check if weather guide has already been dismissed
+                    const tooltipSnap = await database()
+                    .ref(`/users/${user.id}/onboarding/weather_tooltip_dismissed`)
+                    .once('value');
+                    setShowWeatherGuide(tooltipSnap.val() !== true);
+
 
                     // ✅ Fetch onboarding status
                     const onboardingSnap = await database()
@@ -242,6 +247,8 @@ function HomeScreen() {
     const [itineraries, setItineraries] = useState([]);
     const [loadingItineraries, setLoadingItineraries] = useState(false);
     const [checklistRefreshTrigger, setChecklistRefreshTrigger] = useState(0);
+    const [showTooltip, setShowTooltip] = useState(false);
+
 
     // WEATHER
     const fetchWeather = async (latitude, longitude) => {
@@ -373,34 +380,73 @@ function HomeScreen() {
             >
 
                 {/* Weather */}
-                <View style={HomeScreenStyles.weatherContainer}>
-                    <View style={HomeScreenStyles.weatherRow}>
-                        {/* Left side: icon, temperature, city */}
-                        <TouchableOpacity
-                            onPress={handlePackingTip}
-                            style={{ flexDirection: 'row', alignItems: 'center' }}
-                            activeOpacity={0.8}
-                        >
-                            <Image
-                                source={{
-                                    uri: `https://openweathermap.org/img/wn/${weather?.weather_icon || '01d'}@2x.png`,
-                                }}
-                                style={HomeScreenStyles.weatherIcon}
-                            />
-                            <Text style={HomeScreenStyles.temperatureText}>
-                                {weather?.temperature ? `${weather.temperature}°C` : '--°C'}
-                            </Text>
-                            <Text style={HomeScreenStyles.cityText}>
-                                {weather?.weather_name || 'City Name'}
-                            </Text>
-                        </TouchableOpacity>
+                <View style={HomeScreenStyles.weatherSectionWrapper}>
 
-                        {/* Right side: search icon */}
-                        <TouchableOpacity onPress={() => setShowWeatherSearchModal(true)}>
-                            <Icon name="search" size={18} color="#1E3A8A" />
-                        </TouchableOpacity>
-                    </View>
+                {/* 🔹 Weather Widget Container (Reusing weatherWidgetContainer style) */}
+                <View style={HomeScreenStyles.weatherContainer}>
+                <View style={HomeScreenStyles.weatherRow}>
+                    {/* Left Side: Weather Info */}
+                    <TouchableOpacity
+                    onPress={() => setShowWeatherSearchModal(true)}
+                    style={{ flexDirection: 'row', alignItems: 'center' }}
+                    activeOpacity={0.8}
+                    >
+                    <Image
+                        source={{
+                        uri: `https://openweathermap.org/img/wn/${weather?.weather_icon || '01d'}@2x.png`,
+                        }}
+                        style={HomeScreenStyles.weatherIcon}
+                    />
+                    <Text style={HomeScreenStyles.temperatureText}>
+                        {weather?.temperature ? `${weather.temperature}°C` : '--°C'}
+                    </Text>
+                    <Text style={HomeScreenStyles.cityText}>
+                        {weather?.weather_name || 'City Name'}
+                    </Text>
+                    </TouchableOpacity>
+
+                    {/* Right Side: Suitcase Icon */}
+                    <TouchableOpacity
+                    onPress={handlePackingTip}
+                    onLongPress={() => {
+                        setShowTooltip(true);
+                        setTimeout(() => setShowTooltip(false), 1500);
+                    }}
+                    delayLongPress={200}
+                    >
+                    <Icon name="suitcase" size={18} color="#1E3A8A" />
+                    </TouchableOpacity>
                 </View>
+                </View>
+
+                {/* 🔹 Tooltip Bubble BELOW the widget */}
+                {showWeatherGuide && (
+                <>
+                    <View style={HomeScreenStyles.weatherTooltipTail} />
+                    <View style={HomeScreenStyles.weatherTooltipContainer}>
+                    <Text style={HomeScreenStyles.weatherBubbleText}>
+                        Tap the suitcase to get smart packing suggestions!
+                    </Text>
+                    <TouchableOpacity
+                        style={HomeScreenStyles.weatherBubbleButton}
+                        onPress={async () => {
+                        if (userId) {
+                            await database()
+                            .ref(`/users/${userId}/onboarding/weather_tooltip_dismissed`)
+                            .set(true);
+                        }
+                        setShowWeatherGuide(false);
+                        }}
+                    >
+                        <Text style={HomeScreenStyles.weatherBubbleButtonText}>Got it</Text>
+                    </TouchableOpacity>
+                    </View>
+                </>
+                )}
+                </View>
+
+
+
 
                 {showQuizPrompt ? (
                     <StartJourneyBanner
@@ -503,19 +549,12 @@ function HomeScreen() {
                 />
             </Modal>
 
-
-
             <PackingSuggestionModal
                 visible={showPackingModal}
                 suggestion={packingTip}
                 loading={loadingPackingTip}
                 onClose={() => setShowPackingModal(false)}
             />
-
-
-
-
-
 
         </SafeAreaWrapper>
     );
