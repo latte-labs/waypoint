@@ -14,8 +14,8 @@ const SignupScreen = ({ navigation }) => {
   const [showPassword, setShowPassword] = useState(false);
   const imageOpacity = useRef(new Animated.Value(0)).current;
   const cardPosition = useRef(new Animated.Value(0)).current;
-
-
+  const emailRef = useRef(null);
+  const passwordRef = useRef(null);
   useEffect(() => {
     Animated.timing(imageOpacity, {
       toValue: 1,
@@ -179,7 +179,9 @@ const SignupScreen = ({ navigation }) => {
               value={name}
               onChangeText={setName}
               returnKeyType="next"
+              onSubmitEditing={() => emailRef.current?.focus()}
             />
+
             {name.length > 0 && (
               <TouchableOpacity onPress={() => setName('')}>
                 <Icon name="times-circle" size={16} color="#999" style={styles.clearIcon} />
@@ -190,12 +192,14 @@ const SignupScreen = ({ navigation }) => {
 
           <View style={styles.inputContainer}>
             <TextInput
+              ref={emailRef}
               style={styles.inputText}
               placeholder="Email"
               value={email}
               onChangeText={(text) => setEmail(text.toLowerCase())}
               keyboardType="email-address"
               returnKeyType="next"
+              onSubmitEditing={() => passwordRef.current?.focus()}
             />
             {email.length > 0 && (
               <TouchableOpacity onPress={() => setEmail('')}>
@@ -207,6 +211,7 @@ const SignupScreen = ({ navigation }) => {
 
           <View style={styles.inputContainer}>
             <TextInput
+              ref={passwordRef}
               style={styles.inputText}
               placeholder="Password"
               value={password}
@@ -214,6 +219,7 @@ const SignupScreen = ({ navigation }) => {
               secureTextEntry={!showPassword}
               returnKeyType="done"
             />
+
             <TouchableOpacity onPress={() => setShowPassword((prev) => !prev)}>
               <Icon name={showPassword ? 'eye-slash' : 'eye'} size={16} color="#999" />
             </TouchableOpacity>
