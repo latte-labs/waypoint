@@ -18,29 +18,39 @@ const LoginScreen = ({ navigation }) => {
   const cardPosition = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    let keyboardShown = false;
+
     const showSub = Keyboard.addListener('keyboardWillShow', (event) => {
       const keyboardHeight = event.endCoordinates.height;
-      Animated.timing(cardPosition, {
-        toValue: -keyboardHeight, // 40px buffer so it's not glued to the top
-        duration: 250,
-        useNativeDriver: true,
-        easing: Easing.out(Easing.ease),
-      }).start();
+  
+      if (!keyboardShown) {
+        keyboardShown = true;
+        Animated.timing(cardPosition, {
+          toValue: -keyboardHeight,
+          duration: 250,
+          useNativeDriver: true,
+          easing: Easing.out(Easing.ease),
+        }).start();
+      }
     });
   
     const hideSub = Keyboard.addListener('keyboardWillHide', () => {
-      Animated.timing(cardPosition, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-        easing: Easing.out(Easing.ease),
-      }).start();
+      if (keyboardShown) {
+        keyboardShown = false;
+        Animated.timing(cardPosition, {
+          toValue: 0,
+          duration: 250,
+          useNativeDriver: true,
+          easing: Easing.out(Easing.ease),
+        }).start();
+      }
     });
   
     return () => {
       showSub.remove();
       hideSub.remove();
     };
+
   }, []);
   
 

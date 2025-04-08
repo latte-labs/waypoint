@@ -9,7 +9,7 @@ import SignupScreen from './components/screens/SignupScreen';
 import AppNavigator from './components/navigation/AppNavigator';
 import firebase from '@react-native-firebase/app';
 import AuthLoadingScreen from './components/AuthLoadingScreen';
-
+import { CardStyleInterpolators } from '@react-navigation/stack'; 
 
 const Stack = createStackNavigator();
 
@@ -25,7 +25,13 @@ export default function App() {
       <SafeAreaProvider>
         <BottomSheetModalProvider>
           <NavigationContainer>
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Navigator
+              screenOptions={{
+                headerShown: false,
+                gestureEnabled: true,
+                cardStyleInterpolator: CardStyleInterpolators.forFadeFromBottomAndroid, 
+              }}
+            >
               <Stack.Screen name="AuthLoading" component={AuthLoadingScreen} />
               <Stack.Screen name="Login" component={LoginScreen} />
               <Stack.Screen name="Signup" component={SignupScreen} />

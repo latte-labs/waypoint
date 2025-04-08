@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert, StyleSheet, TouchableOpacity, ImageBackground, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, TextInput, Button, Alert, StyleSheet, TouchableOpacity, ImageBackground, KeyboardAvoidingView, Platform, Animated, Keyboard, Easing } from 'react-native';
 import axios from 'axios';
 import API_BASE_URL from '../../config';
-import { database } from '../../firebase';  // ✅ Import Firebase Realtime Database
+import { database } from '../../firebase';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 const SignupScreen = ({ navigation }) => {
   const [name, setName] = useState('');
@@ -10,6 +11,53 @@ const SignupScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+  const imageOpacity = useRef(new Animated.Value(0)).current;
+  const cardPosition = useRef(new Animated.Value(0)).current;
+
+
+  useEffect(() => {
+    Animated.timing(imageOpacity, {
+      toValue: 1,
+      duration: 600,
+      useNativeDriver: true,
+    }).start();
+  
+    let keyboardShown = false;
+
+    const showSub = Keyboard.addListener('keyboardWillShow', (event) => {
+      const keyboardHeight = event.endCoordinates.height;
+  
+      if (!keyboardShown) {
+        keyboardShown = true;
+        Animated.timing(cardPosition, {
+          toValue: -keyboardHeight,
+          duration: 250,
+          useNativeDriver: true,
+          easing: Easing.out(Easing.ease),
+        }).start();
+      }
+    });
+  
+    const hideSub = Keyboard.addListener('keyboardWillHide', () => {
+      if (keyboardShown) {
+        keyboardShown = false;
+        Animated.timing(cardPosition, {
+          toValue: 0,
+          duration: 250,
+          useNativeDriver: true,
+          easing: Easing.out(Easing.ease),
+        }).start();
+      }
+    });
+  
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+  
+
 
   // ✅ Validate Input Fields
   const validateInputs = () => {
@@ -114,26 +162,32 @@ const SignupScreen = ({ navigation }) => {
   };
 
   return (
+    <Animated.View style={[styles.background, { opacity: imageOpacity }]}>
+
     <ImageBackground
       source={require('../../assets/images/signup-image.jpeg')}
       style={styles.background}
       resizeMode="cover"
     >
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <View style={styles.card}>
+        <View style={styles.container}>
+
+        <Animated.View style={[styles.card, { transform: [{ translateY: cardPosition }] }]}>
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.inputText}
               placeholder="Full Name"
               value={name}
               onChangeText={setName}
+              returnKeyType="next"
             />
+            {name.length > 0 && (
+              <TouchableOpacity onPress={() => setName('')}>
+                <Icon name="times-circle" size={16} color="#999" style={styles.clearIcon} />
+              </TouchableOpacity>
+            )}
           </View>
           {errors.name && <Text style={styles.error}>{errors.name}</Text>}
-  
+
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.inputText}
@@ -141,20 +195,31 @@ const SignupScreen = ({ navigation }) => {
               value={email}
               onChangeText={(text) => setEmail(text.toLowerCase())}
               keyboardType="email-address"
+              returnKeyType="next"
             />
+            {email.length > 0 && (
+              <TouchableOpacity onPress={() => setEmail('')}>
+                <Icon name="times-circle" size={16} color="#999" style={styles.clearIcon} />
+              </TouchableOpacity>
+            )}
           </View>
           {errors.email && <Text style={styles.error}>{errors.email}</Text>}
-  
+
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.inputText}
               placeholder="Password"
               value={password}
               onChangeText={setPassword}
-              secureTextEntry
+              secureTextEntry={!showPassword}
+              returnKeyType="done"
             />
+            <TouchableOpacity onPress={() => setShowPassword((prev) => !prev)}>
+              <Icon name={showPassword ? 'eye-slash' : 'eye'} size={16} color="#999" />
+            </TouchableOpacity>
           </View>
           {errors.password && <Text style={styles.error}>{errors.password}</Text>}
+
   
           <TouchableOpacity
             style={styles.signupButton}
@@ -169,9 +234,10 @@ const SignupScreen = ({ navigation }) => {
           <TouchableOpacity onPress={() => navigation.navigate('Login')}>
             <Text style={styles.loginText}>Already have an account? Login</Text>
           </TouchableOpacity>
+        </Animated.View>
         </View>
-      </KeyboardAvoidingView>
     </ImageBackground>
+    </Animated.View>
   );
   
 };
@@ -187,7 +253,7 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'flex-end',
     alignItems: 'center',
-    paddingBottom: 40,
+
   },
   card: {
     width: '100%',
@@ -200,7 +266,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 5,
     alignItems: 'center',
-    paddingBottom: 50,
+  
   },
   inputContainer: {
     width: '100%',
