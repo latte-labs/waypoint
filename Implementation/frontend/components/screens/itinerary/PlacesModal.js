@@ -8,9 +8,12 @@ import {
   FlatList,
   StyleSheet,
   Alert,
+  Dimensions,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { database } from '../../../firebase';
+
+const { height } = Dimensions.get('window');
 
 const PlacesModal = ({ visible, onClose, itineraryId, onPlaceTap }) => {
   const [place, setPlace] = useState('');
@@ -91,30 +94,33 @@ const PlacesModal = ({ visible, onClose, itineraryId, onPlaceTap }) => {
             </TouchableOpacity>
           </View>
 
-          {/* List of Places */}
+          {/* Instructional Subtext (shown once) */}
+          <Text style={styles.instructionText}>💡 Tip: Tap a place below to quickly add it to your itinerary day.</Text>
+
           <FlatList
             data={placesList}
             keyExtractor={(item, index) => index.toString()}
             renderItem={({ item, index }) => (
-              <View style={styles.placeItem}>
-                <TouchableOpacity 
-                  style={styles.actionButton} 
-                  onPress={() => onPlaceTap(item)}
-                  >
-                  <Text style={styles.actionText}>⚡</Text>
-                </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.placeItemWrapper}
+                onPress={() => onPlaceTap(item)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.placeItem}>
+                  <View style={styles.placeTextWrapper}>
+                    <Text style={styles.placeText}>
+                      {index + 1}. {item}
+                    </Text>
+                  </View>
 
-                {/* 👇 Wrap Text inside a flex container */}
-                <View style={styles.placeTextWrapper}>
-                  <Text style={styles.placeText}>{item}</Text>
+                  <TouchableOpacity onPress={() => deletePlace(index)}>
+                    <Text style={styles.deleteText}>❌</Text>
+                  </TouchableOpacity>
                 </View>
-
-                <TouchableOpacity onPress={() => deletePlace(index)}>
-                  <Text style={styles.deleteText}>❌</Text>
-                </TouchableOpacity>
-              </View>
+              </TouchableOpacity>
             )}
           />
+
 
 
           {/* Save & Cancel Buttons */}
@@ -143,6 +149,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     alignItems: 'center',
+    maxHeight: height * 0.6,
   },
   modalTitle: {
     fontSize: 18,
@@ -241,6 +248,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#007bff',
   },
+  placeItemWrapper: {
+    width: '100%',
+  },
+  instructionText: {
+    fontSize: 13,
+    color: '#666',
+    marginBottom: 5,
+    alignSelf: 'flex-start',
+    paddingVertical: 10
+  },
+  
+  
   
 });
 
