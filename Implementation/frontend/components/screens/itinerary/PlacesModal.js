@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Alert,
   Dimensions,
+  Keyboard, TouchableWithoutFeedback
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { database } from '../../../firebase';
@@ -72,12 +73,14 @@ const PlacesModal = ({ visible, onClose, itineraryId, onPlaceTap }) => {
   
   return (
     <Modal
-      animationType="slide"
+      animationType="fade"
       transparent={true}
       visible={visible}
       onRequestClose={onClose}
     >
       <View style={styles.modalOverlay}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+
         <View style={styles.modalContainer}>
           <Text style={styles.modalTitle}>Add Places to Visit</Text>
 
@@ -131,6 +134,7 @@ const PlacesModal = ({ visible, onClose, itineraryId, onPlaceTap }) => {
           </View>
 
         </View>
+        </TouchableWithoutFeedback>
       </View>
     </Modal>
   );
@@ -139,17 +143,18 @@ const PlacesModal = ({ visible, onClose, itineraryId, onPlaceTap }) => {
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    paddingTop: height * 0.1,
   },
   modalContainer: {
-    width: '80%',
+    width: '90%',
     backgroundColor: '#fff',
     padding: 20,
     borderRadius: 10,
     alignItems: 'center',
-    maxHeight: height * 0.6,
+    minHeight: height * 0.4,
+    maxHeight: height * 0.5,
   },
   modalTitle: {
     fontSize: 18,
