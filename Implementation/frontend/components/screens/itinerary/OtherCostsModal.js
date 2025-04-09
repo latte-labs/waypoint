@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
-    Modal, View, Text, TextInput, TouchableOpacity, FlatList, Alert, KeyboardAvoidingView, ScrollView, Platform 
+    Modal, View, Text, TextInput, TouchableOpacity, FlatList, Alert, KeyboardAvoidingView, ScrollView, Platform, Animated 
 } from 'react-native';
 import costTypes from '../../../src/data/costTypes.json';
 import { database } from '../../../firebase';
@@ -11,6 +11,8 @@ const OtherCostsModal = ({ visible, onClose, otherCosts, setOtherCosts, itinerar
     const [selectedSubtypes, setSelectedSubtypes] = useState([]);
     const [itemName, setItemName] = useState('');
     const [amount, setAmount] = useState('');
+    const [showSaveMessage, setShowSaveMessage] = useState(false);
+    const fadeAnim = useRef(new Animated.Value(0)).current;
 
     // ✅ Get subtypes based on selected type
     const subtypes = selectedType ? costTypes[selectedType] : [];
@@ -38,10 +40,23 @@ const OtherCostsModal = ({ visible, onClose, otherCosts, setOtherCosts, itinerar
                 .ref(`/live_itineraries/${itineraryId}/other_costs`)
                 .set(updatedCosts);
             console.log("✅ Other costs saved to Firebase");
+            setShowSaveMessage(true);
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 300,
+                useNativeDriver: true,
+            }).start(() => {
+                setTimeout(() => {
+                    Animated.timing(fadeAnim, {
+                        toValue: 0,
+                        duration: 300,
+                        useNativeDriver: true,
+                    }).start(() => setShowSaveMessage(false));
+                }, 1500);
+            });
         } catch (error) {
             console.error("❌ Failed to save other costs:", error);
-        }
-    
+        }    
         resetFields();
     };
         
@@ -244,9 +259,32 @@ const OtherCostsModal = ({ visible, onClose, otherCosts, setOtherCosts, itinerar
 
                     {/* Saved Costs Preview */}
                     <View style={{ marginTop: 24, width: '100%', marginBottom: 20, }}>
-                        <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#1d3a8a', marginBottom: 10 }}>
-                            Saved Other Costs
-                        </Text>
+                        <View style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: 10,
+                        }}>
+                            <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#1d3a8a' }}>
+                                Saved Other Costs
+                            </Text>
+
+                            {showSaveMessage && (
+                                <Animated.View style={{
+                                    opacity: fadeAnim,
+                                    backgroundColor: '#d1fae5',
+                                    paddingVertical: 4,
+                                    paddingHorizontal: 12,
+                                    borderRadius: 20,
+                                }}>
+                                    <Text style={{ color: '#065f46', fontWeight: '600', fontSize: 12 }}>
+                                        ✅ Cost saved
+                                    </Text>
+                                </Animated.View>
+                            )}
+
+                        </View>
+
 
                         {otherCosts.length > 0 ? (
                             otherCosts.map((cost, index) => (
@@ -296,7 +334,6 @@ const OtherCostsModal = ({ visible, onClose, otherCosts, setOtherCosts, itinerar
                             </Text>
                         )}
                     </View>
-
                 </ScrollView>
                 </KeyboardAvoidingView>
             </View>
