@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,8 @@ import {
   TouchableOpacity,
   ImageBackground,
   ActivityIndicator,
-  StyleSheet
+  StyleSheet,
+  Modal
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -30,7 +31,23 @@ const OverviewTab = ({
   isPlacesModalVisible,
   setIsPlacesModalVisible,
   placesList,
+  
 }) => {
+  const [infoModalVisible, setInfoModalVisible] = useState(false);
+  const [infoModalText, setInfoModalText] = useState('');
+  const handleInfoPress = (type) => {
+    if (type === 'planned') {
+      setInfoModalText(
+        'Planned Budget is the total amount you aim to spend for your entire trip. It can include flights, stays, food, and more.\n\nTo change this amount, tap the "Edit" button on the itinerary screen.'
+      );
+    } else if (type === 'activities') {
+      setInfoModalText(
+        'Activities Cost is calculated automatically based on the individual activity costs added under each day of your itinerary.'
+      );
+    }
+    setInfoModalVisible(true);
+  };
+  
   return (
     <ScrollView style={{ flex: 1 }}>
       <View style={{ flex: 1, backgroundColor: '#fff', paddingBottom: 80 }}>
@@ -109,38 +126,89 @@ const OverviewTab = ({
               )}
             </View>
 
-              {/* Budget Panels */}
-            <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10, marginLeft: 10 }}
-            >
-            <View style={{ width: 175, aspectRatio: 2.1, backgroundColor: '#eef7ff', justifyContent: 'center', alignItems: 'center', borderRadius: 10, padding: 10, marginRight: 10 }}>
-                <Text style={{ fontSize: 14, color: '#007bff', fontWeight: 'bold', marginBottom: 5 }}>Budget</Text>
-                <Text style={{ fontSize: 18, fontWeight: '600', color: '#222' }}>
-                {itinerary?.budget ? `$${itinerary.budget.toLocaleString()}` : 'N/A'}
-                </Text>
-            </View>
+            {/* Budget Section - Grid Style */}
+            <View style={{ marginTop: 20, paddingHorizontal: 10 }}>
+              <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#007bff', marginBottom: 10 }}>
+                Budget Breakdown
+              </Text>
 
-            <View style={{ width: 175, aspectRatio: 2.1, backgroundColor: '#eef7ff', justifyContent: 'center', alignItems: 'center', borderRadius: 10, padding: 10, marginRight: 10 }}>
-                <Text style={{ fontSize: 14, color: '#007bff', fontWeight: 'bold', marginBottom: 5 }}>Activities Cost</Text>
-                <Text style={{ fontSize: 18, fontWeight: '600', color: '#222' }}>
-                {totalItineraryCost ? `$${totalItineraryCost.toLocaleString()}` : 'N/A'}
-                </Text>
-            </View>
+              {/* Planned Budget - full width */}
+              <TouchableOpacity
+                activeOpacity={1}
+                style={[styles.carouselCard, { width: '100%' }]}
+              >
+              <View style={{ marginBottom: 5 }}>
+                <TouchableOpacity
+                  onPress={() => handleInfoPress('planned')}
+                  style={{ flexDirection: 'row', alignItems: 'center' }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.budgetLabel}>Planned Budget</Text>
+                  <Icon name="info-circle" size={14} color="#007bff" style={{ marginLeft: 6 }} />
+                </TouchableOpacity>
+              </View>
 
-            <TouchableOpacity
-                onPress={() => setIsOtherCostsModalVisible(true)}
-                style={{ width: 175, aspectRatio: 2.1, backgroundColor: '#eef7ff', justifyContent: 'center', alignItems: 'center', borderRadius: 10, padding: 10, marginRight: 10 }}
-            >
-                <Text style={{ fontSize: 14, color: '#007bff', fontWeight: 'bold', marginBottom: 5 }}>Other Costs</Text>
-                <Text style={{ fontSize: 18, fontWeight: '600', color: '#222' }}>
-                {otherCosts.length > 0
-                    ? `$${otherCosts.reduce((sum, cost) => sum + parseFloat(cost.amount), 0).toLocaleString()}`
-                    : 'N/A'}
+                <Text style={styles.budgetAmount}>
+                  {itinerary?.budget ? `$${itinerary.budget.toLocaleString()}` : 'N/A'}
                 </Text>
-            </TouchableOpacity>
-            </ScrollView>
+              </TouchableOpacity>
+
+              {/* Activities + Planned Expenses - side by side */}
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
+                {[
+                  {
+                    label: 'Activities Cost',
+                    value: totalItineraryCost ? `$${totalItineraryCost.toLocaleString()}` : 'N/A',
+                    interactive: false,
+                    infoType: 'activities',
+                  },
+                  {
+                    label: 'Planned Expenses',
+                    value:
+                      otherCosts.length > 0
+                        ? `$${otherCosts.reduce((sum, cost) => sum + parseFloat(cost.amount), 0).toLocaleString()}`
+                        : 'N/A',
+                    interactive: true,
+                  },
+                ].map((item, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    activeOpacity={item.interactive ? 0.85 : 1}
+                    style={[styles.carouselCard, { width: '48%' }]}
+                    onPress={() => {
+                      if (item.interactive) setIsOtherCostsModalVisible(true);
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
+                      {item.label === 'Activities Cost' ? (
+                        <TouchableOpacity
+                          onPress={() => handleInfoPress(item.infoType)}
+                          style={{ flexDirection: 'row', alignItems: 'center' }}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={styles.budgetLabel}>{item.label}</Text>
+                          <Icon name="info-circle" size={14} color="#007bff" style={{ marginLeft: 6 }} />
+                        </TouchableOpacity>
+                      ) : (
+                        <Text style={styles.budgetLabel}>{item.label}</Text>
+                      )}
+
+                      {item.interactive && (
+                        <FontAwesome5
+                          name="pencil-alt"
+                          size={12}
+                          color="#007bff"
+                          style={{ marginLeft: 10, alignSelf: 'center', marginBottom: 10 }}
+                        />
+                      )}
+                    </View>
+                    <Text style={styles.budgetAmount}>{item.value}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+
+            </View>
 
             {/* Notes Panel */}
             <View style={{ marginTop: 20, paddingHorizontal: 10 }}>
@@ -184,8 +252,102 @@ const OverviewTab = ({
           </>
         )}
       </View>
+      <Modal
+        visible={infoModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setInfoModalVisible(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalText}>{infoModalText}</Text>
+            <TouchableOpacity
+              onPress={() => setInfoModalVisible(false)}
+              style={styles.modalButton}
+            >
+              <Text style={{ color: '#fff', fontWeight: 'bold' }}>Got it</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
     </ScrollView>
   );
 };
+const styles = StyleSheet.create({
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1E3A8A',
+    marginBottom: 10,
+  },
+  budgetCard: {
+    backgroundColor: '#eef7ff',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#cde0ff',
+  },
+  budgetLabel: {
+    fontSize: 14,
+    color: '#007bff',
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  budgetAmount: {
+    fontSize: 36,
+    fontWeight: '600',
+    color: '#222',
+  },
+  carouselCard: {
+    backgroundColor: '#dbeafe',
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#93c5fd',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
+    height: 110,
+    paddingHorizontal: 10, // optional for text spacing
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 12,
+    width: '80%',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  modalButton: {
+    backgroundColor: '#007bff',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  
+   
+}
 
+)
 export default OverviewTab;
