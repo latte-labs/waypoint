@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, memo } from 'react';
 import { 
-  View, Text, Alert, TouchableOpacity, Modal, TextInput, Pressable, Platform, Image, ImageBackground, ScrollView 
+  View, Text, Alert, TouchableOpacity, Modal, TextInput, Pressable, Platform, Image, ImageBackground, ScrollView, Keyboard, TouchableWithoutFeedback
 } from 'react-native';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -814,6 +814,8 @@ const ItineraryDetailScreen = () => {
               setEditingDayId(null);
             }}
           >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+
             <View style={styles.modalContainer}>
               <View style={styles.modalContent}>
                 <Text style={styles.modalTitle}>{editingDayId ? 'Edit Day' : 'Add a New Day'}</Text>
@@ -823,7 +825,10 @@ const ItineraryDetailScreen = () => {
                   value={dayTitle}
                   onChangeText={setDayTitle}
                 />
-                <TouchableOpacity style={styles.datePicker} onPress={() => setShowDatePicker(true)}>
+                <TouchableOpacity style={styles.datePicker} onPress={() => {
+                  Keyboard.dismiss();
+                  setShowDatePicker(true);
+                }}>
                   <Text style={styles.dateText}>
                     {selectedDate ? parseLocalDate(selectedDate).toDateString() : "Select Date"}
                   </Text>
@@ -858,6 +863,8 @@ const ItineraryDetailScreen = () => {
                 </Pressable>
               </View>
             </View>
+            </TouchableWithoutFeedback>
+
           </Modal>
         )}
 

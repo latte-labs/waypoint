@@ -1,6 +1,8 @@
 // src/screens/implementation/ItineraryDetailScreenStyle.js
 
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
+
+const { height } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
@@ -100,7 +102,8 @@ const styles = StyleSheet.create({
   buttonText: { color: '#fff', fontSize: 14 },
   modalContainer: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: height * 0.15,
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
