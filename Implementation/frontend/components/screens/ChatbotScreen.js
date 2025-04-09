@@ -50,8 +50,9 @@ const ChatbotScreen = () => {
         return prev;
       }
       const updatedHistory = [...prev, newMessage];
-      AsyncStorage.setItem("chatHistory", JSON.stringify(updatedHistory));
-      return updatedHistory;
+      const limitedHistory = updatedHistory.slice(-10);
+      AsyncStorage.setItem("chatHistory", JSON.stringify(limitedHistory));
+      return limitedHistory;
     });
   };
 
