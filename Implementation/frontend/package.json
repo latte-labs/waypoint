@@ -27,6 +27,7 @@
     "core-js": "^3.40.0",
     "date-fns": "^4.1.0",
     "isomorphic-fetch": "^3.0.0",
+    "lottie-react-native": "^7.2.2",
     "metro-config": "^0.81.3",
     "metro-core": "^0.81.3",
     "metro-runtime": "^0.81.3",

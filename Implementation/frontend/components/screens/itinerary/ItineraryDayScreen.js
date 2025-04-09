@@ -11,7 +11,9 @@ import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AddActivityModal from './AddActivityModal';
-
+import LottieView from 'lottie-react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
+import { BlurView } from '@react-native-community/blur';
 
 const ItineraryDayScreen = () => {
   const route = useRoute();
@@ -51,6 +53,8 @@ const ItineraryDayScreen = () => {
       return aSortable.localeCompare(bSortable);
     });
   };
+  const [infoModalVisible, setInfoModalVisible] = useState(false);
+
 
 
   useEffect(() => {
@@ -340,6 +344,7 @@ const ItineraryDayScreen = () => {
     >
       <TouchableOpacity
         style={styles.activityCard}
+        onPress={() => handleEditActivity(item)}
         onLayout={(event) => {
           const { height } = event.nativeEvent.layout;
           setCardHeight(height);
@@ -351,13 +356,18 @@ const ItineraryDayScreen = () => {
       </TouchableOpacity>
     </Swipeable>
   );
+  
 
   return (
     <SafeAreaWrapper>
       <View style={{ flex: 1, padding: 20, backgroundColor: '#fff' }}>
-        <Text style={{ fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 }}>
-          Day Activities
-        </Text>
+      <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 20 }}>
+        <Text style={{ fontSize: 18, fontWeight: 'bold', marginRight: 6 }}>Day Activities</Text>
+        <TouchableOpacity onPress={() => setInfoModalVisible(true)}>
+          <Icon name="information-circle-outline" size={22} color="#007bff" />
+        </TouchableOpacity>
+      </View>
+
 
         {loading ? (
           <ActivityIndicator size="large" color="#007bff" />
@@ -410,6 +420,49 @@ const ItineraryDayScreen = () => {
           DateTimePicker={DateTimePicker}
         />
 
+        <Modal
+          visible={infoModalVisible}
+          animationType="fade"
+          transparent
+          onRequestClose={() => setInfoModalVisible(false)}
+        >
+          <View style={styles.modalContainer}>
+            <BlurView style={styles.blurBackground} blurType="dark" blurAmount={10} reducedTransparencyFallbackColor="black" />
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>How to Edit Activities</Text>
+              <View style={styles.lottieWrapper}>
+                <LottieView
+                  source={require('../../../assets/animations/swipe_instructions_left.json')}
+                  autoPlay
+                  loop
+                  resizeMode="contain"
+                  style={styles.lottie}
+                />
+              </View>
+
+              <Text style={styles.modalText}>Swipe left to edit</Text>
+
+              <View style={styles.lottieWrapper}>
+                <LottieView
+                  source={require('../../../assets/animations/swipe_instructions_right.json')}
+                  autoPlay
+                  loop
+                  resizeMode="contain"
+                  style={styles.lottie}
+                />
+              </View>
+              <Text style={styles.modalText}>Swipe right to delete</Text>
+
+              <Text style={styles.subText}>You can also tap any card to edit it.</Text>
+
+              <TouchableOpacity style={styles.doneButton} onPress={() => setInfoModalVisible(false)}>
+                <Text style={styles.doneText}>Got it</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+
       </View>
     </SafeAreaWrapper>
   );
@@ -431,15 +484,23 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
   },
+  
   modalContent: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
+    backgroundColor: 'transparent',
+    paddingVertical: 30,
+    paddingHorizontal: 20,
+    borderRadius: 20, // smoother corners
     alignItems: 'center',
-    width: 300,
+    width: '85%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 10,
   },
+  
   doneButton: {
     marginTop: 10,
     paddingVertical: 10,
@@ -495,6 +556,43 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center'
   },
+  blurBackground: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#fff',
+  },
+  
+  modalText: {
+    fontSize: 14,
+    marginBottom: 20,
+    color: '#fff',
+  },
+  
+  subText: {
+    fontSize: 14,
+    textAlign: 'center',
+    color: '#ddd',
+    marginBottom: 10,
+    paddingTop: 36
+  },
+  
+  lottieWrapper: {
+    height: 120,        
+    overflow: 'hidden', 
+    marginBottom: 4,
+  },
+  lottie: {
+    width: 180,
+    height: 180,        
+    alignSelf: 'center',
+  },
+  
+  
 
 });
 
