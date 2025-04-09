@@ -15,6 +15,8 @@ import { database } from '../../firebase';
 import API_BASE_URL from '../../config';
 import styles from '../../styles/CheckInScreenStyles';
 import Icon from 'react-native-vector-icons/FontAwesome'
+import { useNavigation } from '@react-navigation/native';
+import AchievementsScreen from './AchievementsScreen';
 
 // calculate distance (in meters) between two coordinates
 function getDistance(lat1, lon1, lat2, lon2) {
@@ -42,6 +44,7 @@ const MapCheckInScreen = () => {
   const [region, setRegion] = useState(null);
   const mapRef = useRef(null);
   const CIRCLE_RADIUS = 200;
+  const navigation = useNavigation();
 
   // Retrieve user check-ins from Firebase on mount
   useEffect(() => {
@@ -132,6 +135,7 @@ const MapCheckInScreen = () => {
     }
   };
 
+
   // Called when user confirms check in
   const confirmCheckIn = useCallback(async (place) => {
     
@@ -166,8 +170,18 @@ const MapCheckInScreen = () => {
 
       Alert.alert(
         "Visit Logged",
-        `You’ve successfully logged a visit at ${place.cached_data?.name || place.name}`
-      );      
+        `You’ve successfully logged a visit at ${place.cached_data?.name || place.name}.`,
+        [
+          { text: "No, Stay Here", style: "cancel" },
+          {
+            text: "View My Progress",
+            onPress: () => {
+              navigation.navigate("Badges");
+            },
+          },
+        ]
+      );
+          
     } catch (error) {
       console.error("Check In Error:", error);
       Alert.alert("Error", "Failed to complete check in. Please try again.");
