@@ -35,10 +35,10 @@ const features = [
     },
     {
       id: '5',
-      title: 'Personalized Recos',
-      desc: 'Places just for your style',
+      title: 'Log Visit',
+      desc: 'Visit Places and Earn Badges',
       icon: 'map-marked-alt',
-      image: require('../../assets/images/card_personalized.jpg'),
+      image: require('../../assets/images/card_logvisit.png'),
     },
 ];
   
@@ -82,6 +82,9 @@ const FeatureCarousel = () => {
           case 'Interactive Map':
               // Navigate to InteractiveRecommendations screen (route: "Map")
               navigation.navigate('Map');
+              break;
+          case 'Log Visit':
+              navigation.navigate('CheckIn');
               break;
           default:
               break;
