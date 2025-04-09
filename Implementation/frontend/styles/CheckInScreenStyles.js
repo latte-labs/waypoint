@@ -74,6 +74,36 @@ const styles = StyleSheet.create({
   refreshButtonText: {
     color: '#1E3A8A',
   },
+  gpsControlContainer: {
+    position: 'absolute',
+    top: 80,
+    right: 20,
+    flexDirection: 'row',
+    gap: 10,
+    zIndex: 10,
+  },
+  
+  pillButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  
+  pillButtonText: {
+    marginLeft: 6,
+    color: '#1E3A8A',
+    fontWeight: '500',
+    fontSize: 13,
+  }
+  
 });
 
 export default styles;

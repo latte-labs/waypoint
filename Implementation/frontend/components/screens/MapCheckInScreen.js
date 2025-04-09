@@ -165,9 +165,9 @@ const MapCheckInScreen = () => {
       setUserCheckIns(prev => [...prev, place.cached_data?.place_id || place.id || place.name]);
 
       Alert.alert(
-        "Check In Successful",
-        `You have checked in at ${place.cached_data?.name || place.name}`
-      );
+        "Visit Logged",
+        `You’ve successfully logged a visit at ${place.cached_data?.name || place.name}`
+      );      
     } catch (error) {
       console.error("Check In Error:", error);
       Alert.alert("Error", "Failed to complete check in. Please try again.");
@@ -205,6 +205,19 @@ const MapCheckInScreen = () => {
   }
 
   const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  const centerMapOnUser = () => {
+    if (mapRef.current && userLocation) {
+      mapRef.current.animateToRegion({
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      }, 300);
+    } else {
+      Alert.alert("Location not available", "Try updating your location first.");
+    }
+  };
+  
 
   return (
     <View style={styles.container}>
@@ -251,39 +264,54 @@ const MapCheckInScreen = () => {
           </Text>
           <Text style={styles.placeCategory}>{capitalize(selectedPlace.category)}</Text>
           {alreadyCheckedIn ? (
-            <Text style={{ color: 'green', marginTop: 10 }}>Already checked in</Text>
+            <Text style={{ color: 'green', marginTop: 10 }}>Visit already logged</Text>
           ) : !inRange ? (
             <TouchableOpacity style={[styles.checkInButton, styles.disabledButton]} disabled={true}>
-              <Text style={styles.disabledButtonText}>Out of Range</Text>
+              <Text style={styles.disabledButtonText}>Too Far to Log Visit. Get Closer.</Text>
             </TouchableOpacity>
           ):(
             <TouchableOpacity
               style={styles.checkInButton}
               onPress={() => {
                 Alert.alert(
-                  "Confirm Check In",
-                  `Do you want to check in at ${selectedPlace.cached_data?.name || selectedPlace.name}?`,
+                  "Confirm Log Visit",
+                  `Do you want to log a visit at ${selectedPlace.cached_data?.name || selectedPlace.name}?`,
                   [
                     { text: "Cancel", style: "cancel" },
                     { text: "Confirm", onPress: () => confirmCheckIn(selectedPlace) }
                   ]
-                );
+                );                
               }}
             >
-              <Text style={styles.checkInButtonText}>Check In</Text>
+              <Text style={styles.checkInButtonText}>Log Visit</Text>
             </TouchableOpacity>
           )}
         </View>
       )}
 
       {/* Refresh button */}
-      <TouchableOpacity
-        style={styles.refreshButton}
-        onPress={fetchUserLocationAndPlaces}
-      >
-       
-        <Icon name="refresh" size={24} color="#1E3A8A" />
-      </TouchableOpacity>
+      <View style={styles.gpsControlContainer}>
+        <TouchableOpacity
+          style={styles.pillButton}
+          onPress={fetchUserLocationAndPlaces}
+          activeOpacity={0.8}
+        >
+          <Icon name="refresh" size={16} color="#1E3A8A" />
+          <Text style={styles.pillButtonText}>Update My Location</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.pillButton}
+          onPress={centerMapOnUser}
+          activeOpacity={0.8}
+        >
+          <Icon name="crosshairs" size={16} color="#1E3A8A" />
+        </TouchableOpacity>
+      </View>
+
+
+
+
     </View>
   );
 };
