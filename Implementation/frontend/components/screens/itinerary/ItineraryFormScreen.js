@@ -203,7 +203,7 @@ const ItineraryFormScreen = () => {
 
   return (
     <SafeAreaWrapper>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -245,7 +245,10 @@ const ItineraryFormScreen = () => {
             </View>
   
             {/* Date Selection */}
-            <Pressable style={styles.input} onPress={() => setCalendarVisible(!calendarVisible)}>
+            <Pressable style={styles.input} onPress={() => {
+              Keyboard.dismiss(); // 👈 Dismiss the keyboard
+              setCalendarVisible(!calendarVisible);
+            }}>
               <Text style={styles.inputText}>
                 {startDate ? startDate : "Select Start Date"} -{" "}
                 {endDate ? endDate : "Select End Date"}
