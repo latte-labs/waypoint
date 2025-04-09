@@ -8,7 +8,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 
 const OtherCostsModal = ({ visible, onClose, otherCosts, setOtherCosts, itineraryId }) => {
     const [selectedType, setSelectedType] = useState(null);
-    const [selectedSubtype, setSelectedSubtype] = useState(null);
+    const [selectedSubtypes, setSelectedSubtypes] = useState([]);
     const [itemName, setItemName] = useState('');
     const [amount, setAmount] = useState('');
 
@@ -17,15 +17,15 @@ const OtherCostsModal = ({ visible, onClose, otherCosts, setOtherCosts, itinerar
 
     // ✅ Handle Save (Add Cost to List)
     const handleSave = async () => {
-        if (!selectedType || !selectedSubtype || !itemName.trim() || !amount.trim()) {
-            Alert.alert("Error", "Please fill in all fields.");
+        if (!selectedType || selectedSubtypes.length === 0 || !itemName.trim() || !amount.trim()) {
+            Alert.alert("Error", "Please fill in all fields and select at least one subtype.");
             return;
         }
     
         const newCost = {
             id: Date.now().toString(),
             type: selectedType,
-            subtype: selectedSubtype,
+            subtypes: selectedSubtypes,
             item: itemName,
             amount: parseFloat(amount),
         };
@@ -41,9 +41,10 @@ const OtherCostsModal = ({ visible, onClose, otherCosts, setOtherCosts, itinerar
         } catch (error) {
             console.error("❌ Failed to save other costs:", error);
         }
+    
         resetFields();
     };
-    
+        
     // ✅ Handle Cost Deletion
     const handleDelete = async (costId) => {
         const updatedCosts = otherCosts.filter(cost => cost.id !== costId);
@@ -62,10 +63,21 @@ const OtherCostsModal = ({ visible, onClose, otherCosts, setOtherCosts, itinerar
     // ✅ Reset input fields
     const resetFields = () => {
         setSelectedType(null);
-        setSelectedSubtype(null);
+        setSelectedSubtypes([]);
         setItemName('');
         setAmount('');
     };
+    
+
+    const toggleSubtype = (item) => {
+        setSelectedSubtypes((prev) => {
+            if (prev.includes(item)) {
+                return prev.filter(sub => sub !== item);
+            } else {
+                return [...prev, item];
+            }
+        });
+    };    
 
     return (
         <Modal visible={visible} animationType="slide" transparent>
@@ -144,16 +156,17 @@ const OtherCostsModal = ({ visible, onClose, otherCosts, setOtherCosts, itinerar
                                     style={{
                                         paddingVertical: 8,
                                         paddingHorizontal: 16,
-                                        backgroundColor: selectedSubtype === item ? '#1d3a8a' : '#eef1f7',
+                                        backgroundColor: selectedSubtypes.includes(item) ? '#1d3a8a' : '#eef1f7',
                                         borderRadius: 20,
                                         marginRight: 10,
-                                        marginBottom: 6,                                    }}
-                                    onPress={() => setSelectedSubtype(item)}
+                                        marginBottom: 6,
+                                    }}
+                                    onPress={() => toggleSubtype(item)}
                                 >
                                     <Text style={{
                                         fontSize: 14,
                                         fontWeight: 'bold',
-                                        color: selectedSubtype === item ? '#fff' : '#1d3a8a',
+                                        color: selectedSubtypes.includes(item) ? '#fff' : '#1d3a8a',
                                     }}>
                                         {item}
                                     </Text>
@@ -250,9 +263,17 @@ const OtherCostsModal = ({ visible, onClose, otherCosts, setOtherCosts, itinerar
                                         marginBottom: 8,
                                     }}
                                 >
-                                    <Text style={{ fontSize: 14, fontWeight: '600', color: '#333' }}>
-                                        {cost.type} - {cost.subtype}
-                                    </Text>
+                                    <View style={{ flex: 1, paddingRight: 8 }}>
+                                        <Text style={{
+                                            fontSize: 14,
+                                            fontWeight: '600',
+                                            color: '#333',
+                                            flexWrap: 'wrap',
+                                        }}>
+                                            {cost.type} - {(cost.subtypes || []).join(', ')}
+                                        </Text>
+                                    </View>
+
 
                                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                         <Text style={{
