@@ -102,7 +102,14 @@ const styles = StyleSheet.create({
     color: '#1E3A8A',
     fontWeight: '500',
     fontSize: 13,
-  }
+  },
+  infoButtonContainer: {
+    position: 'absolute',
+    bottom: 150,
+    right: 20,
+    zIndex: 10,
+  },
+  
   
 });
 

@@ -45,6 +45,8 @@ const MapCheckInScreen = () => {
   const mapRef = useRef(null);
   const CIRCLE_RADIUS = 200;
   const navigation = useNavigation();
+  const [showInfo, setShowInfo] = useState(false);
+
 
   // Retrieve user check-ins from Firebase on mount
   useEffect(() => {
@@ -272,35 +274,50 @@ const MapCheckInScreen = () => {
 
       {/* Bottom Card: Shows selected place details and check-in button/message */}
       {selectedPlace && (
-        <View style={styles.bottomCard}>
-          <Text style={styles.placeTitle}>
-            {selectedPlace.cached_data?.name || selectedPlace.name}
-          </Text>
-          <Text style={styles.placeCategory}>{capitalize(selectedPlace.category)}</Text>
-          {alreadyCheckedIn ? (
-            <Text style={{ color: 'green', marginTop: 10 }}>Visit already logged</Text>
-          ) : !inRange ? (
-            <TouchableOpacity style={[styles.checkInButton, styles.disabledButton]} disabled={true}>
-              <Text style={styles.disabledButtonText}>Too Far to Log Visit. Get Closer.</Text>
-            </TouchableOpacity>
-          ):(
+        <>
+          {/* Info icon above card */}
+          <View style={styles.infoButtonContainer}>
             <TouchableOpacity
-              style={styles.checkInButton}
-              onPress={() => {
-                Alert.alert(
-                  "Confirm Log Visit",
-                  `Do you want to log a visit at ${selectedPlace.cached_data?.name || selectedPlace.name}?`,
-                  [
-                    { text: "Cancel", style: "cancel" },
-                    { text: "Confirm", onPress: () => confirmCheckIn(selectedPlace) }
-                  ]
-                );                
-              }}
+              onPress={() => setShowInfo(true)}
+              activeOpacity={0.8}
+              style={styles.pillButton}
             >
-              <Text style={styles.checkInButtonText}>Log Visit</Text>
+              <Icon name="info-circle" size={16} color="#1E3A8A" />
             </TouchableOpacity>
-          )}
-        </View>
+          </View>
+
+
+          {/* Bottom Card: Shows selected place details and check-in button/message */}
+          <View style={styles.bottomCard}>
+            <Text style={styles.placeTitle}>
+              {selectedPlace.cached_data?.name || selectedPlace.name}
+            </Text>
+            <Text style={styles.placeCategory}>{capitalize(selectedPlace.category)}</Text>
+            {alreadyCheckedIn ? (
+              <Text style={{ color: 'green', marginTop: 10 }}>Visit already logged</Text>
+            ) : !inRange ? (
+              <TouchableOpacity style={[styles.checkInButton, styles.disabledButton]} disabled={true}>
+                <Text style={styles.disabledButtonText}>Too Far to Log Visit. Get Closer.</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={styles.checkInButton}
+                onPress={() => {
+                  Alert.alert(
+                    "Confirm Log Visit",
+                    `Do you want to log a visit at ${selectedPlace.cached_data?.name || selectedPlace.name}?`,
+                    [
+                      { text: "Cancel", style: "cancel" },
+                      { text: "Confirm", onPress: () => confirmCheckIn(selectedPlace) }
+                    ]
+                  );
+                }}
+              >
+                <Text style={styles.checkInButtonText}>Log Visit</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </>
       )}
 
       {/* Refresh button */}
@@ -323,7 +340,58 @@ const MapCheckInScreen = () => {
         </TouchableOpacity>
       </View>
 
+      {showInfo && (
+        <View style={{
+          position: 'absolute',
+          top: '28%',
+          left: 28,
+          right: 28,
+          backgroundColor: 'white',
+          padding: 20,
+          borderRadius: 16,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: 0.25,
+          shadowRadius: 6,
+          elevation: 8,
+          zIndex: 20,
+        }}>
+          <Text style={{ fontSize: 18, fontWeight: '700', marginBottom: 10, color: '#111' }}>
+            Why Log a Visit?
+          </Text>
 
+          <Text style={{ fontSize: 14.5, color: '#444', lineHeight: 21, marginBottom: 12 }}>
+            Logging a visit lets you track places you've been, earn unique category-based badges, and build your travel journey.
+          </Text>
+
+          <Text style={{ fontSize: 14.5, color: '#444', lineHeight: 21 }}>
+            To log a visit:
+          </Text>
+          <Text style={{ fontSize: 14.5, color: '#444', marginTop: 4 }}>
+            1. Move near a place on the map
+          </Text>
+          <Text style={{ fontSize: 14.5, color: '#444' }}>
+            2. Tap on a nearby marker
+          </Text>
+          <Text style={{ fontSize: 14.5, color: '#444' }}>
+            3. Press “Log Visit” to check in and start collecting badges!
+          </Text>
+
+          <TouchableOpacity
+            onPress={() => setShowInfo(false)}
+            style={{
+              alignSelf: 'flex-end',
+              marginTop: 20,
+              paddingHorizontal: 20,
+              paddingVertical: 8,
+              backgroundColor: '#1E3A8A',
+              borderRadius: 10,
+            }}
+          >
+            <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>Got it</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
 
     </View>
