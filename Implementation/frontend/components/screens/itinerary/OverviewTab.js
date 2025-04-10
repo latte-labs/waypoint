@@ -104,14 +104,22 @@ const OverviewTab = ({
 
             {/* Collaborators */}
             <View style={{ marginTop: 10, paddingHorizontal: 10 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#007bff', marginBottom: 10 }}>Collaborators</Text>
-                {user?.id === itinerary?.created_by && (
-                  <TouchableOpacity onPress={() => navigation.navigate('InviteCollaborators', { itinerary })}>
-                    <FontAwesome5 name="pencil-alt" size={14} color="#007bff" style={{ marginLeft: 10, alignSelf: 'center', marginBottom: 10 }} />
-                  </TouchableOpacity>
-                )}
-              </View>
+              <TouchableOpacity 
+                onPress={() => navigation.navigate('InviteCollaborators', { itinerary })}
+                activeOpacity={0.8}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                  <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#007bff' }}>Collaborators</Text>
+                  {user?.id === itinerary?.created_by && (
+                    <FontAwesome5 
+                      name="pencil-alt" 
+                      size={14} 
+                      color="#007bff" 
+                      style={{ marginLeft: 10 }} 
+                    />
+                  )}
+                </View>
+              </TouchableOpacity>
               {collaborators.length > 0 ? (
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: 'row', alignItems: 'center' }}>
                   {collaborators.map((collab) => (
