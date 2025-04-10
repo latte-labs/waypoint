@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  Modal
 } from 'react-native';
 import MapView, { Marker, Circle } from 'react-native-maps';
 import Geolocation from 'react-native-geolocation-service';
@@ -17,6 +18,13 @@ import styles from '../../styles/CheckInScreenStyles';
 import Icon from 'react-native-vector-icons/FontAwesome'
 import { useNavigation } from '@react-navigation/native';
 import AchievementsScreen from './AchievementsScreen';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 
 // calculate distance (in meters) between two coordinates
 function getDistance(lat1, lon1, lat2, lon2) {
@@ -33,7 +41,26 @@ function getDistance(lat1, lon1, lat2, lon2) {
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
-const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+const capitalize = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+
+const trophyImages = {
+  park: {
+    Bronze: require('../../assets/achievements/park/bronze_park.png'),
+    Silver: require('../../assets/achievements/park/silver_park.jpeg'),
+    Gold: require('../../assets/achievements/park/gold_park.jpeg'),
+  },
+  bar: {
+    Bronze: require('../../assets/achievements/bar/bronze_bar.jpeg'),
+    Silver: require('../../assets/achievements/bar/silver_bar.png'),
+    Gold: require('../../assets/achievements/bar/gold_bar.jpeg'),
+  },
+  museum: {
+    Bronze: require('../../assets/achievements/museum/bronze_museum.jpeg'),
+    Silver: require('../../assets/achievements/museum/silver_museum.jpeg'),
+    Gold: require('../../assets/achievements/museum/gold_museum.jpeg'),
+  },
+};
+
 
 
 const MapCheckInScreen = () => {
@@ -48,12 +75,44 @@ const MapCheckInScreen = () => {
   const CIRCLE_RADIUS = 200;
   const navigation = useNavigation();
   const [showInfo, setShowInfo] = useState(false);
+  const [showBadgeModal, setShowBadgeModal] = useState(false);
+  const [newBadgeInfo, setNewBadgeInfo] = useState(null);
+  const badgeScale = useSharedValue(0);
+  const badgeOpacity = useSharedValue(0);
+  const badgeRotation = useSharedValue(0);
+  useEffect(() => {
+    if (showBadgeModal) {
+      badgeScale.value = 0;
+      badgeOpacity.value = 0;
+      badgeRotation.value = 0;
+  
+      badgeScale.value = withSpring(1, { damping: 8, stiffness: 150 });
+      badgeOpacity.value = withSpring(1);
+      badgeRotation.value = withTiming(720, {
+        duration: 1500,
+        easing: Easing.out(Easing.exp),
+      });
+    }
+  }, [showBadgeModal]);
+  const animatedBadgeStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scale: badgeScale.value },
+      { rotate: `${badgeRotation.value}deg` },
+    ],
+    opacity: badgeOpacity.value,
+  }));
+  
+  
 
   function getBadge(count) {
     if (count >= 20) return 'Gold';
     if (count >= 10) return 'Silver';
     if (count >= 5) return 'Bronze';
     return null;
+  }
+  function getBadgeImage(category, tier) {
+    const lowerCat = category?.toLowerCase();
+    return trophyImages[lowerCat]?.[tier] || null;
   }
   
   // Retrieve user check-ins from Firebase on mount
@@ -191,19 +250,14 @@ const MapCheckInScreen = () => {
 
       // Check if badge tier increased
       if (newBadge && newBadge !== prevBadge) {
-        badgeShown = true; 
-        Alert.alert(
-          "🏆 New Achievement Unlocked!",
-          `You’ve earned the ${newBadge} ${capitalize(categoryKey)} badge!`,
-          [
-            { text: "Nice!", style: "default" },
-            {
-              text: "View Badge",
-              onPress: () => navigation.navigate("Badges"),
-            },
-          ]
-        );
+        setNewBadgeInfo({
+          badgeTier: newBadge,
+          category: capitalize(categoryKey),
+        });
+        setShowBadgeModal(true);
+        badgeShown = true;
       }
+      
 
       setUserCheckIns(prev => [...prev, place.cached_data?.place_id || place.id || place.name]);
 
@@ -436,7 +490,81 @@ const MapCheckInScreen = () => {
           </TouchableOpacity>
         </View>
       )}
+      <Modal
+        visible={showBadgeModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowBadgeModal(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 24,
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: 'white',
+              borderRadius: 20,
+              padding: 24,
+              alignItems: 'center',
+              width: '100%',
+            }}
+          >
+            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>
+              🏆 New Badge Unlocked!
+            </Text>
+            <Animated.Image
+              source={getBadgeImage(newBadgeInfo?.category, newBadgeInfo?.badgeTier)}
+              style={[{ width: 120, height: 120, marginBottom: 16 }, animatedBadgeStyle]}
+              resizeMode="contain"
+            />
 
+            <Text style={{ textAlign: 'center', marginBottom: 20 }}>
+              You earned the {newBadgeInfo?.badgeTier} badge in {newBadgeInfo?.category}!
+            </Text>
+
+            <TouchableOpacity
+              onPress={() => {
+                setShowBadgeModal(false);
+                navigation.navigate("Badges");
+              }}
+              style={{
+                backgroundColor: '#1E3A8A',
+                paddingVertical: 10,
+                paddingHorizontal: 24,
+                borderRadius: 10,
+                alignItems: 'center',
+                width: '100%',
+                marginBottom: 10,
+              }}
+            >
+              <Text style={{ color: 'white', fontWeight: 'bold', textAlign: 'center' }}>
+                View Now
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => setShowBadgeModal(false)}
+              style={{
+                backgroundColor: '#E5E7EB',
+                paddingVertical: 10,
+                paddingHorizontal: 24,
+                borderRadius: 10,
+                alignItems: 'center',
+                width: '100%',
+              }}
+            >
+              <Text style={{ color: '#1F2937', fontWeight: 'bold', textAlign: 'center' }}>
+                Check Later
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
     </View>
   );
