@@ -54,11 +54,12 @@ function getProgress(count) {
 }
 
 function getProgressText(count) {
-    if (count < 5) return `${count}/5`;
-    else if (count < 10) return `${count - 5}/5`;
-    else if (count < 20) return `${count - 10}/10`;
-    else return `Achieved`;
+    if (count < 5) return `Keep going! ${5 - count} to Bronze`;
+    else if (count < 10) return `Bronze unlocked! ${10 - count} to Silver`;
+    else if (count < 20) return `Silver unlocked! ${20 - count} to Gold`;
+    else return `You’ve earned them all! 🌟`;
 }
+
 
 const AchievementsScreen = () => {
     const [loading, setLoading] = useState(true);
@@ -216,17 +217,23 @@ const AchievementsScreen = () => {
                         !isSpecial && item.count < 5 && { opacity: 0.3 },
                     ]}
                 />
-                {!isSpecial && (
-                    <Progress.Bar
-                        progress={getProgress(item.count)}
-                        width={null}
-                        height={10}
-                        borderWidth={0}
-                        unfilledColor="#EEE"
-                        color="#1E3A8A"
-                        style={styles.gridProgressBar}
-                    />
-                )}
+                    {!isSpecial && (
+                        <>
+                            <Progress.Bar
+                                progress={getProgress(item.count)}
+                                width={null}
+                                height={10}
+                                borderWidth={0}
+                                unfilledColor="#EEE"
+                                color="#1E3A8A"
+                                style={styles.gridProgressBar}
+                            />
+                            <Text style={styles.gridProgressText}>
+                                {getProgressText(item.count)}
+                            </Text>
+                        </>
+                    )}
+
                 {isSpecial && (
                     <Text style={{ marginTop: 4, fontSize: 12, color: '#4B5563' }}>Onboarding</Text>
                 )}
@@ -301,8 +308,9 @@ const AchievementsScreen = () => {
                                             />
                                         </View>
                                         <Text style={styles.modalProgressText}>
-                                            {getProgressText(selectedAchievement.count)} to next tier
+                                            {getProgressText(selectedAchievement.count)}
                                         </Text>
+
 
                                         <Text style={styles.modalDescription}>
                                             Check in at a {selectedAchievement.category} to earn this achievement. 5 = Bronze, 10 = Silver, 20 = Gold.

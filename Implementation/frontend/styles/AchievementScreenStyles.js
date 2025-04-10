@@ -135,5 +135,13 @@ export default StyleSheet.create({
         alignSelf: 'center',
         paddingHorizontal: 10,
       },
-      
+    gridProgressText: {
+        fontSize: 12,
+        color: '#6B7280',
+        marginTop: 2,
+        textAlign: 'center',
+        alignSelf: 'center',
+    },
+    
+    
 });
