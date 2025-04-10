@@ -33,6 +33,8 @@ function getDistance(lat1, lon1, lat2, lon2) {
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
+const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
 
 const MapCheckInScreen = () => {
   const [loading, setLoading] = useState(true);
@@ -47,7 +49,13 @@ const MapCheckInScreen = () => {
   const navigation = useNavigation();
   const [showInfo, setShowInfo] = useState(false);
 
-
+  function getBadge(count) {
+    if (count >= 20) return 'Gold';
+    if (count >= 10) return 'Silver';
+    if (count >= 5) return 'Bronze';
+    return null;
+  }
+  
   // Retrieve user check-ins from Firebase on mount
   useEffect(() => {
     const fetchUserCheckIns = async () => {
@@ -143,6 +151,7 @@ const MapCheckInScreen = () => {
     
     if (!place) return;
     setLoading(true);
+    let badgeShown = false;
     try {
       const checkinId = uuidv4();
       const createdAt = new Date().toISOString();
@@ -164,25 +173,55 @@ const MapCheckInScreen = () => {
         place_id: place.cached_data?.place_id || place.id || place.name,
         created_at: createdAt,
       };
+      const categoryKey = place.category.toLowerCase();
 
+      // Get previous check-in count for this category
+      const prevSnapshot = await database().ref(`/game/${userId}/${categoryKey}`).once('value');
+      const prevData = prevSnapshot.val() || {};
+      const prevCount = Object.keys(prevData).length;
+      const prevBadge = getBadge(prevCount);
+      
       await database().ref(`/game/${userId}/${place.category.toLowerCase()}/${checkinId}`).set(checkInData);
       await database().ref(`/users/${userId}/onboarding/checked_in`).set(true);
+      // Get new check-in count
+      const updatedSnapshot = await database().ref(`/game/${userId}/${categoryKey}`).once('value');
+      const updatedData = updatedSnapshot.val() || {};
+      const newCount = Object.keys(updatedData).length;
+      const newBadge = getBadge(newCount);
+
+      // Check if badge tier increased
+      if (newBadge && newBadge !== prevBadge) {
+        badgeShown = true; 
+        Alert.alert(
+          "🏆 New Achievement Unlocked!",
+          `You’ve earned the ${newBadge} ${capitalize(categoryKey)} badge!`,
+          [
+            { text: "Nice!", style: "default" },
+            {
+              text: "View Badge",
+              onPress: () => navigation.navigate("Badges"),
+            },
+          ]
+        );
+      }
 
       setUserCheckIns(prev => [...prev, place.cached_data?.place_id || place.id || place.name]);
 
-      Alert.alert(
-        "Visit Logged",
-        `You’ve successfully logged a visit at ${place.cached_data?.name || place.name}.`,
-        [
-          { text: "No, Stay Here", style: "cancel" },
-          {
-            text: "View My Progress",
-            onPress: () => {
-              navigation.navigate("Badges");
+      if (!badgeShown) {
+        Alert.alert(
+          "Visit Logged",
+          `You’ve successfully logged a visit at ${place.cached_data?.name || place.name}.`,
+          [
+            { text: "No, Stay Here", style: "cancel" },
+            {
+              text: "View My Progress",
+              onPress: () => {
+                navigation.navigate("Badges");
+              },
             },
-          },
-        ]
-      );
+          ]
+        );
+      }      
           
     } catch (error) {
       console.error("Check In Error:", error);
@@ -220,7 +259,6 @@ const MapCheckInScreen = () => {
     );
   }
 
-  const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
   const centerMapOnUser = () => {
     if (mapRef.current && userLocation) {
       mapRef.current.animateToRegion({
@@ -233,7 +271,13 @@ const MapCheckInScreen = () => {
       Alert.alert("Location not available", "Try updating your location first.");
     }
   };
-  
+  function getBadge(count) {
+  if (count >= 20) return 'Gold';
+  if (count >= 10) return 'Silver';
+  if (count >= 5) return 'Bronze';
+  return null;
+}
+
 
   return (
     <View style={styles.container}>
