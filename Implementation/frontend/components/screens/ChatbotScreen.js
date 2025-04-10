@@ -13,7 +13,7 @@ const ChatbotScreen = () => {
   const [user, setUser] = useState(null);
   //const [messages, setMessages] = useState([]);
   const [messages, setMessages] = useState([
-    { role: "assistant", content: "Hi! My name is WayPointer, your personal travel assistant! Ask me for recommendations and I'll provide suggestions based on your travel style." }
+    { role: "assistant", content: "Hi! My name is WayPointer, your personal travel assistant! Ask me for recommendations and I'll provide suggestions based on your travel style. ⚠️ Note: Currently limited to BC, Canada during testing." }
   ]);
   //const [messages, setMessages] = useState([{role: "assistant", content: "Hi! My name is WayPointer, your personal travel assistant! Ask me for recommendations and i'll provide suggestions based on your travel style"}]);
   const [input, setInput] = useState("");
@@ -177,14 +177,15 @@ const ChatbotScreen = () => {
         <View style={styles.container}>
           {/* Header */}
           <View style={styles.header}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
             <Text style={styles.headerTitle}>WayPointer</Text>
             <Text style={styles.headerAvatar}>💬</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <TouchableOpacity onPress={toggleHistoryModal}>
-                <FontAwesome5 name="history" size={20} color="#007bff" style={{ marginRight: 10 }} />
-              </TouchableOpacity>
-            </View>
           </View>
+          <TouchableOpacity onPress={toggleHistoryModal}>
+            <FontAwesome5 name="history" size={20} color="#007bff" />
+          </TouchableOpacity>
+        </View>
+
 
           {/* Chat Display */}
           <FlatList
