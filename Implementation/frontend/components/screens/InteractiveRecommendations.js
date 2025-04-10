@@ -119,18 +119,25 @@ const InteractiveRecommendations = () => {
                 ref={markerRefs.current[index]}
                 onPress={() => focusMapOnPlace(place, index)}
               >
-                <Callout tooltip={true}>
+                <Callout
+                  tooltip={true}
+                  onPress={() => {
+                    setSelectedPlace(place);
+                    setModalVisible(true);
+                  }}
+                >
                   <View style={styles.calloutContainer}>
                     <View style={styles.calloutHeader}>
                       <Text style={styles.calloutTitle}>{place.name}</Text>
                       <CalloutSubview
+                        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                         onPress={() => {
                           setSelectedPlace(place);
                           setModalVisible(true);
                         }}
                         style={styles.calloutIconWrapper}
                       >
-                        <Icon name="plus-circle" size={20} color="#007AFF" />
+                        <Icon name="plus-circle" size={28} color="#007AFF" />
                       </CalloutSubview>
                     </View>
                     <Text style={styles.calloutSubtitle}>{capitalize(place.category)}</Text>
@@ -319,6 +326,7 @@ const InteractiveRecommendations = () => {
             setSelectedPlace(null);
           }}
         />
+
 
       </View>
   );
