@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-    View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet, Dimensions, Alert 
-} from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet, Dimensions, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native';
 import axios from 'axios';
@@ -23,10 +21,11 @@ const ItineraryListScreen = () => {
     const route = useRoute();  // HIGHLIGHT: Added useRoute
     const initialIndex = route.params && route.params.activeTab === 'shared' ? 1 : 0;
     const [index, setIndex] = useState(initialIndex);
-    const [routes] = useState([
-        { key: 'personal', title: 'Personal' }, 
-        { key: 'shared', title: 'Shared Itineraries' }  
+    const [routes, setRoutes] = useState([
+        { key: 'personal', title: 'Personal' },
+        { key: 'shared', title: 'Shared Itineraries' },
     ]);
+    
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -355,52 +354,94 @@ const ItineraryListScreen = () => {
             Alert.alert("Error", "Failed to decline the invite.");
         }
     };
-            
+    // useEffect(() => {
+    //     const inviteCount = pendingInvites.length;
+    //     setRoutes(prevRoutes =>
+    //         prevRoutes.map(route =>
+    //             route.key === 'shared'
+    //                 ? {
+    //                       ...route,
+    //                       title: inviteCount > 0 ? `Shared Itineraries (${inviteCount})` : 'Shared Itineraries',
+    //                   }
+    //                 : route
+    //         )
+    //     );
+    // }, [pendingInvites]);
+    useEffect(() => {
+        console.log("Pending invites updated:", pendingInvites.length);
+        // Force tab routes to update when pendingInvites changes
+        setRoutes([
+          { key: 'personal', title: 'Personal' },
+          { key: 'shared', title: `Shared Itineraries${pendingInvites.length > 0 ? ` (${pendingInvites.length})` : ''}` },
+        ]);
+      }, [pendingInvites]);
+        
 
     return (
         <SafeAreaWrapper>
-            <View style={styles.container}>
-                {loading ? (
-                    <View style={styles.loadingContainer}>
-                        <ActivityIndicator size="large" color="#007bff" />
-                    </View>
-                ) : (
-
-                    <TabView
-                        navigationState={{ index, routes }}
-                        renderScene={renderScene} 
-                        onIndexChange={setIndex}
-                        initialLayout={{ width: Dimensions.get('window').width }}
-                        renderTabBar={props => (
-                            <TabBar
-                              {...props}
-                              indicatorStyle={{
-                                height: 4,
-                                backgroundColor: '#1d3a8a',
-                                borderRadius: 2,
-                              }}
-                              style={{
-                                backgroundColor: 'white',
-                                elevation: 0,
-                              }}
-                              labelStyle={{
-                                fontSize: 16,
-                                fontWeight: 'bold',
-                                textTransform: 'capitalize',
-                              }}
-                              activeColor="black"
-                              inactiveColor="gray"
-                            />
-                        )}                          
-                    />
+    <View style={styles.container}>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#007bff" />
+        </View>
+      ) : (
+        <>
+          {/* Custom Tab Header with Badge */}
+          <View style={styles.customTabHeader}>
+            <TouchableOpacity 
+              style={[styles.customTab, index === 0 && styles.activeCustomTab]} 
+              onPress={() => setIndex(0)}
+            >
+              <Text style={[styles.customTabText, index === 0 && styles.activeCustomTabText]}>
+                Personal
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.customTab, index === 1 && styles.activeCustomTab]} 
+              onPress={() => setIndex(1)}
+            >
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={[styles.customTabText, index === 1 && styles.activeCustomTabText]}>
+                  Shared Itineraries
+                </Text>
+                {pendingInvites.length > 0 && (
+                  <View style={styles.badgeContainer}>
+                    <Text style={styles.badgeText}>{pendingInvites.length}</Text>
+                  </View>
                 )}
+              </View>
+            </TouchableOpacity>
+          </View>
+          
+          {/* Use SceneMap directly rather than TabView */}
+          <View style={{flex: 1}}>
+            {index === 0 ? (
+              ownedItineraries.length === 0 ? (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.noItineraries}>You have no itineraries created yet.</Text>
+                </View>
+              ) : (
+                <FlatList 
+                  data={ownedItineraries}
+                  renderItem={renderItineraryItem}
+                  keyExtractor={(item, index) => item.id ? item.id.toString() : `owned-${index}`}
+                  contentContainerStyle={styles.listContainer}
+                />
+              )
+            ) : (
+              <SharedItineraries />
+            )}
+          </View>
+        </>
+      )}
 
-                {/* ✅ Add Itinerary Button */}
-                <TouchableOpacity style={styles.addButton} onPress={handleAddItinerary}>
-                    <Icon name="plus" size={16} color="white" />
-                </TouchableOpacity>
-            </View>
-        </SafeAreaWrapper>
+      {/* ✅ Add Itinerary Button */}
+      <TouchableOpacity style={styles.addButton} onPress={handleAddItinerary}>
+        <Icon name="plus" size={16} color="white" />
+      </TouchableOpacity>
+    </View>
+  </SafeAreaWrapper>
     );
 };
 
@@ -520,6 +561,44 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
+    customTabHeader: {
+        flexDirection: 'row',
+        backgroundColor: 'white',
+        height: 50,
+        borderBottomWidth: 1,
+        borderBottomColor: '#e0e0e0',
+      },
+      customTab: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 12,
+      },
+      activeCustomTab: {
+        borderBottomWidth: 4,
+        borderBottomColor: '#1d3a8a',
+      },
+      customTabText: {
+        fontSize: 14,
+        fontWeight: '500', 
+      },
+      activeCustomTabText: {
+        color: 'black',
+      },
+      badgeContainer: {
+        marginLeft: 8,
+        backgroundColor: 'red',
+        width: 22,
+        height: 22,
+        borderRadius: 11,
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+      badgeText: {
+        color: 'white',
+        fontSize: 12,
+        fontWeight: 'bold',
+      },
     
 });
 
