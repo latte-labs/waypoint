@@ -40,19 +40,20 @@ const ProfileScreen = ({ navigation }) => {
     tripRole: '',
   });
   const [completion, setCompletion] = useState(0);
+  const [friendCount, setFriendCount] = useState(0);
   const [showPhotoOptions, setShowPhotoOptions] = useState(false);
   const rotate = useSharedValue(0);
-const buttonsVisible = useSharedValue(0);
+  const buttonsVisible = useSharedValue(0);
 
-const fabRotationStyle = useAnimatedStyle(() => {
-  return {
-    transform: [
-      {
-        rotate: `${rotate.value}deg`,
-      },
-    ],
-  };
-});
+  const fabRotationStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          rotate: `${rotate.value}deg`,
+        },
+      ],
+    };
+  });
 
 const leftButtonStyle = useAnimatedStyle(() => {
   return {
@@ -153,6 +154,15 @@ const farLeftButtonStyle = useAnimatedStyle(() => {
           
   
           setProfileData(profileFromDB);
+          // ✅ Load Friend Count
+          const friendsRef = ref(db, `/friends/${user.id}`);
+          onValue(friendsRef, (snapshot) => {
+            if (snapshot.exists()) {
+              setFriendCount(Object.keys(snapshot.val()).length);
+            } else {
+              setFriendCount(0);
+            }
+          });
           calculateCompletion(profileFromDB);
           await AsyncStorage.setItem('@profile_data', JSON.stringify(profileFromDB));
         } else {
@@ -438,22 +448,12 @@ const farLeftButtonStyle = useAnimatedStyle(() => {
         </View>
 
         <View style={styles.profileContainer}>
-        {isEditing ? (
-          <View style={styles.editActionRow}>
-            <TouchableOpacity style={styles.saveButton} onPress={saveProfile}>
-              <Text style={styles.editProfileText}>Save Profile</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.cancelButton} onPress={cancelEdit}>
-              <FontAwesome name="times" size={18} color="white" />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <TouchableOpacity style={styles.editProfileButton} onPress={() => setIsEditing(true)}>
-            <Text style={styles.editProfileText}>Edit Profile</Text>
-          </TouchableOpacity>
-        )}
-
-
+        <TouchableOpacity
+          style={styles.friendCountButton}
+          onPress={() => navigation.navigate('Friends')}
+        >
+          <Text style={styles.friendCountText}>{friendCount} {friendCount === 1 ? 'Friend' : 'Friends'}</Text>
+        </TouchableOpacity>
 
           {uploading && (
             <ActivityIndicator size="small" color="#888" style={{ marginTop: 12 }} />
@@ -1061,6 +1061,19 @@ const styles = StyleSheet.create({
   cancelButtonBg: {
     backgroundColor: '#e53935',
   },
+  friendCountButton: {
+    marginTop: 80,
+    backgroundColor: '#263986',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  friendCountText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  
   
 });
 
