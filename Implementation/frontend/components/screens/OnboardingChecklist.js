@@ -20,7 +20,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 
-const OnboardingChecklist = ({ userId, onComplete, refreshTrigger }) => {
+const OnboardingChecklist = ({ userId, onComplete, refreshTrigger, onWeatherNudge }) => {
   const navigation = useNavigation();
   const [progress, setProgress] = useState({
     quiz: false,
@@ -126,7 +126,7 @@ const OnboardingChecklist = ({ userId, onComplete, refreshTrigger }) => {
     { key: 'quiz', label: 'Take Travel Style Quiz', action: () => navigation.navigate('QuizScreen') },
     { key: 'itinerary', label: 'Create Your First Itinerary', action: () => navigation.navigate('Itinerary') },
     { key: 'chatbot', label: 'Use Chatbot', action: () => navigation.navigate('Chatbot') },
-    { key: 'weatherChecked', label: 'Check Weather Widget', action: () => null },
+    { key: 'weatherChecked', label: 'Check Weather Widget', action: () => onWeatherNudge?.() },
     { key: 'checkedIn', label: 'Check In to a Place', action: () => navigation.navigate('CheckIn') },
     { key: 'achievementsViewed', label: 'View Achievements', action: () => navigation.navigate('Badges') },
   ];
@@ -185,7 +185,7 @@ const OnboardingChecklist = ({ userId, onComplete, refreshTrigger }) => {
       >
 
     {/* Checklist items */}
-    {checklistItems.map((item) => (
+    {checklistItems.map((item, index) => (
       <TouchableOpacity
         key={item.key}
         onPress={item.action}
@@ -194,6 +194,7 @@ const OnboardingChecklist = ({ userId, onComplete, refreshTrigger }) => {
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
+          marginTop: index === 0 ? 12 : 4,  
           marginVertical: 4,
           paddingVertical: 6,
           borderRadius: 8,

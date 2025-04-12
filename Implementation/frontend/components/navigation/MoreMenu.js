@@ -134,7 +134,7 @@ const MoreMenu = ({ closeMenu }) => {
             <TouchableOpacity onPress={() => handleNavigate("CheckIn")} style={navigationStyles.moreMenuItem}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Icon name="sign-in-alt" size={20} color="#1E3A8A" style={{ marginRight: 12 }} />
-                    <Text style={navigationStyles.moreMenuText}>Check In</Text>
+                    <Text style={navigationStyles.moreMenuText}>Log Visit</Text>
                 </View>
             </TouchableOpacity>
 

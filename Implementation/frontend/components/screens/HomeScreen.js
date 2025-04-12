@@ -27,7 +27,8 @@ import Animated, {
     useSharedValue,
     useAnimatedStyle,
     withDecay,
-    runOnJS
+    runOnJS,
+    withSpring
 } from 'react-native-reanimated';
 import WeatherSearchModal from './WeatherSearchModal';
 import OnboardingChecklist from './OnboardingChecklist';
@@ -59,7 +60,20 @@ function HomeScreen() {
         ],
     }));
     const [showWeatherGuide, setShowWeatherGuide] = useState(false);
-
+    const weatherNudgeAnim = useSharedValue(0);
+    const weatherNudgeStyle = useAnimatedStyle(() => {
+      return {
+        transform: [{ translateX: withSpring(weatherNudgeAnim.value * 5) }],
+      };
+    });
+    const nudgeWeatherWidget = () => {
+      weatherNudgeAnim.value = 1;
+      setTimeout(() => {
+        weatherNudgeAnim.value = 0;
+      }, 200);
+    };
+    const weatherNudgeRef = useRef(nudgeWeatherWidget);
+    
     const panGesture = Gesture.Pan()
         .minDistance(1)
         .onStart(() => {
@@ -269,6 +283,7 @@ function HomeScreen() {
         console.error("❌ Error during pull-to-refresh:", error);
     } finally {
         setRefreshing(false);
+        setChecklistRefreshTrigger(prev => prev + 1);
         setShowToast(true);
         setTimeout(() => setShowToast(false), 2000);
     }      
@@ -433,39 +448,38 @@ function HomeScreen() {
 
                 {/* 🔹 Weather Widget Container (Reusing weatherWidgetContainer style) */}
                 <View style={HomeScreenStyles.weatherContainer}>
-                <View style={HomeScreenStyles.weatherRow}>
-                    {/* Left Side: Weather Info */}
+                <Animated.View style={[HomeScreenStyles.weatherRow, weatherNudgeStyle]}>
                     <TouchableOpacity
-                    onPress={() => setShowWeatherSearchModal(true)}
-                    style={{ flexDirection: 'row', alignItems: 'center' }}
-                    activeOpacity={0.8}
+                        onPress={() => setShowWeatherSearchModal(true)}
+                        style={{ flexDirection: 'row', alignItems: 'center' }}
+                        activeOpacity={0.8}
                     >
-                    <Image
+                        <Image
                         source={{
-                        uri: `https://openweathermap.org/img/wn/${weather?.weather_icon || '01d'}@2x.png`,
+                            uri: `https://openweathermap.org/img/wn/${weather?.weather_icon || '01d'}@2x.png`,
                         }}
                         style={HomeScreenStyles.weatherIcon}
-                    />
-                    <Text style={HomeScreenStyles.temperatureText}>
+                        />
+                        <Text style={HomeScreenStyles.temperatureText}>
                         {weather?.temperature ? `${weather.temperature}°C` : '--°C'}
-                    </Text>
-                    <Text style={HomeScreenStyles.cityText}>
+                        </Text>
+                        <Text style={HomeScreenStyles.cityText}>
                         {weather?.weather_name || 'City Name'}
-                    </Text>
+                        </Text>
                     </TouchableOpacity>
 
-                    {/* Right Side: Suitcase Icon */}
+                    {/* Suitcase icon */}
                     <TouchableOpacity
-                    onPress={handlePackingTip}
-                    onLongPress={() => {
+                        onPress={handlePackingTip}
+                        onLongPress={() => {
                         setShowTooltip(true);
                         setTimeout(() => setShowTooltip(false), 1500);
-                    }}
-                    delayLongPress={200}
+                        }}
+                        delayLongPress={200}
                     >
-                    <Icon name="suitcase" size={18} color="#1E3A8A" />
+                        <Icon name="suitcase" size={18} color="#1E3A8A" />
                     </TouchableOpacity>
-                </View>
+                </Animated.View>
                 </View>
 
                 {/* 🔹 Tooltip Bubble BELOW the widget */}
@@ -513,6 +527,7 @@ function HomeScreen() {
                             userId={userId}
                             onComplete={() => setOnboardingComplete(true)}
                             refreshTrigger={checklistRefreshTrigger}
+                            onWeatherNudge={() => weatherNudgeRef.current()}
                         />
                     </View>
 
