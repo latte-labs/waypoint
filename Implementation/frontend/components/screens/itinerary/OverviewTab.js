@@ -12,6 +12,7 @@ import {
 import Icon from 'react-native-vector-icons/FontAwesome';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
+
 const OverviewTab = ({
   loading,
   itinerary,
@@ -123,10 +124,16 @@ const OverviewTab = ({
               {collaborators.length > 0 ? (
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: 'row', alignItems: 'center' }}>
                   {collaborators.map((collab) => (
-                    <View key={collab.userId} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#eef7ff', padding: 8, borderRadius: 5, marginRight: 10, marginBottom: 10, minWidth: 100, justifyContent: 'center' }}>
+                    <TouchableOpacity
+                      key={collab.userId}
+                      style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#eef7ff', padding: 8, borderRadius: 5, marginRight: 10, marginBottom: 10, minWidth: 100, justifyContent: 'center' }}
+                      onPress={() => navigation.navigate('PublicProfile', { friendId: collab.userId })}
+                      activeOpacity={0.8}
+                    >
                       <Icon name="user" size={16} color="#007bff" style={{ marginRight: 5 }} />
                       <Text style={{ fontSize: 12, color: '#007bff' }}>{collab.name}</Text>
-                    </View>
+                    </TouchableOpacity>
+
                   ))}
                 </ScrollView>
               ) : (
