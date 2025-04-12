@@ -49,13 +49,37 @@ const InteractiveRecommendations = () => {
   const [toggleVisible, setToggleVisible] = useState(false);
   const [selectedCity, setSelectedCity] = useState('Vancouver');
   const [cityToggleVisible, setCityToggleVisible] = useState(false);
-  
+  const [savedPlacesByItinerary, setSavedPlacesByItinerary] = useState({});
 
 
 
   useEffect(() => {
     fetchPlaces();
   }, [travelStyle, region]);
+  const fetchSavedPlaces = async () => {
+    try {
+      const snapshot = await database().ref('/live_itineraries').once('value');
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        const saved = {};
+        Object.entries(data).forEach(([itineraryId, details]) => {
+          if (details?.places) {
+            saved[itineraryId] = details.places;
+          }
+        });
+        setSavedPlacesByItinerary(saved);
+      }
+    } catch (err) {
+      console.error("❌ Error fetching saved places:", err);
+    }
+  };
+  
+
+  useEffect(() => {
+    fetchSavedPlaces();
+  }, []);
+  
+  
 
   const fetchPlaces = async () => {
     setLoading(true);
@@ -79,7 +103,12 @@ const InteractiveRecommendations = () => {
     : mapPlaces;
 
   const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-
+  const isPlaceAlreadySaved = (placeName) => {
+    return Object.values(savedPlacesByItinerary).some(placeList =>
+      Array.isArray(placeList) && placeList.includes(placeName)
+    );
+  };
+  
   const focusMapOnPlace = (place, index) => {
     setActiveIndex(index);
   
@@ -118,7 +147,9 @@ const InteractiveRecommendations = () => {
                 coordinate={{ latitude: place.latitude, longitude: place.longitude }}
                 ref={markerRefs.current[index]}
                 onPress={() => focusMapOnPlace(place, index)}
+                pinColor={isPlaceAlreadySaved(place.name) ? '#32CD32' : '#007AFF'} // green if already saved
               >
+
                 <Callout
                   tooltip={true}
                   onPress={() => {
@@ -288,6 +319,12 @@ const InteractiveRecommendations = () => {
                   >
                     <Icon name="plus-circle" size={24} color="#007AFF" />
                   </TouchableOpacity>
+                  {isPlaceAlreadySaved(item.name) && (
+                    <View style={styles.checkIconWrapper}>
+                      <Icon name="check-circle" size={20} color="#32CD32" />
+                    </View>
+                  )}
+
                   <View style={styles.cardContent}>
                     <Text style={styles.cardTitle}>{item.name}</Text>
                     <Text>{capitalize(item.category)}</Text>
@@ -317,6 +354,7 @@ const InteractiveRecommendations = () => {
               } else {
                 await ref.set([...existingPlaces, selectedPlace.name]);
                 Alert.alert("Success", `${selectedPlace.name} added to itinerary.`);
+                await fetchSavedPlaces(); 
               }
             } catch (error) {
               console.error("❌ Error adding place:", error);
@@ -474,8 +512,17 @@ const styles = StyleSheet.create({
   
   dropdownIcon: {
     marginLeft: 4,
-    marginTop: 1, // fine-tune vertical alignment if needed
+    marginTop: 1,
   },
+  checkIconWrapper: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 2,
+    zIndex: 10,
+  }
   
   
   
