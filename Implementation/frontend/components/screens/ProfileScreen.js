@@ -5,7 +5,7 @@ import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native';
 import API_BASE_URL from '../../config';
 import ImagePicker from 'react-native-image-crop-picker';
-import { getDatabase, ref, update, onValue, get } from '@react-native-firebase/database';
+import { getDatabase, ref, update, onValue, get, remove } from '@react-native-firebase/database';
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import CustomDropdown from './CustomDropdown';
 
@@ -33,6 +33,7 @@ const ProfileScreen = ({ navigation }) => {
     tripRole: '',
   });
   const [completion, setCompletion] = useState(0);
+  const [showPhotoOptions, setShowPhotoOptions] = useState(false);
 
   const calculateCompletion = (data) => {
     const fields = [
@@ -59,21 +60,19 @@ const ProfileScreen = ({ navigation }) => {
   
         if (userData) {
           // ✅ Load Profile Image
-          if (userData.profilePhotoUrl) {
-            console.log("✅ Firebase Returned URL:", userData.profilePhotoUrl);
-            const cacheBustedUrl = `${userData.profilePhotoUrl}?ts=${Date.now()}`;
+          const photoUrl = userData.profilePhotoUrl;
+          const isPhotoValid = photoUrl && typeof photoUrl === 'string' && photoUrl.trim() !== '' && !photoUrl.includes('null');
+          
+          if (isPhotoValid) {
+            const cacheBustedUrl = `${photoUrl}?ts=${Date.now()}`;
             setProfileImage(cacheBustedUrl);
             await AsyncStorage.setItem('profileImage', cacheBustedUrl);
           } else {
-            const fallback = await AsyncStorage.getItem('profileImage');
-            if (fallback) {
-              console.log("ℹ️ Using fallback image from AsyncStorage");
-              setProfileImage(fallback);
-            } else {
-              setProfileImage(null);
-              console.log("🚫 No image found in Firebase or cache");
-            }
+            setProfileImage(null); // ensure it's cleared from state
+            await AsyncStorage.removeItem('profileImage');
+            console.log("🚫 No valid image found. Removed from AsyncStorage and UI.");
           }
+          
   
           // ✅ Load Profile Fields
           const {
@@ -231,9 +230,16 @@ const ProfileScreen = ({ navigation }) => {
           const backup = await AsyncStorage.getItem('@profile_data');
           if (backup) {
             const profile = JSON.parse(backup);
+          
+            // 🚫 Avoid restoring image from old profile data if Firebase has cleared it
+            const hasImage = await AsyncStorage.getItem('profileImage');
+            if (!hasImage) {
+              setProfileImage(null); // explicitly clear
+            }
+          
             setProfileData(profile);
             calculateCompletion(profile);
-          }
+          }          
         } catch (error) {
           console.error("❌ Error loading user data:", error);
         } finally {
@@ -364,7 +370,16 @@ const ProfileScreen = ({ navigation }) => {
         
 
         <View style={styles.headerContainer}>
-          <TouchableOpacity onPress={handleProfileImagePress} style={styles.profileImageWrapper}>
+          <TouchableOpacity
+            onPress={() => {
+              if (profileImage) {
+                setShowPhotoOptions(true);
+              } else {
+                handleProfileImagePress();
+              }
+            }}            
+            style={styles.profileImageWrapper}
+          >
             {profileImage ? (
               <Image
                 source={{ uri: profileImage }}
@@ -373,7 +388,7 @@ const ProfileScreen = ({ navigation }) => {
               />
             ) : (
               <View style={[styles.profileImage, styles.placeholderImage]}>
-                <Text>No Photo</Text>
+                <Text>Tap to add photo</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -623,12 +638,90 @@ const ProfileScreen = ({ navigation }) => {
             </>
           )}
         </View>
-
-
-
-
-
       </ScrollView>
+      {showPhotoOptions && profileImage && (
+        <View style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: '#fff',
+          paddingTop: 20,
+          paddingBottom: 40,
+          paddingHorizontal: 24,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -3 },
+          shadowOpacity: 0.1,
+          shadowRadius: 6,
+        }}>
+          <View style={{ alignItems: 'center' }}>
+          <Image
+            source={{ uri: profileImage }}
+            style={{
+              width: '100%',
+              height: 220,
+              borderRadius: 12,
+              marginBottom: 24,
+              resizeMode: 'contain',
+              backgroundColor: '#f3f3f3',
+            }}
+          />
+
+          </View>
+
+          <TouchableOpacity
+            style={{
+              backgroundColor: '#263986',
+              paddingVertical: 12,
+              borderRadius: 10,
+              marginBottom: 14,
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '100%',
+            }}
+            onPress={() => {
+              setShowPhotoOptions(false);
+              handleProfileImagePress();
+            }}
+          >
+            <Text style={{ color: '#fff', fontWeight: '600', fontSize: 16 }}>Upload New Photo</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={{
+              backgroundColor: '#e53935',
+              paddingVertical: 12,
+              borderRadius: 10,
+              marginBottom: 14,
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '100%',
+            }}
+            onPress={async () => {
+              try {
+                const db = getDatabase();
+                await remove(ref(db, `users/${user.id}/profilePhotoUrl`));
+                await AsyncStorage.removeItem('profileImage');
+                setProfileImage(null);                
+                setShowPhotoOptions(false);
+              } catch (err) {
+                console.error('Failed to delete photo:', err);
+                Alert.alert('Error', 'Failed to delete profile photo.');
+              }
+            }}
+          >
+            <Text style={{ color: '#fff', fontWeight: '600', fontSize: 16 }}>Delete Photo</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => setShowPhotoOptions(false)} style={{ alignItems: 'center' }}>
+            <Text style={{ color: '#888', fontSize: 15, marginTop: 4 }}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
     </SafeAreaView>
   );
 };
@@ -852,10 +945,6 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: '#263986',
   },
-  
-  
-  
-  
 });
 
 export default ProfileScreen;

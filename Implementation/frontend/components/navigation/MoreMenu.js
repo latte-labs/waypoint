@@ -4,14 +4,19 @@ import { useNavigation } from "@react-navigation/native";
 import { navigationStyles } from "../../styles/NavigationStyles";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import styles from "../../styles/CheckInScreenStyles";
-
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    withRepeat,
+    withTiming,
+    Easing
+  } from 'react-native-reanimated';
+  
 
 const MoreMenu = ({ closeMenu }) => {
     const navigation = useNavigation();
     const [profileImage, setProfileImage] = useState(null);
     const [profileName, setProfileName] = useState("Guest");
-
 
     useEffect(() => {
         // Retrieve the profile image from AsyncStorage on mount
@@ -33,7 +38,6 @@ const MoreMenu = ({ closeMenu }) => {
 
         fetchProfileData();
     }, []);
-
 
     const handleNavigate = (screen) => {
         closeMenu(); //closing menu before navigating
@@ -59,18 +63,38 @@ const MoreMenu = ({ closeMenu }) => {
     return (
         <View style={navigationStyles.moreContainer}>
             {/* Profile Card */}
-            <TouchableOpacity onPress={() => handleNavigate("Profile")} style={{ width: '90%', alignItems: 'center' }}>
-                <View style={navigationStyles.profileHeader}>
+            <View style={{
+                backgroundColor: '#F3F4F6',
+                borderRadius: 16,
+                paddingVertical: 20,
+                paddingHorizontal: 16,
+                alignItems: 'center',
+                width: '90%',
+                alignSelf: 'center',
+                marginBottom: 24,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 3,
+            }}>
+                <TouchableOpacity onPress={() => handleNavigate("Profile")}>
                     {profileImage ? (
-                        <Image
-                            source={{ uri: profileImage }}
-                            style={navigationStyles.profileHeaderImage}
-                        />
+                    <Image
+                        source={{ uri: profileImage }}
+                        style={{ width: 80, height: 80, borderRadius: 40, marginBottom: 8 }}
+                    />
                     ) : (
-                        <Icon name="user-circle" size={60} color="#ccc" />
+                    <Icon name="user-circle" size={80} color="#ccc" style={{ marginBottom: 8 }} />
                     )}
-                </View>
-            </TouchableOpacity>
+                    <Text style={{ fontSize: 16, fontWeight: '600', color: '#111' }}>My Profile</Text>
+                    <Text style={{ fontSize: 14, color: '#6B7280', marginTop: 4 }}>
+                    {profileName}
+                    </Text>
+                </TouchableOpacity>
+            </View>
+
+
 
             <TouchableOpacity onPress={() => handleNavigate("Settings")} style={navigationStyles.moreMenuItem}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
