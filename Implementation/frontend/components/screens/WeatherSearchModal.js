@@ -89,7 +89,7 @@ const WeatherSearchModal = ({ visible, onClose, onSelectCity }) => {
           onChangeText={(text) => {
             setInput(text);
             clearTimeout(debounceRef.current);
-            debounceRef.current = setTimeout(() => fetchPlaces(text), 600);
+            debounceRef.current = setTimeout(() => fetchPlaces(text), 400);
           }}
           style={styles.input}
         />
