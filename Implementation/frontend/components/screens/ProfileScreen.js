@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useLayoutEffect } from 'react';
-import { View, Text, Button, Image, StyleSheet, SafeAreaView, ActivityIndicator, TouchableOpacity, Alert, ScrollView, TextInput, StatusBar } from 'react-native';
+import { View, Text, Button, Image, StyleSheet, SafeAreaView, ActivityIndicator, TouchableOpacity, Alert, ScrollView, TextInput, StatusBar, Keyboard, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native';
@@ -42,6 +42,7 @@ const ProfileScreen = ({ navigation }) => {
   const [completion, setCompletion] = useState(0);
   const [friendCount, setFriendCount] = useState(0);
   const [showPhotoOptions, setShowPhotoOptions] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const rotate = useSharedValue(0);
   const buttonsVisible = useSharedValue(0);
 
@@ -349,6 +350,20 @@ const farLeftButtonStyle = useAnimatedStyle(() => {
     });
   }, [navigation, isEditing, profileData]);
   
+  useEffect(() => {
+    const showSub = Keyboard.addListener('keyboardDidShow', (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+  
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardHeight(0);
+    });
+  
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
   
   
 
@@ -765,7 +780,7 @@ const farLeftButtonStyle = useAnimatedStyle(() => {
         </View>
       )}
 
-<View style={styles.fabContainer}>
+<View style={[styles.fabContainer, { bottom: keyboardHeight + 24 }]}>
   {/* Cancel Button */}
   <Animated.View style={[styles.fabButton, styles.cancelButtonBg, farLeftButtonStyle]}>
     <TouchableOpacity onPress={() => {
