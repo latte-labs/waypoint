@@ -8,7 +8,7 @@ import {
     TouchableOpacity,
     Alert,
     Dimensions,
-    Modal,
+    Modal, RefreshControl
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -241,13 +241,38 @@ function HomeScreen() {
         }, [])
     );
 
-
-
-
     const [itineraries, setItineraries] = useState([]);
     const [loadingItineraries, setLoadingItineraries] = useState(false);
     const [checklistRefreshTrigger, setChecklistRefreshTrigger] = useState(0);
     const [showTooltip, setShowTooltip] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
+    const [showToast, setShowToast] = useState(false);
+
+    const refreshHomeScreen = async () => {
+    setRefreshing(true);
+    try {
+        if (userId) {
+        const freshItineraries = await fetchAndStoreRecentItineraries(userId);
+        setRecentTrips(freshItineraries);
+        }
+        // Re-trigger other dynamic data if needed (optional)
+        const storedUser = await AsyncStorage.getItem('user');
+        if (storedUser) {
+        const user = JSON.parse(storedUser);
+        const savedWeather = await AsyncStorage.getItem('last_searched_weather');
+        if (savedWeather) {
+            const { lat, lng } = JSON.parse(savedWeather);
+            fetchWeather(lat, lng);
+        }
+        }
+    } catch (error) {
+        console.error("❌ Error during pull-to-refresh:", error);
+    } finally {
+        setRefreshing(false);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 2000);
+    }      
+    };
 
 
     // WEATHER
@@ -273,6 +298,22 @@ function HomeScreen() {
             console.log('Error fetching weather data: ', err);
         }
     };
+    const fetchAndStoreRecentItineraries = async (userId) => {
+        try {
+          const response = await axios.get(`${API_BASE_URL}/itineraries/users/${userId}/itineraries/recent`);
+          if (response.status === 200 && response.data.length > 0) {
+            await AsyncStorage.setItem('recent_itineraries', JSON.stringify(response.data));
+            console.log("✅ Itinerary images refreshed");
+            return response.data;
+          } else {
+            console.log("ℹ️ No recent itineraries found.");
+            return [];
+          }
+        } catch (error) {
+          console.error("❌ Error refreshing itineraries:", error);
+          return [];
+        }
+      };      
 
     const handleLocationGranted = (coords) => {
         setLocation(coords);
@@ -374,10 +415,18 @@ function HomeScreen() {
                 style={{ flex: 1, backgroundColor: 'white' }}
                 contentContainerStyle={{
                     paddingBottom: 10,
-                    paddingHorizontal: 16, // ✅ Add space on left and right
+                    paddingHorizontal: 16,
                 }}
                 keyboardShouldPersistTaps="handled"
-            >
+                refreshControl={
+                    <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={refreshHomeScreen}
+                    tintColor="#1E3A8A"
+                    colors={['#1E3A8A']}
+                    />
+                }
+                >
 
                 {/* Weather */}
                 <View style={HomeScreenStyles.weatherSectionWrapper}>
@@ -566,6 +615,11 @@ function HomeScreen() {
                 loading={loadingPackingTip}
                 onClose={() => setShowPackingModal(false)}
             />
+            {showToast && (
+            <View style={HomeScreenStyles.toast}>
+                <Text style={HomeScreenStyles.toastText}>✅ Refreshed</Text>
+            </View>
+            )}
 
         </SafeAreaWrapper>
     );

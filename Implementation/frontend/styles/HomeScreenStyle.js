@@ -277,9 +277,27 @@ const HomeScreenStyles = StyleSheet.create({
         marginRight: 22,
         marginTop: -18,
       },
-      
-      
-      
+    toast: {
+    position: 'absolute',
+    bottom: 90,
+    alignSelf: 'center',
+    backgroundColor: '#1E3A8A',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    zIndex: 9999,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+    },
+    
+    toastText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
+    },
 });
 
 export default HomeScreenStyles;
