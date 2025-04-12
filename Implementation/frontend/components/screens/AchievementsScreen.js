@@ -7,6 +7,7 @@ import SafeAreaWrapper from './SafeAreaWrapper';
 import * as Progress from 'react-native-progress';
 import { Dimensions } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import FriendsAchievements from './FriendsAchievements';
 
 const trophyImages = {
     park: {
@@ -65,6 +66,7 @@ function getProgressText(count) {
 const AchievementsScreen = () => {
     const [loading, setLoading] = useState(true);
     const [achievements, setAchievements] = useState([]);
+    const [friendsWithBadges, setFriendsWithBadges] = useState([]);
     const [error, setError] = useState(null);
     const screenWidth = Dimensions.get('window').width;
     const progressBarWidth = screenWidth * 0.7 - 40;
@@ -112,15 +114,6 @@ const AchievementsScreen = () => {
             const onboardingComplete = onboardingSnap.val() === true;
             let specialBadge = null;
 
-            // if (onboardingComplete === true) {
-            //     const onboardingBadge = {
-            //         category: 'onboarding',
-            //         count: 1,
-            //         badge: 'Completed',
-            //         isSpecial: true,
-            //     };
-            //     results.splice(3, 0, onboardingBadge);
-            //   }
             if (onboardingComplete) {
                 results.push({
                     category: 'onboarding',
@@ -155,6 +148,43 @@ const AchievementsScreen = () => {
             });
 
             setAchievements(results);
+            // Fetch friends' achievements
+            const friendsSnapshot = await database().ref(`/friends/${userId}`).once('value');
+            const friendsData = friendsSnapshot.val() || {};
+            const friendIds = Object.keys(friendsData);
+
+            const friendsPromises = friendIds.map(async (fid) => {
+                const [profileSnap, gameSnap] = await Promise.all([
+                    database().ref(`/users/${fid}`).once('value'),
+                    database().ref(`/game/${fid}`).once('value'),
+                ]);
+                const profile = profileSnap.val();
+                const game = gameSnap.val() || {};
+
+                const friendBadges = ALL_CATEGORIES.map((cat) => {
+                    const count = game[cat] ? Object.keys(game[cat]).length : 0;
+                    const badge = getBadge(count);
+                    return count >= 5
+                        ? { image: getBadgeImage(cat, badge) }
+                        : null;
+                }).filter(Boolean);
+
+                const onboardingSnap = await database().ref(`/users/${fid}/onboarding/onboarding_complete`).once('value');
+                if (onboardingSnap.val() === true) {
+                    friendBadges.push({ image: specialBadges.onboarding });
+                }
+
+                return {
+                    id: fid,
+                    profilePhotoUrl: profile?.profilePhotoUrl ?? null,
+                    friendName: friendsData[fid]?.friendName ?? 'Friend',
+                    badges: friendBadges,
+                };                
+            });
+
+            const friendsWithBadgesResolved = await Promise.all(friendsPromises);
+            setFriendsWithBadges(friendsWithBadgesResolved);
+
         } catch (err) {
             console.error("Error fetching achievements:", err);
             setError("Failed to fetch achievements.");
@@ -333,6 +363,13 @@ const AchievementsScreen = () => {
                         </View>
                     </View>
                 </Modal>
+                {friendsWithBadges.length > 0 && (
+                    <View style={{ marginTop: 30 }}>
+                        <Text style={styles.title}>Friends' Achievements</Text>
+                        <FriendsAchievements friends={friendsWithBadges} />
+                    </View>
+                )}
+
             </View>
         </SafeAreaWrapper>
     );
