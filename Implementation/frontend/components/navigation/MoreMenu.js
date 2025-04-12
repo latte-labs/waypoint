@@ -77,24 +77,45 @@ const MoreMenu = ({ closeMenu }) => {
                 shadowOpacity: 0.1,
                 shadowRadius: 4,
                 elevation: 3,
-            }}>
-                <TouchableOpacity onPress={() => handleNavigate("Profile")}>
+                }}>
+                <TouchableOpacity onPress={() => handleNavigate("Profile")} activeOpacity={0.85}>
+                    <View style={{ alignItems: 'center' }}>
                     {profileImage ? (
-                    <Image
+                        <Image
                         source={{ uri: profileImage }}
-                        style={{ width: 80, height: 80, borderRadius: 40, marginBottom: 8 }}
-                    />
+                        style={{
+                            width: 90,
+                            height: 90,
+                            borderRadius: 45,
+                            borderWidth: 2,
+                            borderColor: '#fff',
+                            backgroundColor: '#e5e7eb',
+                            marginBottom: 12,
+                        }}
+                        />
                     ) : (
-                    <Icon name="user-circle" size={80} color="#ccc" style={{ marginBottom: 8 }} />
+                        <Icon name="user-circle" size={90} color="#ccc" style={{ marginBottom: 12 }} />
                     )}
-                    <Text style={{ fontSize: 16, fontWeight: '600', color: '#111' }}>My Profile</Text>
-                    <Text style={{ fontSize: 14, color: '#6B7280', marginTop: 4 }}>
-                    {profileName}
+
+                    <Text style={{
+                        fontSize: 16,
+                        fontWeight: '700',
+                        color: '#111',
+                        textAlign: 'center',
+                    }}>
+                        My Profile
                     </Text>
+                    <Text style={{
+                        fontSize: 14,
+                        color: '#6B7280',
+                        marginTop: 4,
+                        textAlign: 'center',
+                    }}>
+                        {profileName}
+                    </Text>
+                    </View>
                 </TouchableOpacity>
             </View>
-
-
 
             <TouchableOpacity onPress={() => handleNavigate("Settings")} style={navigationStyles.moreMenuItem}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
