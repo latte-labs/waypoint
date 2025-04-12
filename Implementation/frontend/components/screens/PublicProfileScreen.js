@@ -270,7 +270,7 @@ const PublicProfileScreen = ({ route, navigation }) => {
                     </View>
                 )}
 
-                {friendAchievements.length > 0 && (
+                {friendAchievements.filter(item => item.isSpecial || item.count >= 5).length > 0 && (
                     <View style={styles.cardContainer}>
                         <Text style={styles.cardHeader}>Achievements</Text>
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 16, paddingRight: 8 }}>

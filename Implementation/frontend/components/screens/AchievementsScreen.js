@@ -75,7 +75,7 @@ const AchievementsScreen = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedAchievement, setSelectedAchievement] = useState(null);
     const [specialAchievement, setSpecialAchievement] = useState(null);
-
+    const [userId, setUserId] = useState(null);
 
     useEffect(() => {
         fetchAchievements();
@@ -95,6 +95,13 @@ const AchievementsScreen = () => {
             }
             const userData = JSON.parse(storedUser);
             const userId = userData.id;
+            setUserId(userId);
+
+            // ✅ Fetch full user profile from Firebase (includes profilePhotoUrl)
+            const userProfileSnap = await database().ref(`/users/${userId}`).once('value');
+            const userProfile = userProfileSnap.val() || {};
+            const userProfilePhotoUrl = userProfile.profilePhotoUrl ?? null;
+         
 
             // Read from Firebase: /game/userId
             const snapshot = await database().ref(`/game/${userId}`).once('value');
@@ -179,12 +186,32 @@ const AchievementsScreen = () => {
                     profilePhotoUrl: profile?.profilePhotoUrl ?? null,
                     friendName: friendsData[fid]?.friendName ?? 'Friend',
                     badges: friendBadges,
+                    badgeCount: friendBadges.length, 
                 };                
             });
 
             const friendsWithBadgesResolved = await Promise.all(friendsPromises);
-            setFriendsWithBadges(friendsWithBadgesResolved);
+            const isUserIncluded = friendsWithBadgesResolved.some(f => f.id === userId);
 
+            if (!isUserIncluded) {
+              const currentUserBadges = results.filter(r => r.count >= 5 || r.category === 'onboarding');
+              const badgeCount = currentUserBadges.length;
+            
+              friendsWithBadgesResolved.push({
+                id: userId,
+                profilePhotoUrl: userProfilePhotoUrl,
+                friendName: 'You',
+                badges: currentUserBadges.map(b => ({
+                  image: b.isSpecial
+                    ? specialBadges.onboarding
+                    : getBadgeImage(b.category, b.badge),
+                })),
+                badgeCount,
+              });
+            }
+            
+            setFriendsWithBadges(friendsWithBadgesResolved);
+            
         } catch (err) {
             console.error("Error fetching achievements:", err);
             setError("Failed to fetch achievements.");
@@ -365,8 +392,8 @@ const AchievementsScreen = () => {
                 </Modal>
                 {friendsWithBadges.length > 0 && (
                     <View style={{ marginTop: 30 }}>
-                        <Text style={styles.title}>Friends' Achievements</Text>
-                        <FriendsAchievements friends={friendsWithBadges} />
+                        <Text style={styles.title}>Leaderboard</Text>
+                        <FriendsAchievements friends={friendsWithBadges} currentUserId={userId} />
                     </View>
                 )}
 
