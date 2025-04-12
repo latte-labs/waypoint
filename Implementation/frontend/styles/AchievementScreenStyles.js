@@ -89,10 +89,9 @@ export default StyleSheet.create({
     },
     modalCloseButton: {
         alignSelf: 'flex-end',
-        fontSize: 18,
-        fontWeight: 'bold',
+        padding: 8,
         marginBottom: 10,
-    },
+    },    
     modalTrophyImage: {
         width: 120,
         height: 120,

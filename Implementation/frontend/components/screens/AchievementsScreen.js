@@ -6,6 +6,7 @@ import styles from '../../styles/AchievementScreenStyles'
 import SafeAreaWrapper from './SafeAreaWrapper';
 import * as Progress from 'react-native-progress';
 import { Dimensions } from 'react-native';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 const trophyImages = {
     park: {
@@ -267,13 +268,9 @@ const AchievementsScreen = () => {
                     <View style={styles.modalOverlay}>
                         <View style={styles.modalContent}>
                             {/* Close button */}
-                            <Text
-                                style={styles.modalCloseButton}
-                                onPress={closeModal}
-                            >
-                                X
-                            </Text>
-
+                            <TouchableOpacity style={styles.modalCloseButton} onPress={closeModal}>
+                                <FontAwesome name="close" size={22} color="#333" />
+                            </TouchableOpacity>
                             {selectedAchievement && (
                                 selectedAchievement.category === 'onboarding' ? (
                                     <>
