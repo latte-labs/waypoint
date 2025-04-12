@@ -31,7 +31,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import WeatherSearchModal from './WeatherSearchModal';
 import OnboardingChecklist from './OnboardingChecklist';
-
+import HomeActionTiles from './HomeActionTiles';
 
 const { width, height } = Dimensions.get('window');
 function clamp(val, min, max) {
@@ -473,6 +473,17 @@ function HomeScreen() {
                 <View style={{ marginLeft: 0 }}>
                     <FeatureCarousel />
                 </View>
+
+                <View style={{ marginTop: 10 }}>
+                <HomeActionTiles
+                    onNavigate={(id) => {
+                    if (id === 'itinerary') navigation.navigate("Main", { screen: "Itinerary" });
+                    else if (id === 'checkin') navigation.navigate("CheckIn");
+                    else if (id === 'friends') navigation.navigate("Friends");
+                    }}
+                />
+                </View>
+
 
                 {/* ✅ 3. TITLE SECTION*/}
                 <View
