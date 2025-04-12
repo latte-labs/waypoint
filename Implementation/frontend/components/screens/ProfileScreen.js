@@ -8,6 +8,13 @@ import ImagePicker from 'react-native-image-crop-picker';
 import { getDatabase, ref, update, onValue, get, remove } from '@react-native-firebase/database';
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import CustomDropdown from './CustomDropdown';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring
+} from 'react-native-reanimated';
+
 
 const ProfileScreen = ({ navigation }) => {
   const [user, setUser] = useState(null);
@@ -34,6 +41,41 @@ const ProfileScreen = ({ navigation }) => {
   });
   const [completion, setCompletion] = useState(0);
   const [showPhotoOptions, setShowPhotoOptions] = useState(false);
+  const rotate = useSharedValue(0);
+const buttonsVisible = useSharedValue(0);
+
+const fabRotationStyle = useAnimatedStyle(() => {
+  return {
+    transform: [
+      {
+        rotate: `${rotate.value}deg`,
+      },
+    ],
+  };
+});
+
+const leftButtonStyle = useAnimatedStyle(() => {
+  return {
+    transform: [
+      {
+        translateY: withTiming(buttonsVisible.value ? -15 : 0, { duration: 300 }),
+      },
+    ],
+    opacity: withTiming(buttonsVisible.value, { duration: 300 }),
+  };
+});
+
+const farLeftButtonStyle = useAnimatedStyle(() => {
+  return {
+    transform: [
+      {
+        translateY: withTiming(buttonsVisible.value ? -30 : 0, { duration: 300 }),
+      },
+    ],
+    opacity: withTiming(buttonsVisible.value, { duration: 300 }),
+  };
+});
+
 
   const calculateCompletion = (data) => {
     const fields = [
@@ -353,6 +395,7 @@ const ProfileScreen = ({ navigation }) => {
       await update(ref(db), updates);
       await AsyncStorage.setItem('@profile_data', JSON.stringify(profileData));
       setIsEditing(false);
+      Alert.alert("Success", "Your profile has been saved.");
     } catch (error) {
       console.error("❌ Error saving profile to Firebase:", error);
       Alert.alert("Save Failed", "Could not update your profile. Please try again.");
@@ -722,6 +765,45 @@ const ProfileScreen = ({ navigation }) => {
         </View>
       )}
 
+<View style={styles.fabContainer}>
+  {/* Cancel Button */}
+  <Animated.View style={[styles.fabButton, styles.cancelButtonBg, farLeftButtonStyle]}>
+    <TouchableOpacity onPress={() => {
+      buttonsVisible.value = 0;
+      rotate.value = withSpring(0);
+      setIsEditing(false);
+    }}>
+      <FontAwesome name="times" size={20} color="#fff" />
+    </TouchableOpacity>
+  </Animated.View>
+
+  {/* Save Button */}
+  <Animated.View style={[styles.fabButton, styles.saveButtonBg, leftButtonStyle]}>
+    <TouchableOpacity onPress={() => {
+      buttonsVisible.value = 0;
+      rotate.value = withSpring(0);
+      saveProfile();
+    }}>
+      <FontAwesome name="save" size={20} color="#fff" />
+    </TouchableOpacity>
+  </Animated.View>
+
+  {/* Main FAB (Edit / Cancel Toggle) */}
+  <Animated.View style={[styles.fabButton, styles.editButtonBg, fabRotationStyle]}>
+    <TouchableOpacity
+      onPress={() => {
+        const isOpening = buttonsVisible.value === 0;
+        buttonsVisible.value = isOpening ? 1 : 0;
+        rotate.value = withSpring(isOpening ? 60 : 0);
+        setIsEditing(isOpening); // 💡 toggle editing state
+      }}
+    >
+      <FontAwesome name="pencil" size={20} color="#fff" />
+    </TouchableOpacity>
+  </Animated.View>
+</View>
+
+
     </SafeAreaView>
   );
 };
@@ -945,6 +1027,41 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: '#263986',
   },
+  fabContainer: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 12,
+    zIndex: 10,
+  },  
+  
+  fabButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  
+  editButtonBg: {
+    backgroundColor: '#263986',
+  },
+  
+  saveButtonBg: {
+    backgroundColor: '#1E1E1E',
+  },
+  
+  cancelButtonBg: {
+    backgroundColor: '#e53935',
+  },
+  
 });
 
 export default ProfileScreen;
