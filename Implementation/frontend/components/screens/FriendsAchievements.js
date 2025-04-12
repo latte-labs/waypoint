@@ -1,10 +1,11 @@
 // components/FriendsAchievements.js
 import React, { useState } from 'react';
 import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
 const FriendsAchievements = ({ friends, currentUserId }) => {
     const [activeFriendId, setActiveFriendId] = useState(null);
-
+    const navigation = useNavigation();
     return (
       <View style={styles.container}>
         <ScrollView
@@ -28,7 +29,7 @@ const FriendsAchievements = ({ friends, currentUserId }) => {
         ]}
         activeOpacity={0.85}
         onPress={() => {
-          // navigation.navigate('PublicProfileScreen', { friendId: friend.id });
+          navigation.navigate('PublicProfile', { friendId: friend.id });
         }}
       >
         <Text style={styles.rank}>
