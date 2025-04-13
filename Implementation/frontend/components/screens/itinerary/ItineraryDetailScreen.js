@@ -724,7 +724,12 @@ const ItineraryDetailScreen = () => {
             try {
               const config = { headers: { "X-User-Id": user.id } };
               await axios.delete(`${API_BASE_URL}/itineraries/${itineraryId}`, config);
-              navigation.navigate("Itinerary");
+
+              await database()
+                .ref(`/live_itineraries/${itineraryId}`)
+                .remove();
+              
+              navigation.navigate("Itinerary");              
             } catch (error) {
               console.error("Error deleting itinerary:", error.response?.data || error.message);
               Alert.alert("Error", "Failed to delete itinerary.");

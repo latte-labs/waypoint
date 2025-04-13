@@ -25,7 +25,7 @@ import { GOOGLE_PLACES_API_KEY } from '@env';
 import 'react-native-get-random-values';
 import DestinationSearchModal from './DestinationSearchModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { database } from '../../../firebase';
 
 
 const ItineraryFormScreen = () => {
@@ -186,13 +186,24 @@ const ItineraryFormScreen = () => {
 
       if (response.status === 200) {
         const newItineraryId = response.data.itinerary_id || response.data.id;
+      
+        // ✅ Only add to Firebase if creating a new itinerary
+        if (!itineraryId) {
+          await database()
+            .ref(`/live_itineraries/${newItineraryId}`)
+            .set({
+              places: [],
+              owner: userId,
+            });
+        }
+      
         await updateRecentTripsInStorage();
         Alert.alert(
           "Success",
           itineraryId ? "Itinerary updated successfully!" : "Itinerary created successfully!"
         );
         navigation.replace("ItineraryDetail", { itineraryId: newItineraryId });
-      }
+      }      
     } catch (error) {
       console.error("❌ Error saving itinerary:", error.response?.data || error.message);
       Alert.alert("Error", "Failed to save itinerary.");
