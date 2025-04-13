@@ -58,22 +58,29 @@ const InteractiveRecommendations = () => {
   }, [travelStyle, region]);
   const fetchSavedPlaces = async () => {
     try {
+      const userId = await AsyncStorage.getItem('user_id');
+      if (!userId) return;
+  
       const snapshot = await database().ref('/live_itineraries').once('value');
       if (snapshot.exists()) {
         const data = snapshot.val();
         const saved = {};
+  
         Object.entries(data).forEach(([itineraryId, details]) => {
-          if (details?.places) {
+          const isOwner = details?.owner === userId;  // ✅ updated key
+          const isCollaborator = details?.collaborators && Object.keys(details.collaborators).includes(userId);
+  
+          if ((isOwner || isCollaborator) && details?.places) {
             saved[itineraryId] = details.places;
           }
         });
+  
         setSavedPlacesByItinerary(saved);
       }
     } catch (err) {
       console.error("❌ Error fetching saved places:", err);
     }
   };
-  
 
   useEffect(() => {
     fetchSavedPlaces();
