@@ -40,8 +40,6 @@ The **WayPoint** project is a mobile application designed to simplify trip plann
 - **User Profile Management** (Backend setup, authentication, Firebase integration for login storage)
 - **Travel Style Quiz** (Quiz implementation, storing results in PostgreSQL)
 - **Backend Deployment** (FastAPI app successfully deployed on Heroku)
-
-### Upcoming MVPs 🚀
 - **Personalized Recommendations** (Integration with Google Places API, filtering locations by travel style)
 - **Interactive Map** (Google Maps API integration for displaying recommended destinations)
 - **Event Browsing** (Fetching event data from Eventbrite API and displaying it in-app)
