@@ -12,7 +12,6 @@ The **WayPoint** project is a mobile application designed to simplify trip plann
 - **Travel Style Quiz**: Determines a user’s travel style and customizes recommendations accordingly.
 - **Personalized Recommendations**: Suggests attractions, restaurants, and events based on the user’s preferences and location.
 - **Interactive Map**: Displays recommended destinations and allows users to navigate them.
-- **Event Browsing**: Fetches and displays local events through the **Eventbrite API**.
 - **Collaborative Itinerary Planning**: Allows users to plan trips with friends in real-time.
 - **Gamified Exploration**: Users can earn badges based on their travel activities.
 - **Chatbot Assistance**: Uses AI to provide instant travel advice and app support.
